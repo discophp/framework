@@ -1,0 +1,23 @@
+<ul class='breadcrumbs'>
+    <li><a href='/'>Home</a></li>
+    <li class='active'>{{&$symbol}}</li>
+</ul>
+<div class='row collapse'>
+    <h2>{{$symbol}}</h2>
+    <p>{{$message else "nodata"}}</p>
+
+    <table id='price-table' class='table display'>
+        <thead>
+            <tr>
+                <td>Latest Price</td>
+                <td>Average Price</td>
+                <td>Time</td>
+                <td>Unix Time</td>
+            </tr>
+        </thead>
+        <tbody>
+            {{$prices with @bitcoin/pricerow}}
+        </tbody>
+    </table>
+
+</div>

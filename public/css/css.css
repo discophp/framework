@@ -73,3 +73,18 @@ padding:5px 0px
 h1 {
 color:#fff;
 }
+
+.prices li {
+width:30%;
+display:inline-block;
+font-size:.8em;
+}
+
+.table thead td {
+cursor:pointer;
+}
+
+.table {
+width:100% !important;
+}
+
