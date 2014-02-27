@@ -1,4 +1,9 @@
-phpBoilerPlate
+Disco Core Framework
 ==============
 
-A PHP Boiler Plate for Web Application Development
+
+<p>This is the core code for the Disco PHP framework.</p>
+
+<p>
+For the full application head over to: github.com/jbhamilton/disco
+</p>
