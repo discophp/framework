@@ -43,9 +43,14 @@ class BaseView {
     public $isAjax=false;
 
     public function __destruct(){
+        //View::prepare();
+        //View::printPage();
     }//destruct
 
-    public function prepare(){
+    private $views = Array();
+
+
+    public function __construct(){
 
         $this->title = "Default Page Title";
         $this->description = "'Default Page Description'";
@@ -115,6 +120,10 @@ HEAD;
 
 
     public function setTitle($t){
+        $this->title=$t;
+    }//setTitle
+
+    public function title($t){
         $this->title=$t;
     }//setTitle
 
@@ -289,37 +298,37 @@ HEAD;
 
 }//view
 
-Class View {
-
-    public static function title($t){
-        Disco::view()->setTitle($t);
-    }//setTitle
-
-    public static function html($h){
-        Disco::view()->html($h);
-    }//html
-
-    public static function script($s){
-        Disco::view()->script($s);
-    }//script
-
-    public static function scriptSrc($s){
-        Disco::view()->scriptSrc($s);
-    }//scriptSrc
-
-    public static function bodyStyle($s){
-        Disco::view()->bodyStyle($s);
-    }//bodyStyle
-
-    public static function printPage(){
-        Disco::view()->printPage();
-    }//printPage
-
-    public static function printAjaxPage(){
-        Disco::view()->printAjaxPage();
-    }//printPage
-
-}//View
+//Class View {
+//
+//    public static function title($t){
+//        Disco::view()->setTitle($t);
+//    }//setTitle
+//
+//    public static function html($h){
+//        Disco::view()->html($h);
+//    }//html
+//
+//    public static function script($s){
+//        Disco::view()->script($s);
+//    }//script
+//
+//    public static function scriptSrc($s){
+//        Disco::view()->scriptSrc($s);
+//    }//scriptSrc
+//
+//    public static function bodyStyle($s){
+//        Disco::view()->bodyStyle($s);
+//    }//bodyStyle
+//
+//    public static function printPage(){
+//        Disco::view()->printPage();
+//    }//printPage
+//
+//    public static function printAjaxPage(){
+//        Disco::view()->printAjaxPage();
+//    }//printPage
+//
+//}//View
 
 
 ?>

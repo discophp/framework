@@ -2,12 +2,26 @@
 
 class BaseRouter {
     private $param;
+    private $haveMatch = false;
+    private $ctrlerRequest=false;
     private $function;
     private $variableRestrictions = Array();
 
     public function __destruct(){
-        if($this->match($this->param)){
-            if($this->variables)
+
+        if(!Disco::routeMatch() && $this->match($this->param)){
+            Disco::routeMatch(true);
+            if(!$this->function instanceof Closure){
+                if(stripos($this->function,'@')!==false){
+                    $ctrl = explode('@',$this->function);
+                    $obj = new $ctrl[0];
+                    $vars = Array();
+                    foreach($this->variables as $k=>$v)
+                        $vars[]=$v;
+                    Disco::handle($obj,$ctrl[1],$vars);
+                }//if
+            }//if
+            else if($this->variables)
                 call_user_func_array($this->function,$this->variables);
             else 
                 call_user_func($this->function);
@@ -83,6 +97,7 @@ class BaseRouter {
                 $variables[$name]=$value;
             }//foreach
 
+
             foreach($variables as $k=>$v){
                 if(isset($this->variableRestrictions[$k])){
                     if(!preg_match("/{$this->variableRestrictions[$k]}/",$v)){
@@ -92,8 +107,12 @@ class BaseRouter {
                 $param = str_replace("{{$k}}",$v,$param);
             }//foreach
 
+
             if($param==$_SERVER['REQUEST_URI']){
                 $this->variables=$variables;
+                //echo "Param: $param  ||";
+                //echo "url: {$_SERVER['REQUEST_URI']}  ||";
+
                 return true;
             }//if
             else 

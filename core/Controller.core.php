@@ -6,6 +6,7 @@ class Controller {
     public $db;
     public $view;
     public $models=Array();
+    public $facades=Array();
     public $router;
     public $template;
     public $user;
@@ -52,19 +53,19 @@ class Controller {
 
 $disco = new Controller();
 
-require_once('BaseView.core.php');
-$disco->view = new BaseView();
+//require_once('BaseView.core.php');
+//$disco->view = new BaseView();
 
-require_once('BaseTemplate.core.php');
-$disco->template = new BaseTemplate();
+//require_once('BaseTemplate.core.php');
+//$disco->template = new BaseTemplate();
 
-require_once('Utilities.core.php');
-$disco->util = new Utilities();
+//require_once('Utilities.core.php');
+//$disco->util = new Utilities();
 
-require_once('Database.core.php');
-$disco->db = new Database();
+//require_once('Database.core.php');
+//$disco->db = new Database();
 
-require_once('BaseRouter.core.php');
+//require_once('BaseRouter.core.php');
 
 //$disco->setUp();
 

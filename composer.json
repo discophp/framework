@@ -1,0 +1,27 @@
+{
+    "name": "jbhamilton/disco",
+    "description": "php framework",
+    "license": "Apache License V2",
+    "authors": [
+        {
+            "name": "Bradley Hamilton",
+            "email": "bradleygoskimmin@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php":">=5.4.0"
+    },
+    "autoload": {
+        "classmap":[
+            "core/",
+            "core/facades/"
+        ]
+    },
+    "extra": {
+        "branch-alias":{
+            "dev-master":"1.0-dev"
+        }
+    }
+    
+}

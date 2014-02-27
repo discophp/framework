@@ -1,79 +1,182 @@
 <?php
 
+require_once('../vendor/autoload.php');
+
+require_once('Prep.core.php');
 require_once('Controller.core.php');
 
+
+//      The $
 Class Disco {
-    public static function view(){
+
+
+    //      Has a router matched a request
+    public static $routeMatch=false;
+
+
+
+    /**
+     *      Store a facade for potential use at
+     *      some point in the applications life cycle
+     *
+     *      @param string $name
+     *      @param closure $callback
+     */
+    public static function make($name,$callback){
         global $disco;
-        return $disco->view;
-    }//view
+        if(!isset($disco->facades[$name]))
+            $disco->facades[$name]=$callback;
+        else 
+            $disco->facades[$name]=$callback;
+    }//make
 
-    public static function template(){
-        global $disco;
-        return $disco->template;
-    }//template
 
-    public static function util(){
-        global $disco;
-        return $disco->util;
-    }//util
 
-    public static function model($name){
-        global $disco;
-        if(isset($disco->models[$name]))
-            return $disco->models[$name];
 
-        $path = "../model/{$name}.model.php";
-        if(is_file($path)){
-            require_once($path);
-            $disco->models[$name]=new $name();
-            return $disco->models[$name];
-        }//if
-    }//model
+    /**
+     *      Handle/Resolve/Execute and return a 
+     *      method call on an instance with pass args
+     *
+     *      @param class $instance
+     *      @param functionName $method
+     *      @param array $args
+     *      @return mixed
+     */
+    public static function handle($instance,$method,$args){
+        switch (count($args)) {
+            case 0:
+                return $instance->$method();
+            case 1:
+                return $instance->$method($args[0]);
+            case 2:
+                return $instance->$method($args[0], $args[1]);
+            case 3:
+                return $instance->$method($args[0], $args[1], $args[2]);
+            case 4:
+                return $instance->$method($args[0], $args[1], $args[2], $args[3]);
+            default:
+                return call_user_func_array(array($instance, $method), $args);
+        }//switch
+    }//handle
 
+
+    /**
+     *      a router instance 
+     *
+     *      @return core/BaseRouter
+     */
     public static function router(){
         return new BaseRouter();
     }//router
 
-    public static function db(){
-        global $disco;
-        return $disco->db;
-    }//db
 
-    public static function useView($orgView){
-        $viewPath = "../view/$orgView.view.php";
-        if(file_exists($viewPath)){
-            require_once($viewPath);
-            $orgView = explode('/',$orgView);
-            if(count($orgView)==1)
-                $orgView=$orgView[0];
-            else
-                $orgView = $orgView[count($orgView)-1];
+    /**
+     *      Once a router has found a match we notify disco so we dont perform more match attempts.
+     *      Unless we have a nested router, in which case we will flip the flag back to false
+     *      to allow further processing
+     *
+     *      @param boolean $m
+     *      @return boolean
+     */
+    public static function routeMatch($m=null){
+        if($m!=null)
+            Disco::$routeMatch=$m;
 
-            global $disco;
-            $disco->view = new $orgView();
-            $disco->view->prepare();
-        }//if
+        return Disco::$routeMatch;
 
-    }//useView
+    }//routerMatch
 
-    public static function useRouter($orgRouter){
-        $routerPath = "../router/$orgRouter.router.php";
-        if(file_exists($routerPath))
+
+    /**
+    *       set a router
+    *
+    *       @param string $router
+    */
+    public static function useRouter($router){
+        $routerPath = "../app/router/$router.router.php";
+        if(file_exists($routerPath)){
             require_once($routerPath);
+            Disco::routeMatch(false);
+        }//if
     }//useRouter
 
 
 }//Disco
 
-class Model {
-    public static function m($name){
-        return Disco::model($name);
-    }//m
-}//Model
 
 
-//set the standard view
-Disco::useView('Standard');
+/*
+*       Make our DB Facade using
+*       - core/BaseMySQLiDatabase.core.php
+*       - core/facade/DB.facade.php
+*/
+Disco::make('DB',function(){
+    return new BaseMySQLiDatabase();
+});
+
+
+
+
+/*
+*       Make our View Facade using
+*       - core/BaseView.core.php
+*       - core/facade/View.facade.php
+*/
+Disco::make('View',function(){
+    return new BaseView();
+});
+
+
+
+
+/**
+*       Make our Template Facade using
+*       - core/BaseTemplate.core.php
+*       - core/facade/Template.facade.php
+*
+*/
+Disco::make('Template',function(){
+    return new BaseTemplate();
+});
+
+
+
+
+/**
+*       Make our Model Facade using
+*       - core/BaseModel.core.php
+*       - core/facade/Model.facade.php
+*
+*/
+Disco::make('Model',function(){
+    return new BaseModel();
+});
+
+
+
+/**
+*       Make our Util Facade using
+*       - core/BaseUtilities.core.php
+*       - core/facade/Util.facade.php
+*
+*/
+Disco::make('Util',function(){
+    return new BaseUtilities();
+});
+
+
+
+/*
+*       Make our Cache Facade using
+*       - core/BaseUtilities.core.php
+*       - core/facade/Util.facade.php
+*
+*/
+Disco::make('Cache',function(){
+    return new BaseCache();
+});
+
+
+
 
 ?>

@@ -9,8 +9,12 @@ Class BaseTemplate {
     private $copy = "{{&\$%1\$s}}";
     private $beingModified='';
 
+    protected static function returnBICID(){
+        return 'Template';
+    }
+
     private function loadTemplate($name){
-        $path = "../template/{$name}.template.html";
+        $path = "../app/template/{$name}.template.html";
         if(!isset($this->templates[$name]) && file_exists($path)){
             $this->templates[$name] = file_get_contents($path);
         }//if
@@ -35,7 +39,8 @@ Class BaseTemplate {
 
 
     public function with($name,$data=Array()){
-        Disco::view()->pushHTML($this->build($name,$data));
+        //Disco::view()->pushHTML($this->build($name,$data));
+        View::html($this->build($name,$data));
     }//with
 
     public function build($name,$data=Array()){
@@ -45,25 +50,25 @@ Class BaseTemplate {
 
         if(count($data)!=0){
             $this->set($data);
+
+            $testDelin = '({{\$[a-zA-Z0-9\s\"\']*}})';
+            preg_match("/{$testDelin}/",$this->beingModified,$matches);
+            if($matches){
+                foreach($matches as $m){
+                    $orgM=$m;
+                    $m = trim(trim($m,'{'),'}');
+                    $v = substr($m,0,stripos($m,' '));
+                    $d = "{$v}=null;if({$v}!=null)return {$v};";
+                    $else = trim(substr($m,stripos($m,' ')),' ');
+                    $else = str_replace(' ',' return ',$else);
+                    $eva = eval($d.$else.';');
+
+                    $this->beingModified = implode($eva,explode($orgM,$this->beingModified,2));
+
+                }//foreach
+            }//if
+
         }//if
-
-        $testDelin = '({{\$[a-zA-Z0-9\s\"\']*}})';
-        preg_match("/{$testDelin}/",$this->beingModified,$matches);
-        if($matches){
-            foreach($matches as $m){
-                $orgM=$m;
-                $m = trim(trim($m,'{'),'}');
-                $v = substr($m,0,stripos($m,' '));
-                $d = "{$v}=null;if({$v}!=null)return {$v};";
-                $else = trim(substr($m,stripos($m,' ')),' ');
-                $else = str_replace(' ',' return ',$else);
-                $eva = eval($d.$else.';');
-
-                $this->beingModified = implode($eva,explode($orgM,$this->beingModified,2));
-
-            }//foreach
-        }//if
-
 
         return $this->beingModified;
 
@@ -200,27 +205,7 @@ Class BaseTemplate {
     }//parseInfo
 
 
-}//Template
-
-Class Template {
-
-    public static function name($name){
-        return Disco::template()->name($param,$function);
-    }//name
-
-    public static function set($data){
-        return Disco::template()->set($param,$function);
-    }//set
-
-    public static function with($param,$data=Array()){
-        Disco::template()->with($param,$data);
-    }//with
-
-    public static function build($param,$data=Array()){
-        return Disco::template()->build($param,$data);
-    }//build
 
 }//Template
-
 
 ?>
