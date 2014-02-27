@@ -30,7 +30,7 @@ class BaseView {
     public $description;
 
     //set this to the path of your working project
-    public $path = 'http://disco.localhost/';
+    public $path;
 
     //name of your default stylesheet
     public $styleSheet = 'css';
@@ -51,6 +51,10 @@ class BaseView {
 
 
     public function __construct(){
+
+        if(isset($_SERVER['URL'])){
+            $this->path=$_SERVER['URL'];
+        }//if
 
         $this->title = "Default Page Title";
         $this->description = "'Default Page Description'";
