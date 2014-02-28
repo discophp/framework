@@ -13,7 +13,7 @@ class BaseMySQLiDatabase {
     public function __construct() {
         $this->connected = false;
 
-        $this->mysqli = @new mysqli('localhost', 'root', $_SERVER['DB_PASSWORD'], 'bitcoin');
+        $this->mysqli = @new mysqli($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
         if($this->mysqli->connect_error)
             die('Connect Error '.$this->mysqli->connect_errno.' '.$this->mysqli->connect_error);
         else
@@ -89,60 +89,8 @@ class BaseMySQLiDatabase {
 
 
 
-    public function encrypt_AES128($input){
-    
-        $cipher = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-        $key128 = '9324414997743825'; //16 length key (counting from 1)
-        $iv =  '1482030241932178'; //16 length key (counting from 1)
-
-        if (mcrypt_generic_init($cipher, $key128, $iv) != -1) {
-            $cipherText = mcrypt_generic($cipher,$input);
-            mcrypt_generic_deinit($cipher);
-        }//if
-
-        return bin2hex($cipherText);
-    }//AES128
-
-
-
-    public function decrypt_AES128($crypt){
-        $cipher = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-        $key128 = '9324414997743825'; //16 length key (counting from 1)
-        $iv =  '1482030241932178'; //16 length key (counting from 1)
-
-        if (mcrypt_generic_init($cipher, $key128, $iv) != -1) {
-            $cipherText = mcrypt_generic($cipher,$crypt);
-            mcrypt_generic_deinit($cipher);
-        }//end if
-
-        return bin2hex($cipherText);
-    }//end AES128
-
-
-
-    public function pwHash($pw){
-        return hash('sha512',"RANDOMSTRING234234{$pw}MORERANDOM234324");
-    }//pwHash
 
 }//class DataBase
-
-
-//class DB {
-//    public static function query($q){
-//        Disco::db()->executeQUery($q);
-//    }//query
-//
-//    public static function last(){
-//        return Disco::db()->last;
-//    }//last
-//
-//    public static function sp($q){
-//        return Disco::db()->sp($q);
-//    }////sp
-//
-//}//DB
-
-
 
 
 ?>

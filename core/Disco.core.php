@@ -24,14 +24,6 @@ Class Disco {
      *      @param string $name
      *      @param closure $callback
      */
-    //public static function make($name,$callback){
-    //    global $disco;
-    //    if(!isset($disco->facades[$name]))
-    //        $disco->facades[$name]=$callback;
-    //    else 
-    //        $disco->facades[$name]=$callback;
-    //}//make
-
     public static function make($name,$callback){
         if(!isset(Disco::$facades[$name]))
             Disco::$facades[$name]=$callback;
@@ -183,6 +175,18 @@ Disco::make('Util',function(){
 */
 Disco::make('Cache',function(){
     return new BaseCache();
+});
+
+
+
+/*
+*       Make our Crypt Facade using
+*       - core/BaseCrypt.core.php
+*       - core/facade/Crypt.facade.php
+*
+*/
+Disco::make('Crypt',function(){
+    return new BaseCrypt();
 });
 
 
