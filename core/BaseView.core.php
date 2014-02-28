@@ -72,7 +72,7 @@ class BaseView {
 
         //provide the same end point url as a javascript variable for use
         //      provides consistency 
-        $this->pushScript('var endPoint="'.$this->path.'";');
+        $this->script('var endPoint="'.$this->path.'";');
 
     }//construct
 
