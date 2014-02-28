@@ -11,15 +11,15 @@ class BaseEmail {
     }//construct
 
     public function useSSL(){
-        $this->settings->DEFAULT="SSL";
+        $this->settings->{'DEFAULT'}="SSL";
     }//useSSL
 
     public function useTLS(){
-        $this->settings->DEFAULT="TLS";
+        $this->settings->{'DEFAULT'}="TLS";
     }//useSSL
 
     public function useSMTP(){
-        $this->settings->DEFAULT="SMTP";
+        $this->settings->{'DEFAULT'}="SMTP";
     }//useSMTP
 
     public function send($account,$toEmail,$subject,$body,$attach=null){
@@ -57,15 +57,15 @@ class BaseEmail {
          
         try {
             //Create the Transport
-            $type = $this->settings->DEFAULT;
-            $server = $this->settings->{$type}->HOST;
-            $port = $this->settings->{$type}->PORT;
+            $type = $this->settings->{'DEFAULT'};
+            $server = $this->settings->{$type}->{'HOST'};
+            $port = $this->settings->{$type}->{'PORT'};
 
             $type = strtolower($type);
 
             $transport = Swift_SmtpTransport::newInstance($server,$port,$type);
-            $transport->setUsername($this->settings->ACCOUNTS[$account]->USER);
-            $transport->setPassword($this->settings->ACCOUNTS[$account]->PASSWORD);      
+            $transport->setUsername($this->settings->{$account}->{'USER'});
+            $transport->setPassword($this->settings->{$account}->{'PASSWORD'});
             
             // Create the Mailer using the Transport
             $mailer = Swift_Mailer::newInstance($transport);
