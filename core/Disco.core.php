@@ -1,6 +1,6 @@
 <?php
 
-$composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor'
+$composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
 require_once("../{$composerPath}/autoload.php");
 
 require_once('Prep.core.php');
