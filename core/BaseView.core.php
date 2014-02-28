@@ -164,17 +164,17 @@ class BaseView {
 
         echo $this->metaHeader();
 
-        echo '<div id="bottom-page" class="row">';
+        echo '<div id="body">';
             $this->HTMLDump();
         echo '</div>';//close #bottom-page
 
         //print the header 
         echo "
-            <div id='top-page' class='row'>
+            <div id='header'>
             ".(($this->header=='')?$this->header():$this->header)."
             </div>
 
-            <div id='footer' class='row'>
+            <div id='footer'>
             ".(($this->footer=='')?$this->footer():$this->footer)."
             </div>
             ";
@@ -295,7 +295,7 @@ class BaseView {
     private function printScriptSrcs(){
         $scripts='';
         foreach($this->scriptSrcs as $s){
-           $scripts.="<script type='text/javascript' src='{$s}.js'></script>"; 
+           $scripts.="<script type='text/javascript' src='{$s}'></script>"; 
         }//foreach
         return $scripts;
     }//printScriptSrcs
@@ -320,7 +320,7 @@ class BaseView {
     private function printStyleSrcs(){
         $styles = '';
         foreach($this->styleSrcs as $s){
-            $styles.= "<link rel='stylesheet' href='{$this->path}css/{$s}.css' type='text/css'/>";
+            $styles.= "<link rel='stylesheet' href='{$s}' type='text/css'/>";
         }//foreach
         return $styles;
     }//printStyleSrcs
