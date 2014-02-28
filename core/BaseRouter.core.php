@@ -30,10 +30,13 @@ class BaseRouter {
     }//destruct
 
     public function get($param,$function){
-        $this->param=$param;
-        if(count($_POST)>0)
-            $function='';
+        if(count($_POST)>0){
+            $this->function=null;
+            $this->param=null;
+            return $this;
+        }//if
         $this->function=$function;
+        $this->param=$param;
         return $this;
     }//get
 
@@ -45,7 +48,9 @@ class BaseRouter {
 
     public function post($param,$function){
         if(count($_POST)==0){
-            return false;
+            $this->param=null;
+            $this->function=null;
+            return $this;
         }//if
         $this->param=$param;
         $this->function=$function;
