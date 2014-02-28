@@ -1,9 +1,10 @@
 <?php
 
-require_once('../vendor/autoload.php');
+$composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor'
+require_once("../{$composerPath}/autoload.php");
 
 require_once('Prep.core.php');
-require_once('Controller.core.php');
+//require_once('Controller.core.php');
 
 
 //      The $
@@ -13,7 +14,8 @@ Class Disco {
     //      Has a router matched a request
     public static $routeMatch=false;
 
-
+    //      Our Facades
+    public static $facades=Array();
 
     /**
      *      Store a facade for potential use at
@@ -22,20 +24,27 @@ Class Disco {
      *      @param string $name
      *      @param closure $callback
      */
-    public static function make($name,$callback){
-        global $disco;
-        if(!isset($disco->facades[$name]))
-            $disco->facades[$name]=$callback;
-        else 
-            $disco->facades[$name]=$callback;
-    }//make
+    //public static function make($name,$callback){
+    //    global $disco;
+    //    if(!isset($disco->facades[$name]))
+    //        $disco->facades[$name]=$callback;
+    //    else 
+    //        $disco->facades[$name]=$callback;
+    //}//make
 
+    public static function make($name,$callback){
+        if(!isset(Disco::$facades[$name]))
+            Disco::$facades[$name]=$callback;
+        else 
+            Disco::$facades[$name]=$callback;
+    }//make
 
 
 
     /**
      *      Handle/Resolve/Execute and return a 
-     *      method call on an instance with pass args
+     *      method call on an instance 
+     *      with passed args
      *
      *      @param class $instance
      *      @param functionName $method

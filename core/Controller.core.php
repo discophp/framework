@@ -1,16 +1,9 @@
 <?php
-define('DOCUMENT_ROOT',dirname(realpath(__FILE__)).'/');
-
 
 class Controller {
-    public $db;
-    public $view;
     public $models=Array();
-    public $facades=Array();
-    public $router;
-    public $template;
+    //public $facades=Array();
     public $user;
-    public $util;
     public $loggedIn=false;
 
     // protect a directories access past index.php with a session name
@@ -51,23 +44,7 @@ class Controller {
 }//Control
 
 
-$disco = new Controller();
-
-//require_once('BaseView.core.php');
-//$disco->view = new BaseView();
-
-//require_once('BaseTemplate.core.php');
-//$disco->template = new BaseTemplate();
-
-//require_once('Utilities.core.php');
-//$disco->util = new Utilities();
-
-//require_once('Database.core.php');
-//$disco->db = new Database();
-
-//require_once('BaseRouter.core.php');
-
-//$disco->setUp();
+//$disco = new Controller();
 
 
 ?>
