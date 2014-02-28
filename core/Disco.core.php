@@ -4,7 +4,6 @@ $composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'ve
 require_once("../{$composerPath}/autoload.php");
 
 require_once('Prep.core.php');
-//require_once('Controller.core.php');
 
 
 //      The $
@@ -187,6 +186,17 @@ Disco::make('Cache',function(){
 */
 Disco::make('Crypt',function(){
     return new BaseCrypt();
+});
+
+
+/*
+*       Make our Email Facade using
+*       - core/BaseEmail.core.php
+*       - core/facade/Email.facade.php
+*
+*/
+Disco::make('Email',function(){
+    return new BaseEmail();
 });
 
 
