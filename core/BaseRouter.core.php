@@ -17,7 +17,7 @@ class BaseRouter {
                     $obj = new $ctrl[0];
                     $vars = Array();
 
-                    if(is_array($this->variables))
+                    if(count($this->variables)>0)
                         foreach($this->variables as $k=>$v)
                             $vars[]=$v;
 
