@@ -201,5 +201,15 @@ Disco::make('Email',function(){
 
 
 
+/*
+*       Make our Session Facade using
+*       - core/BaseSession.core.php
+*       - core/facade/Session.facade.php
+*
+*/
+Disco::make('Session',function(){
+    return new BaseSession();
+});
+
 
 ?>

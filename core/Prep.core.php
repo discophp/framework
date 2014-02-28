@@ -1,5 +1,8 @@
 <?php
 
+ini_set('session.use_trans_sid',0);
+ini_set('session.use_only_cookies',1);
+
 if(is_file('../.env.local.json')){
     $env=json_decode(file_get_contents('../.env.local.json'));
     foreach($env as $k=>$v){
