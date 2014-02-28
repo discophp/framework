@@ -6,7 +6,7 @@ class BaseSession {
      *      Start up our session
      *      and do some security checks
     */
-    private function __construct(){
+    public function __construct(){
         session_start();
 
         if(!isset($_SESSION['IP_REFER_CHECK']))

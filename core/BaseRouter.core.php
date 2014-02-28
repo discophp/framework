@@ -16,8 +16,11 @@ class BaseRouter {
                     $ctrl = explode('@',$this->function);
                     $obj = new $ctrl[0];
                     $vars = Array();
-                    foreach($this->variables as $k=>$v)
-                        $vars[]=$v;
+
+                    if(is_array($this->variables))
+                        foreach($this->variables as $k=>$v)
+                            $vars[]=$v;
+
                     Disco::handle($obj,$ctrl[1],$vars);
                 }//if
             }//if
@@ -115,9 +118,6 @@ class BaseRouter {
 
             if($param==$_SERVER['REQUEST_URI']){
                 $this->variables=$variables;
-                //echo "Param: $param  ||";
-                //echo "url: {$_SERVER['REQUEST_URI']}  ||";
-
                 return true;
             }//if
             else 
