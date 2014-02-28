@@ -18,6 +18,10 @@ class BaseEmail {
         $this->settings->DEFAULT="TLS";
     }//useSSL
 
+    public function useSMTP(){
+        $this->settings->DEFAULT="SMTP";
+    }//useSMTP
+
     public function send($account,$toEmail,$subject,$body,$attach=null){
 
         // Approach 1: Change the global setting (suggested)
