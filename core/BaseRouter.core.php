@@ -1,17 +1,33 @@
 <?php
 
 class BaseRouter {
+
+    //      url path to match
     private $param;
-    private $haveMatch = false;
-    private $ctrlerRequest=false;
+
+    //      action to take if matched
     private $function;
+
+    //      did we find a match?
+    private $haveMatch = false;
+
+    //      where restrictions
     private $variableRestrictions = Array();
 
+
+    /*
+     *      When we tear down the object is when we do the work
+     *      Find if there is a match and take the appropriate action
+    */
     public function __destruct(){
 
+        //have no match already and this matches?
         if(!Disco::routeMatch() && $this->match($this->param)){
             Disco::routeMatch(true);
+
             if(!$this->function instanceof Closure){
+
+                //is a controller being requested?
                 if(stripos($this->function,'@')!==false){
                     $ctrl = explode('@',$this->function);
                     $obj = new $ctrl[0];
@@ -32,6 +48,17 @@ class BaseRouter {
 
     }//destruct
 
+
+
+    /**
+     *      Match a get url route
+     *
+     *
+     *      @param string   $param
+     *      @param mixed    $function
+     *      
+     *      @return object
+     */
     public function get($param,$function){
         if(count($_POST)>0){
             $this->function=null;
@@ -43,12 +70,32 @@ class BaseRouter {
         return $this;
     }//get
 
+
+    /**
+     *      Match a any url route
+     *
+     *
+     *      @param string   $param
+     *      @param mixed    $function
+     *      
+     *      @return object
+     */
     public function any($param,$function){
         $this->param=$param;
         $this->function=$function;
         return $this;
     }//any
 
+
+    /**
+     *      Match a post url route
+     *
+     *
+     *      @param string   $param
+     *      @param mixed    $function
+     *      
+     *      @return object
+     */
     public function post($param,$function){
         if(count($_POST)==0){
             $this->param=null;
@@ -60,6 +107,13 @@ class BaseRouter {
         return $this;
     }//post
 
+
+    /**
+     *      Add where variables restrictions
+     *
+     *      @param mixed    $k
+     *      @param mixed    $v
+     */
     public function where($k,$v){
         if(is_array($k)){
             $this->variableRestrictions = $v;
@@ -68,6 +122,14 @@ class BaseRouter {
         $this->variableRestrictions[$k]=$v;
     }//where
 
+
+    /**
+     *      Match a url route against the $param
+     *
+     *      @param string $param
+     *
+     *      @return boolean
+     */
     private function match($param){
         $url = $_SERVER['REQUEST_URI'];
 
@@ -125,11 +187,11 @@ class BaseRouter {
 
         }//if
 
-
         return false;
     }//match
 
 }//Router
+
 
 class Router {
 
