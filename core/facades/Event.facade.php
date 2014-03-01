@@ -2,7 +2,7 @@
 
 class Event extends Facade {
     
-    protected static function reutrnFacadeId(){
+    protected static function returnFacadeId(){
         return 'Event';
     }//returnFacadeId
 
