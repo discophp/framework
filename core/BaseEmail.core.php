@@ -3,25 +3,52 @@
 
 class BaseEmail {
     private $settings;
-
+    
+    /**
+     *      get our email settings
+     */
     public function __construct(){
         if(is_file('../.mail.settings.json')){
             $this->settings=json_decode(file_get_contents('../.mail.settings.json'));
         }//if
     }//construct
 
+
+    /**
+     *      Use SSL protocol to send email
+    */
     public function useSSL(){
         $this->settings->{'DEFAULT'}="SSL";
     }//useSSL
 
+
+    /**
+     *      Use TLS protocol to send email 
+    */
     public function useTLS(){
         $this->settings->{'DEFAULT'}="TLS";
     }//useSSL
 
+
+    /**
+     *      Use SMTP protocol to send email
+    */
     public function useSMTP(){
         $this->settings->{'DEFAULT'}="SMTP";
     }//useSMTP
 
+
+    /**
+    *       Send an email through a specified account
+    *
+    *       @param string   $account
+    *       @param mixed    $toEmail
+    *       @param string   $subject
+    *       @param string   $body
+    *       @param array    $attach
+    *
+    *       @return boolean
+    */
     public function send($account,$toEmail,$subject,$body,$attach=null){
 
         // Approach 1: Change the global setting (suggested)
