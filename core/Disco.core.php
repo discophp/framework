@@ -212,4 +212,16 @@ Disco::make('Session',function(){
 });
 
 
+/*
+*       Make our Event Facade using
+*       - core/BaseEvent.core.php
+*       - core/facade/Event.facade.php
+*
+*/
+Disco::make('Event',function(){
+    return new BaseEvent();
+});
+
+
+
 ?>
