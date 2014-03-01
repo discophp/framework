@@ -2,17 +2,28 @@
 
 Class BaseTemplate {
 
+    //      Store our accessed templates
     public $templates = Array();
+
+    //      name of the working template
     private $workingTemplate='';
-    private $delin = "{{\$%1\$s}}";
-    private $testdelin = Array('({{\$','','[a-zA-Z0-9\s\"\']+}})');
-    private $copy = "{{&\$%1\$s}}";
+
+    //      html of template being manipulated
     private $beingModified='';
 
-    protected static function returnBICID(){
-        return 'Template';
-    }
+    //      how we access variables
+    private $delin = "{{\$%1\$s}}";
 
+    //      how we access copies of a variable
+    private $copy = "{{&\$%1\$s}}";
+
+
+
+    /**
+     *      Load a template from disk
+     *
+     *      @param string $name
+    */
     private function loadTemplate($name){
         $path = "../app/template/{$name}.template.html";
         if(!isset($this->templates[$name]) && file_exists($path)){
@@ -20,6 +31,12 @@ Class BaseTemplate {
         }//if
     }//getTemplate
 
+
+    /**
+     *      Get the current template
+     *
+     *      @return string
+    */
     private function getWorkingTemplate(){
         if(!isset($this->templates[$this->workingTemplate])){
             $this->loadTemplate($this->workingTemplate);        
@@ -27,22 +44,48 @@ Class BaseTemplate {
         return $this->templates[$this->workingTemplate];
     }//getWorkingTempalte
 
+
+    /**
+     *      work on a specific template
+     *
+     *      @return object
+     */
     public function name($name){
         $this->workingTemplate=$name;
         $this->beingModified=$this->getWorkingTemplate();
         return $this;
     }//use
 
+
+    /**
+     *      get the markup of the active template
+     *
+     *      @return string
+    */
     public function html(){
        return $this->beingModified; 
     }//return
 
 
+    /**
+     *      build a template and push its html
+     *      onto the Views html stack
+     *
+     *      @param string $name
+     *      @param array $data
+    */
     public function with($name,$data=Array()){
-        //Disco::view()->pushHTML($this->build($name,$data));
         View::html($this->build($name,$data));
     }//with
 
+
+    /**
+     *      build a template 
+     *
+     *      @param string $name
+     *      @param array $data
+     *      @return string
+    */
     public function build($name,$data=Array()){
         $this->workingTemplate=$name;
         $this->beingModified = $this->getWorkingTemplate();
@@ -75,6 +118,12 @@ Class BaseTemplate {
     }//returnData
 
 
+    /**
+     *      Set data into the template
+     *
+     *      @param array $data
+     *      @return object
+    */
     public function set($data){
         $t = $this->beingModified;
         $arrays = Array();
@@ -87,7 +136,6 @@ Class BaseTemplate {
                 $arrays[]=$v;
                 continue;
             }//if
-
 
 
             if(is_numeric($k)){
@@ -111,7 +159,6 @@ Class BaseTemplate {
                 $t = implode($v,explode($matches[0],$t,1));
 
 
-
             $this->beingModified=$t;
 
             unset($data[$k]);
@@ -130,12 +177,18 @@ Class BaseTemplate {
 
         }//foreach
 
-
         return $this;
 
     }//setData
 
 
+
+    /**
+     *      append nested templates
+     *
+     *      @param array $data
+     *      @return string
+    */
     private function appendTemplate($data){
         $t = $this->beingModified;
         if(!$data){
@@ -155,6 +208,17 @@ Class BaseTemplate {
         return $t;
     }//appendTemplate
 
+
+
+    /**
+     *      inject the template into the calling template
+     *
+     *      @param array $data
+     *      @param string $k
+     *      @param mixed $v
+     *      @param string $t
+     *      @return string
+    */
     private function insertTemplate($data,$k,$v,$t){
         $this->loadTemplate($data['templateName']);
 
@@ -174,6 +238,15 @@ Class BaseTemplate {
 
     }//insert
 
+
+
+    /**
+     *      get any nested templates names that need to be injected
+     *      
+     *      @param string $k
+     *      @param string $t
+     *      @return mixed
+    */
     private function parseInfo($k,$t){
         $pos = stripos($t,"{{\${$k} with @");
         $data = Array('templateName'=>'','textBlock'=>'','justTemplate'=>false);
