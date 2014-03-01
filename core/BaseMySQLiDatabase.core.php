@@ -1,9 +1,8 @@
 <?php
-class BaseMySQLiDatabase {
+class BaseMySQLiDatabase extends mysqli {
 
 
-    public $mysqli;
-    public $connected;
+    public $connected=false;
     private $queryCache = array();
     private $dataCache = array();
     public $last;
@@ -11,11 +10,14 @@ class BaseMySQLiDatabase {
     
 
     public function __construct() {
-        $this->connected = false;
 
-        $this->mysqli = @new mysqli($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
-        if($this->mysqli->connect_error)
-            die('Connect Error '.$this->mysqli->connect_errno.' '.$this->mysqli->connect_error);
+        parent::__construct($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
+        //$this->mysqli = @new mysqli($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
+        if($this->connect_error){
+            TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
+            Util::death();
+            die(0);
+        }//if
         else
             $this->connected = true;
 
@@ -23,9 +25,8 @@ class BaseMySQLiDatabase {
 
 
     public function __destruct(){
-        $id = $this->mysqli->thread_id;
-        $this->mysqli->kill($id);
-        $this->mysqli->close();
+        if($this->connected)
+            $this->close();
     }//deconstruct
 
 
@@ -39,38 +40,60 @@ class BaseMySQLiDatabase {
             $inc = stripslashes($inc);
         }//if
 
-        $inc = $this->mysqli->real_escape_string($inc);
+        $inc = $this->real_escape_string($inc);
 
        return $inc; 
     }//clean
 
-    public function query($q){
-        return $this->executeQuery($q);
-    }//query
+    public function query($q,$args=null){
 
-    public function executeQuery($query){
-        if(!$result = $this->mysqli->query($query)){
-            echo $this->mysqli->error;
-            trigger_error('Error executing query',E_USER_ERROR);
+        $q = $this->set($q,$args);
+
+        if(!$result = parent::query($q)){
+            trigger_error('DB::Error executing query - '.$this->error,E_USER_ERROR);
             return false;
         }//if
         else{
             $this->last = $result;
-            $this->lastID = $this->mysqli->insert_id;
+            $this->lastID = $this->insert_id;
             return $result;
         }//el
-    }//executeQuery
+    }//query
+
+    private function set($q,$args){
+        if($args!=null){
+            if(is_array($args)){
+                foreach($args as $a){
+                    $q=implode($this->prepareType($a),explode('?',$q,2));
+                }//foreach
+            }//if
+            else {
+                $q=implode($this->prepareType($args),explode('?',$q,2));
+            }//el
+        }//if
+
+        return $q;
+
+    }//set
+
+    private function prepareType($arg){
+        $arg = $this->clean($arg);
+        if(!is_numeric($arg))
+            return "'$arg'";
+        return $arg;
+    }//wrapStrings
 
 
-
-    public function sp($q){
+    public function sp($q,$args=null){
         $rows = Array();
 
-        if(!$this->mysqli->multi_query($q)){
-            return false;
+        $q = $this->set($q,$args);
+
+        if(!$this->multi_query($q)){
+            return null;
         }//if
         do {
-            if($result = $this->mysqli->store_result()){
+            if($result = $this->store_result()){
         
                 while($row = $result->fetch_assoc()){
                     $rows[]= $row;
@@ -79,10 +102,10 @@ class BaseMySQLiDatabase {
                 $result->free();
             }//if
             else {
-                return false;
+                break;
             }//e
         }//do
-        while($this->mysqli->more_results() && $this->mysqli->next_result());
+        while($this->more_results() && $this->next_result());
 
         return $rows;
     }//executeSP
