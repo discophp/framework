@@ -83,7 +83,7 @@ class BaseSession {
     }//reset
 
 
-    /*
+    /**
      *      Clear all session variables
     */
     public function flush(){
