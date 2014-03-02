@@ -20,7 +20,7 @@ class BaseEvent {
             $keys = array_keys($this->events[$event]['actions']);
 
             if(count($keys)>1)
-                $keys = ksort($keys);
+                rsort($keys);
 
             foreach($keys as $k){
                 $action = $this->events[$event]['actions'][$k];
