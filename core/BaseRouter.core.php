@@ -116,7 +116,7 @@ class BaseRouter {
      */
     public function where($k,$v){
         if(is_array($k)){
-            $this->variableRestrictions = $v;
+            $this->variableRestrictions = $k;
             return;
         }//if
         $this->variableRestrictions[$k]=$v;
