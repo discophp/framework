@@ -24,7 +24,7 @@ abstract class Facade {
 
 
 
-    abstract protected function returnFacadeId();
+    abstract protected static function returnFacadeId();
 
 
 
