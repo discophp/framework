@@ -8,7 +8,7 @@ ini_set('session.use_only_cookies',1);
 
 
 //Load our local settings
-$hostName = shell_exec('hostname');
+$hostName = trim(shell_exec('hostname'),"\n");
 if(is_file("../.env.{$hostName}.json")){
     $env=json_decode(file_get_contents("../.env.{$hostName}.json"));
     foreach($env as $k=>$v){
