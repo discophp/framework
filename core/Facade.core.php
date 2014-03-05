@@ -24,6 +24,10 @@ abstract class Facade {
 
 
 
+    abstract protected function returnFacadeId();
+
+
+
 }//BaseInstanceController
 
 ?>
