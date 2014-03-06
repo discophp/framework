@@ -77,15 +77,6 @@ class BaseView {
     }//construct
 
 
-    /**
-     *      Allow the page to be printed by echoing
-     *      the Template object.
-     */
-    public function __toString(){
-        $this->printPage();
-    }//toString
-
-
 
     /**
      *      @return html
