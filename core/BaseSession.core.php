@@ -90,6 +90,15 @@ class BaseSession {
         session_unset();
     }//flush
 
+
+    /**
+     *      Destroy A session
+     */
+    public function destroy(){
+        session_destroy();
+    }//destroy
+
+
 }//BaseSession
 
 ?>
