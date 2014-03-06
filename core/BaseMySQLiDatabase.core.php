@@ -6,8 +6,6 @@ class BaseMySQLiDatabase extends mysqli {
     private $queryCache = array();
     private $dataCache = array();
     public $last;
-    public $lastID=0;
-    
 
     public function __construct() {
 
@@ -55,10 +53,13 @@ class BaseMySQLiDatabase extends mysqli {
         }//if
         else{
             $this->last = $result;
-            $this->lastID = $this->insert_id;
             return $result;
         }//el
     }//query
+
+    public function lastId(){
+        return $this->insert_id;
+    }//lastId
 
     private function set($q,$args){
         if($args!=null){
