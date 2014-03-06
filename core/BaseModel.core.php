@@ -14,6 +14,10 @@ class BaseModel {
 
     }//use
 
+    public function __invoke($name){
+        return $this->m($name);
+    }//__invoke
+
 }//Model
 
 
