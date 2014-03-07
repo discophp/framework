@@ -144,12 +144,12 @@ Disco::make('Template',function(){
 
 /**
 *       Make our Model Facade using
-*       - core/BaseModel.core.php
+*       - core/ModelFactory.core.php
 *       - core/facade/Model.facade.php
 *
 */
 Disco::make('Model',function(){
-    return new BaseModel();
+    return new ModelFactory();
 });
 
 
