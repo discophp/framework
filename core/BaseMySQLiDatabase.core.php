@@ -61,7 +61,7 @@ class BaseMySQLiDatabase extends mysqli {
         return $this->insert_id;
     }//lastId
 
-    private function set($q,$args){
+    public function set($q,$args){
         if($args!=null){
             if(is_array($args)){
                 foreach($args as $a){
