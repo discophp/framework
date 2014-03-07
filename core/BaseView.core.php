@@ -186,6 +186,8 @@ class BaseView {
 
     /**
      *      Is a request Ajax?
+     *
+     *      @return void
     */
     public function isAjax(){
         $this->isAjax=true;
@@ -196,10 +198,11 @@ class BaseView {
      *      Print an ajax request 
      *      Will not contain any meta head info
      *      only html bits and added scripts
+     *
+     *      @return void
     */
     private function printAjaxPage(){
         echo $this->HTMLDump();
-        echo $this->printScripts();
     }//printAjaxPage
 
 
