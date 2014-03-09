@@ -1,27 +1,52 @@
 <?php
 
+/**
+ *      This is the core code for the Disco PHP Framework.
+ *      It is distributed under the Apache Lisence v2.0.
+ *
+ *      This file contains all the necessary bootstrapping code to pick the 
+ *      application up off its feet and assemble the pieces needed to complete the
+ *      request.
+ *
+*/
+
+
+
 $composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
-require_once("../{$composerPath}/autoload.php");
+require("../{$composerPath}/autoload.php");
 
-require_once('Prep.core.php');
+require('Prep.core.php');
 
 
-//      The $
+/**
+ *      Our applications primary Controller. 
+ *
+*/
 Class Disco {
 
 
-    //      Has a router matched a request
+    /**
+     *      Has a router matched a request.
+    */
     public static $routeMatch=false;
 
-    //      Our Facades
+
+
+    /**
+     *      Facades.
+    */
     public static $facades=Array();
+
+
 
     /**
      *      Store a facade for potential use at
      *      some point in the applications life cycle
      *
+     *
      *      @param string $name
      *      @param closure $callback
+     *      @return void
      */
     public static function make($name,$callback){
         if(!isset(Disco::$facades[$name]))
@@ -36,6 +61,7 @@ Class Disco {
      *      Handle/Resolve/Execute and return a 
      *      method call on an instance 
      *      with passed args
+     *
      *
      *      @param class $instance
      *      @param functionName $method
@@ -63,6 +89,7 @@ Class Disco {
     /**
      *      a router instance 
      *
+     *
      *      @return core/BaseRouter
      */
     public static function router(){
@@ -73,7 +100,8 @@ Class Disco {
     /**
      *      Once a router has found a match we notify disco so we dont perform more match attempts.
      *      Unless we have a nested router, in which case we will flip the flag back to false
-     *      to allow further processing
+     *      to allow further processing.
+     *
      *
      *      @param boolean $m
      *      @return boolean
@@ -88,15 +116,17 @@ Class Disco {
 
 
     /**
-    *       set a router
+    *       Set a router.
+    *
     *
     *       @param string $router
+    *       @return void
     */
     public static function useRouter($router){
         $routerPath = "../app/router/$router.router.php";
         if(file_exists($routerPath)){
             Disco::$routeMatch=false;
-            require_once($routerPath);
+            require($routerPath);
         }//if
     }//useRouter
 
@@ -105,7 +135,7 @@ Class Disco {
 
 
 
-/*
+/**
 *       Make our DB Facade using
 *       - core/BaseMySQLiDatabase.core.php
 *       - core/facade/DB.facade.php
@@ -117,7 +147,7 @@ Disco::make('DB',function(){
 
 
 
-/*
+/**
 *       Make our View Facade using
 *       - core/BaseView.core.php
 *       - core/facade/View.facade.php
@@ -166,7 +196,7 @@ Disco::make('Util',function(){
 
 
 
-/*
+/**
 *       Make our Cache Facade using
 *       - core/BaseUtilities.core.php
 *       - core/facade/Util.facade.php
@@ -178,7 +208,7 @@ Disco::make('Cache',function(){
 
 
 
-/*
+/**
 *       Make our Crypt Facade using
 *       - core/BaseCrypt.core.php
 *       - core/facade/Crypt.facade.php
@@ -189,7 +219,7 @@ Disco::make('Crypt',function(){
 });
 
 
-/*
+/**
 *       Make our Email Facade using
 *       - core/BaseEmail.core.php
 *       - core/facade/Email.facade.php
@@ -201,7 +231,7 @@ Disco::make('Email',function(){
 
 
 
-/*
+/**
 *       Make our Session Facade using
 *       - core/BaseSession.core.php
 *       - core/facade/Session.facade.php
@@ -212,7 +242,7 @@ Disco::make('Session',function(){
 });
 
 
-/*
+/**
 *       Make our Event Facade using
 *       - core/BaseEvent.core.php
 *       - core/facade/Event.facade.php
