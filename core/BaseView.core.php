@@ -2,49 +2,79 @@
 
 class BaseView {
 
-    //hold html bits
+    /**
+    *       hold html bits
+    */
     private $html = Array();
 
-    //hold script(js) bits
+    /**
+     *      hold script(js) bits
+    */
     private $scripts = Array();
 
-    //hold script(js) URLs 
+    /**
+     *      hold script(js) URLs 
+    */
     private $scriptSrcs = Array();
 
-    //hold style(css) bits
+    /**
+     *      hold style(css) bits
+    */
     private $styles = Array();
 
-    //hold style(css) URLs 
+    /**
+     *      hold style(css) URLs 
+    */
     private $styleSrcs = Array();
 
-    //hold classes to apply to the body element
+    /**
+     * hold classes to apply to the body element
+    */
     private $bodyStyles = Array();
 
-    //page title
+    /**
+     *      page title
+    */
     public $title;
 
-    //page description
+    /**
+     *      page description
+    */
     public $description;
 
-    //set this to the path of your working project
+    /**
+     *      set this to the path of your working project
+    */
     public $path;
 
-    //name of your default stylesheet
+    /**
+     *      name of your default stylesheet
+    */
     public $styleSheet = 'css';
 
-    //name of your default javascript file
+    /**
+     *      name of your default javascript file
+    */
     public $script = 'js';
 
-    //html mark up of our header
+    /**
+     *      html mark up of our header
+    */
     public $header='';
 
-    //html mark up of our footer
+    /**
+     *      html mark up of our footer
+    */
     public $footer='';
 
-    //is the request AJAX?
+    /**
+     *      is the request AJAX?
+    */
     private $isAjax=false;
 
-    //how should it be scraped
+    /**
+     *      how should it be scraped
+    */
     private $indexes = Array(
         0=>'index,follow',
         1=>'noindex,nofollow',
@@ -52,12 +82,18 @@ class BaseView {
         3=>'noindex,follow'
     );
     
-    //standard scrape
+    /**
+     *      standard scrape
+    */
     public $activeIndex=0;
+
 
 
     /**
     *      Default Constructor
+    *
+    *
+    *      @return void
     */
     public function __construct(){
 
@@ -66,20 +102,18 @@ class BaseView {
             $this->path=$_SERVER['URL'];
         }//if
 
-        $this->title = "Default Page Title";
+        $this->title = "";
         $this->description = "";
-
-
-        //provide the same end point url as a javascript variable for use
-        //      provides consistency 
-        $this->script('var endPoint="'.$this->path.'";');
 
     }//construct
 
 
 
     /**
-     *      @return html
+     *      Get the markup set for the view header
+     *  
+     *
+     *      @return string $this->header 
     */
     public function header(){
         return $this->header;;
@@ -88,32 +122,47 @@ class BaseView {
 
 
     /**
-     *      @param html
+     *      Set the markup for the view header
+     *      
+     *
+     *      @param string $html the markup
     */
     public function setHeader($html){
         $this->header = $html;
     }//setHeader
 
 
+
     /**
-     *      @return html
+     *      Get the markup set for the view footer
+     *      
+     *
+     *      @return string $this->footer
     */
     public function footer(){
         return $this->footer;
     }//footer
 
 
+
     /**
-     *      @param string $html
+     *      Set the markup for the view footer
+     *
+     *
+     *      @param string $html the markup
     */
     public function setFooter($html){
         $this->footer = $html;
     }//setFooter
 
 
+
     /**
-     *      @return html
-    */
+     *      Return the markup for the Views <head></head> element
+     *
+     *
+     *      @return string 
+   */
     private function metaHeader(){
 
         $metaHeader = " 
@@ -145,15 +194,20 @@ class BaseView {
             $this->description,
             $this->printStyles(),
             $this->printStyleSrcs(),
-            $this->printBodyStyles(),
+            $this->bodyStyles(),
             $this->indexes[$this->activeIndex]
         );
 
     }//buildMetaHeader
 
+
+
     /**
      *      This function handles putting togethor
      *      and echoing the pieces that make up the View
+     *
+     *
+     *      @return void
     */
     public function printPage(){
 
@@ -162,13 +216,15 @@ class BaseView {
             return;
         }//isAjax
 
+        //print the metaheader
         echo $this->metaHeader();
 
+        //print the body
         echo '<div id="body">';
             $this->HTMLDump();
-        echo '</div>';//close #bottom-page
+        echo '</div>';
 
-        //print the header 
+        //print the header  & footer
         echo "
             <div id='header'>
             ".(($this->header=='')?$this->header():$this->header)."
@@ -179,13 +235,15 @@ class BaseView {
             </div>
             ";
 
+        //print the closing page info and markup 
         $this->printFooter();
 
     }//printPage
 
 
+
     /**
-     *      Is a request Ajax?
+     *      Set that a request is AJAX 
      *
      *      @return void
     */
@@ -194,8 +252,9 @@ class BaseView {
     }//isAjaxa
 
 
+
     /**
-     *      Print an ajax request 
+     *      Print an ajax request.
      *      Will not contain any meta head info
      *      only html bits and added scripts
      *
@@ -206,8 +265,12 @@ class BaseView {
     }//printAjaxPage
 
 
+
     /**
-     *      the footer
+     *     Return the closing of the page and the scripts and script srcs 
+     *
+     *
+     *     @return void
     */
     public function printFooter(){
         echo "
@@ -218,32 +281,48 @@ class BaseView {
     }//printFooter
 
 
+
     /**
-     *      @param string $t
+     *      Set the title of the view.
+     *
+     *
+     *      @param string $t the title of the page
     */
     public function title($t){
         $this->title=$t;
     }//setTitle
 
 
+
     /**
-     *      @param string $d
+     *      Set the description of the view
+     *
+     *
+     *      @param string $d the description of the page
     */
     public function desc($d){
         $this->description=$d;
     }//setDesc
 
 
+
     /**
-     *      @param string $h
+     *      Add a snippet of html to the view
+     *
+     *
+     *      @param string $h a string to put into the view
     */
     public function html($h){
         $this->html[]=$h;
     }//html
 
 
+
     /**
-     *      @param string $s 
+     *      Add a Javascript snippet to the page
+     *
+     *
+     *      @param string $s a block of javascript code
     */
     public function script($s){
         if(is_array($s))
@@ -253,8 +332,12 @@ class BaseView {
     }//pushScript
 
 
+
     /**
-     *      @param string $s
+     *      Add a Javascript file to the page by URL
+     *
+     *
+     *      @param string $s a url path to a javascript file
     */
     public function scriptSrc($s){
         if(is_array($s))
@@ -264,7 +347,11 @@ class BaseView {
     }//pushScriptSrc
 
 
+
     /**
+     *      Add a css style to the page
+     *
+     *
      *      @param string $s
     */
     public function style($s){
@@ -272,8 +359,12 @@ class BaseView {
     }//style
 
 
+
     /**
-     *      @param string $s
+     *      Add a CSS file to the page by URL
+     *
+     *
+     *      @param string $s a url path to a CSS file
     */
     public function styleSrc($s){
         if(is_array($s))
@@ -283,16 +374,24 @@ class BaseView {
     }//pushStyleSrc
 
 
+
     /**
-     *      @param string $s
+     *      Add a body class 
+     *
+     *
+     *      @param string $s a css class
     */
     public function bodyStyle($s){
         $this->bodyStyles[] = $s;
     }//pushBodyStyle
 
 
+
     /**
-     *      @return string
+     *      create html to include added scripts      
+     *
+     *
+     *      @return string 
     */
     private function printScripts(){
         return '<script type="text/javascript">'.implode('',$this->scripts).'</script>';
@@ -301,6 +400,9 @@ class BaseView {
 
 
     /**
+     *      Create the html that includes the needed JavaScript files
+     *
+     *
      *      @return string
     */
     private function printScriptSrcs(){
@@ -314,6 +416,9 @@ class BaseView {
 
 
     /**
+     *      return html to contain added css styles fragments
+     *
+     *
      *      @return string
     */
     private function printStyles(){
@@ -326,6 +431,9 @@ class BaseView {
 
 
     /** 
+     *      Create the html that includes the needed CSS stylesheets 
+     *
+     *
      *      @return string
     */
     private function printStyleSrcs(){
@@ -337,16 +445,24 @@ class BaseView {
     }//printStyleSrcs
 
 
+
     /**
+     *      Return the classes to be added to the body.
+     *
+     *
      *      @return string
     */
-    private function printBodyStyles(){
+    private function bodyStyles(){
         return implode(' ',$this->bodyStyles);
     }//addBodyStyles
 
 
+
     /**
      *      echo all our bits
+     *
+     *
+     *      @return void
     */
     private function HTMLDump(){
         foreach($this->html as $p){
@@ -354,29 +470,46 @@ class BaseView {
         }//foreach
     }//HTMLDump
 
+
+
     /**
      *      set the index type to
      *      noindex,nofollow
+     *
+     *
+     *      @return void
     */
     public function noIndex(){
         $this->activeIndex=1;
     }//noIndex
 
+
+
     /**
      *      set the index type to
      *      index,nofollow
+     *
+     *
+     *      @return void
     */
     public function indexNoFollow(){
         $this->activeIndex=2;
     }//indexNoFollow
 
+
+
     /**
      *      set the index type to
      *      noindex,follow
+     *
+     *
+     *      @return void
     */
     public function noIndexFollow(){
         $this->activeIndex=3;
     }//noIndexFollow
+
+
 
 }//BaseView
 
