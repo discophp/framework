@@ -1,6 +1,18 @@
 <?php
+/**
+ *      This file hold the BaseModel class
+*/
 
 
+
+/**
+ *      BaseModel class.
+ *      Allows the creation of ORM style models through 
+ *      extentions of this class.
+ *
+ *      These extending classes must set $table and $ids to use the ORM.
+ *
+*/
 class BaseModel {
 
     /**
