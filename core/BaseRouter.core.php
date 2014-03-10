@@ -1,23 +1,48 @@
 <?php
+/**
+ *      This file holds the class BaseRouter
+*/
 
+
+
+/**
+ *      BaseRouter class.
+ *      Used to resove a RESTful endpoint to an action, either a Closure or a Controller.
+ *
+*/
 class BaseRouter {
 
-    //      url path to match
+    /**
+     *      url path to match
+    */
     private $param;
 
-    //      action to take if matched
+    /**
+     *      action to take if matched
+    */
     private $function;
 
-    //      did we find a match?
+    /**
+     *      did we find a match?
+    */
     private $haveMatch = false;
 
-    //      where restrictions
+    /**
+     *      where restrictions
+    */
     private $variableRestrictions = Array();
+
 
 
     /*
      *      When we tear down the object is when we do the work
-     *      Find if there is a match and take the appropriate action
+     *      Find if there is a match and take the appropriate action:
+     *          - Execute an instance of a Closure
+     *          - Resolve the requested Controller and method
+     *          - Bind the passed data into the Closure function or class method
+     *
+     *
+     *      @return void
     */
     public function __destruct(){
 
@@ -54,10 +79,9 @@ class BaseRouter {
      *      Match a get url route
      *
      *
-     *      @param string   $param
-     *      @param mixed    $function
-     *      
-     *      @return object
+     *      @param string   $param the url to match
+     *      @param mixed    $function the action to take if there is a match
+     *      @return object $this
      */
     public function get($param,$function){
         if(count($_POST)>0){
@@ -71,14 +95,14 @@ class BaseRouter {
     }//get
 
 
+
     /**
      *      Match a any url route
      *
      *
-     *      @param string   $param
-     *      @param mixed    $function
-     *      
-     *      @return object
+     *      @param string   $param the url to match
+     *      @param mixed    $function the action to take if there is a match
+     *      @return object $this
      */
     public function any($param,$function){
         $this->param=$param;
@@ -87,14 +111,14 @@ class BaseRouter {
     }//any
 
 
+
     /**
      *      Match a post url route
      *
      *
-     *      @param string   $param
-     *      @param mixed    $function
-     *      
-     *      @return object
+     *      @param string   $param the url to match
+     *      @param mixed    $function the action to take if there is a match
+     *      @return object $this
      */
     public function post($param,$function){
         if(count($_POST)==0){
@@ -108,11 +132,14 @@ class BaseRouter {
     }//post
 
 
+
     /**
      *      Add where variables restrictions
      *
-     *      @param mixed    $k
-     *      @param mixed    $v
+     *
+     *      @param mixed    $k Either a string key or an array
+     *      @param mixed    $v either null or a string
+     *      @return void
      */
     public function where($k,$v){
         if(is_array($k)){
@@ -123,11 +150,12 @@ class BaseRouter {
     }//where
 
 
+
     /**
      *      Match a url route against the $param
      *
-     *      @param string $param
      *
+     *      @param string $param the url
      *      @return boolean
      */
     private function match($param){
@@ -193,6 +221,12 @@ class BaseRouter {
 }//Router
 
 
+/**
+ *      We use the Router class as a static access point to a 
+ *      factory generator for routers method of Disco by calling Disco::router()
+ *      we also get a new instance returned.
+ *
+ */
 class Router {
 
     public static function get($param,$function){
