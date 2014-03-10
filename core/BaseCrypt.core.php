@@ -1,6 +1,18 @@
 <?php
+/**
+ *      This file contains the class BaseCrypt
+*/
 
+
+/**
+ *
+ *      BaseCrypt class.
+ *      Provides easy wrapper around mcryp php module
+ *
+*/
 class BaseCrypt {
+
+
 
     /**
      *      Encrypt with AES256
@@ -19,6 +31,7 @@ class BaseCrypt {
         return base64_encode($iv.$cipherText);
 
     }//AES128
+
 
 
     /**
@@ -41,6 +54,7 @@ class BaseCrypt {
     }//end AES128
 
 
+
     /**
      *      hash with sha512
      *      
@@ -49,6 +63,8 @@ class BaseCrypt {
     public function hash($pw){
         return hash('sha512',$_SERVER['SHA512_SALT_LEAD'].$pw.$_SERVER['SHA512_SALT_TAIL']);
     }//pwHash
+
+
 
 }//BaseCrypt
 
