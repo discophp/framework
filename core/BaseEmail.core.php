@@ -1,11 +1,30 @@
 <?php
+/**
+ *      This file holds the BaseEmail class
+ */
 
 
+
+/**
+ *
+ *      BaseEmail class.
+ *      Handle sending emails through different setup accounts.
+ *      This class relies on the settings set in .mail.settings.json
+ *
+*/
 class BaseEmail {
+
+    /**
+     *      holds json from ../.mail.settings.json
+    */
     private $settings;
+
     
     /**
      *      get our email settings
+     *
+     *
+     *      @return void
      */
     public function __construct(){
         if(is_file('../.mail.settings.json')){
@@ -14,32 +33,46 @@ class BaseEmail {
     }//construct
 
 
+
     /**
      *      Use SSL protocol to send email
+     *
+     *
+     *      @return void
     */
     public function useSSL(){
         $this->settings->{'DEFAULT'}="SSL";
     }//useSSL
 
 
+
     /**
      *      Use TLS protocol to send email 
+     *
+     *
+     *      @return void
     */
     public function useTLS(){
         $this->settings->{'DEFAULT'}="TLS";
     }//useSSL
 
 
+
     /**
      *      Use SMTP protocol to send email
+     *
+     *
+     *      @return void
     */
     public function useSMTP(){
         $this->settings->{'DEFAULT'}="SMTP";
     }//useSMTP
 
 
+
     /**
     *       Send an email through a specified account
+    *
     *
     *       @param string   $account
     *       @param mixed    $toEmail
