@@ -1,9 +1,36 @@
 <?php
+/**
+ *      This file hold the class BaseEvent
+ *
+*/
 
+
+/**
+ *
+ *      BaseEvent class.
+ *      Implements a Broadcast/Receiver pattern.
+ *
+*/
 class BaseEvent {
 
+
+
+    /**
+     *      Events to listen for
+    */
     private $events=Array();
 
+
+    /**
+     *      Register an event name with an associated action
+     *
+     *
+     *      @param string $event name of the event
+     *      @param mixed $action Closure or class/method to execute
+     *      @param int $priority priority of event 
+     *
+     *      @return void
+    */
     public final function listen($event,$action,$priority=0){
         if(!isset($this->events[$event])){
             $this->events[$event]=Array('actions'=>Array());
@@ -13,6 +40,17 @@ class BaseEvent {
 
     }//listen
 
+
+
+    /**
+     *      Fire off a registered event 
+     *
+     *
+     *      @param string $event name of event to fire
+     *      @param mixed $data data to be carried to closure or method
+     *
+     *      @return void
+    */
     public final function fire($event,$data=null){
 
         if(count(array_intersect_key(Array($event=>Array()),$this->events))>0){
@@ -43,6 +81,8 @@ class BaseEvent {
         else 
             TRIGGER_ERROR('Event:: Event not found '.$event,E_USER_WARNING);
     }//fire
+
+
 
 }//BaseEvent
 
