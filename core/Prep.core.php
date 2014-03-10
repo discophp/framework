@@ -1,10 +1,18 @@
 <?php
+/**
+ *      This file sets some php.ini settings as well as loading up
+ *      our environments settings
+ *
+*/
+
+
 
 //disable apache from append session ids to requests
 ini_set('session.use_trans_sid',0);
 
 //only allow sessions to be used with cookies
 ini_set('session.use_only_cookies',1);
+
 
 
 //Load our local settings
