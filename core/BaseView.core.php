@@ -1,5 +1,17 @@
 <?php
+/**
+ *      This file holds the BaseView class
+*/
 
+
+/**
+ *
+ *      BaseView class.
+ *      The BaseView class provides the functionality of dynamically creating
+ *      web pages. Essentially the eventual response to the client.
+ *
+ *      See the docs at discophp.com/docs/View
+*/
 class BaseView {
 
     /**
