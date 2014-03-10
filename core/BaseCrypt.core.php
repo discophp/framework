@@ -17,6 +17,8 @@ class BaseCrypt {
     /**
      *      Encrypt with AES256
      *      
+     *
+     *      @param string $input value to encrypt
      *      @return string
     */
     public function encrypt($input){
@@ -37,6 +39,8 @@ class BaseCrypt {
     /**
      *      Decrypt with AES256
      *
+     *
+     *      @param string $crypt value to decrypt
      *      @return string
     */
     public function decrypt($crypt){
@@ -57,11 +61,13 @@ class BaseCrypt {
 
     /**
      *      hash with sha512
-     *      
+     *
+     *
+     *      @param string $s value to hash
      *      @return string
      */
-    public function hash($pw){
-        return hash('sha512',$_SERVER['SHA512_SALT_LEAD'].$pw.$_SERVER['SHA512_SALT_TAIL']);
+    public function hash($s){
+        return hash('sha512',$_SERVER['SHA512_SALT_LEAD'].$s.$_SERVER['SHA512_SALT_TAIL']);
     }//pwHash
 
 
