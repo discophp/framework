@@ -1,20 +1,46 @@
 <?php
+/**
+ *      This file holds the BaseTemplate class
+*/
 
+
+
+/**
+ *      BaseTemplate class.
+ *      Provide support for using tempaltes that are stored in ../app/template/
+ *      See documentation online at discophp.com/docs/Tempalte
+ *
+*/
 Class BaseTemplate {
 
-    //      Store our accessed templates
+
+    /**
+     *      Store our accessed templates
+    */
     public $templates = Array();
 
-    //      name of the working template
+
+    /**
+     *      name of the working template
+    */
     private $workingTemplate='';
 
-    //      html of template being manipulated
+
+    /**
+     *      html of template being manipulated
+    */
     private $beingModified='';
 
-    //      how we access variables
+
+    /**
+     *      how we access variables
+    */
     private $delin = "{{\$%1\$s}}";
 
-    //      how we access copies of a variable
+
+    /**
+     *      how we access copies of a variable
+    */
     private $copy = "{{&\$%1\$s}}";
 
 
@@ -22,7 +48,9 @@ Class BaseTemplate {
     /**
      *      Load a template from disk
      *
+     *
      *      @param string $name
+     *      @return void
     */
     private function loadTemplate($name){
         $path = "../app/template/{$name}.template.html";
@@ -32,8 +60,10 @@ Class BaseTemplate {
     }//getTemplate
 
 
+
     /**
      *      Get the current template
+     *
      *
      *      @return string
     */
@@ -45,10 +75,13 @@ Class BaseTemplate {
     }//getWorkingTempalte
 
 
+
     /**
      *      work on a specific template
      *
-     *      @return object
+     *
+     *      @param string $name the template to work on
+     *      @return object $this
      */
     public function name($name){
         $this->workingTemplate=$name;
@@ -57,8 +90,10 @@ Class BaseTemplate {
     }//use
 
 
+
     /**
      *      get the markup of the active template
+     *
      *
      *      @return string
     */
@@ -67,24 +102,29 @@ Class BaseTemplate {
     }//return
 
 
+
     /**
      *      build a template and push its html
      *      onto the Views html stack
      *
-     *      @param string $name
-     *      @param array $data
+     *
+     *      @param string $name the template name
+     *      @param array $data the data to embed
+     *      @return void
     */
     public function with($name,$data=Array()){
         View::html($this->build($name,$data));
     }//with
 
 
+
     /**
      *      build a template 
      *
-     *      @param string $name
-     *      @param array $data
-     *      @return string
+     *
+     *      @param string $name the tempalte name
+     *      @param array $data the data to embed
+     *      @return string $this->beingModified the build tempalte
     */
     public function build($name,$data=Array()){
         $this->workingTemplate=$name;
@@ -118,11 +158,13 @@ Class BaseTemplate {
     }//returnData
 
 
+
     /**
      *      Set data into the template
      *
+     *
      *      @param array $data
-     *      @return object
+     *      @return object $this
     */
     public function set($data){
         $t = $this->beingModified;
@@ -186,8 +228,9 @@ Class BaseTemplate {
     /**
      *      append nested templates
      *
+     *
      *      @param array $data
-     *      @return string
+     *      @return string $t
     */
     private function appendTemplate($data){
         $t = $this->beingModified;
@@ -213,11 +256,12 @@ Class BaseTemplate {
     /**
      *      inject the template into the calling template
      *
+     *
      *      @param array $data
      *      @param string $k
      *      @param mixed $v
      *      @param string $t
-     *      @return string
+     *      @return string $t
     */
     private function insertTemplate($data,$k,$v,$t){
         $this->loadTemplate($data['templateName']);
@@ -242,10 +286,11 @@ Class BaseTemplate {
 
     /**
      *      get any nested templates names that need to be injected
+     *
      *      
      *      @param string $k
      *      @param string $t
-     *      @return mixed
+     *      @return mixed $data
     */
     private function parseInfo($k,$t){
         $pos = stripos($t,"{{\${$k} with @");
