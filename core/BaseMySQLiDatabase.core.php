@@ -1,12 +1,47 @@
 <?php
+/**
+ *      This file holds the class BaseMySQLiDatabase
+ */
+
+
+
+/**
+ *      Class BaseMySQLiDatabase.
+ *      Provides access to a MySQL server and the ability to run DML statements on it. 
+ *      Settings in .env.*.json must be set in order to establish a connection to the server.
+ *
+*/
 class BaseMySQLiDatabase extends mysqli {
 
 
+    /**
+     *      Are we connected to the MySQL server?
+    */
     public $connected=false;
+
+    /**
+     *      Cache of queries we executed
+     */
     private $queryCache = array();
+
+    /**
+     *      Cache of results we received
+     */
     private $dataCache = array();
+
+    /**
+     *      The last result of a query
+     */
     public $last;
 
+
+
+    /**
+     *      Connect to the MySQL server 
+     *
+     *
+     *      @return void
+     */
     public function __construct() {
 
         parent::__construct($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
@@ -22,17 +57,38 @@ class BaseMySQLiDatabase extends mysqli {
     }//end constructor
 
 
+    /**
+     *      Tear down the connection
+     *
+     *
+     *      @return void
+    */
     public function __destruct(){
         if($this->connected)
             $this->close();
     }//deconstruct
 
 
+
+    /**
+     *      Access the last query resultSet 
+     *
+     *      
+     *      @return object $this->last A MySQL ResultSet
+     */
     public function last(){
         return $this->last;
     }//last
 
 
+
+    /**
+     *      Sanatize a string before trying to use it in the DML
+     *
+     *
+     *      @param string $inc query to clean
+     *      @return string $inc cleaned query
+    */
     public function clean($inc){
         if(get_magic_quotes_gpc()){
             $inc = stripslashes($inc);
@@ -43,6 +99,16 @@ class BaseMySQLiDatabase extends mysqli {
        return $inc; 
     }//clean
 
+
+
+    /**
+     *      Execute a query
+     *
+     *
+     *      @param string $q the query to execute
+     *      @param mixed $args the variables to bind to the query string
+     *      @return object $result a mysql resultset
+    */
     public function query($q,$args=null){
 
         $q = $this->set($q,$args);
@@ -57,10 +123,29 @@ class BaseMySQLiDatabase extends mysqli {
         }//el
     }//query
 
+
+
+    /**
+     *      Return the last generated Auto Increment ID
+     *
+     *
+     *      @return int $this->insert_id
+    */
     public function lastId(){
         return $this->insert_id;
     }//lastId
 
+
+
+    /**
+     *      Bind passed variables into a query string and do proper type checking
+     *      and escaping before binding
+     *
+     *
+     *      @param string $q the query string
+     *      @param mixed $args the variables to bind to the query
+     *      @return string $q the query with variables bound into it
+    */
     public function set($q,$args){
         if($args!=null){
             if(is_array($args)){
@@ -77,6 +162,16 @@ class BaseMySQLiDatabase extends mysqli {
 
     }//set
 
+
+
+    /**
+     *      Determine the type of variable being bound into the query.
+     *      Ex String, Int
+     *
+     *
+     *      @param mixed $arg
+     *      @return mixed $arg
+    */
     private function prepareType($arg){
         $arg = $this->clean($arg);
         if(!is_numeric($arg))
@@ -85,6 +180,17 @@ class BaseMySQLiDatabase extends mysqli {
     }//wrapStrings
 
 
+
+
+    /**
+     *      Execute a Stored Procedure on the Server
+     *
+     *
+     *      @param string $q the stored procedure to execute
+     *      @param mixed $args the variables to bind the the stored procedure
+     *      @return array $rows the tuples returned by the stored procedure
+     *
+    */
     public function sp($q,$args=null){
         $rows = Array();
 
