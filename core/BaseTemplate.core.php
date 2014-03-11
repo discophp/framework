@@ -44,7 +44,7 @@ Class BaseTemplate {
 
 
     /**
-     *      Load a template from disk
+     *      Load a template from disk/Cache
      *
      *
      *      @param string $name
