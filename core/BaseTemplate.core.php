@@ -1,18 +1,16 @@
 <?php
 /**
- *      This file holds the BaseTemplate class
+*       This file holds the BaseTemplate class
 */
-
 
 
 /**
- *      BaseTemplate class.
- *      Provide support for using tempaltes that are stored in ../app/template/
- *      See documentation online at discophp.com/docs/Tempalte
- *
+*       BaseTemplate class.
+*       Provide support for using tempaltes that are stored in ../app/template/
+*       See documentation online at discophp.com/docs/Tempalte
+*
 */
 Class BaseTemplate {
-
 
     /**
      *      Store our accessed templates
@@ -27,14 +25,14 @@ Class BaseTemplate {
 
 
     /**
-     *      html of template being manipulated
+     *      html of template being manipulated 
     */
     private $beingModified='';
 
 
     /**
      *      how we access variables
-    */
+     */
     private $delin = "{{\$%1\$s}}";
 
 
@@ -54,16 +52,75 @@ Class BaseTemplate {
     */
     private function loadTemplate($name){
         $path = "../app/template/{$name}.template.html";
-        if(!isset($this->templates[$name]) && file_exists($path)){
+
+        if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
+            if(Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
+
+                $lastModifiedCache = Cache::get($path.'-last-modified');
+                if($lastModifiedCache){
+                    $lastModified = filemtime($path);
+                    if($lastModifiedCache!=$lastModified){
+                        $this->cacheTemplate($path,$name);
+                    }//if
+                    else {
+                        $this->templates[$name]=Cache::get($path);
+                    }//el
+                }//if
+                else {
+                    $this->cacheTemplate($path,$name);
+                }//el
+
+            }//if
+            else if(!isset($this->templates[$name]) && file_exists($path)){
+                $this->templates[$name] = file_get_contents($path);
+            }//if
+        }//if
+        else if(!isset($this->templates[$name]) && file_exists($path)){
             $this->templates[$name] = file_get_contents($path);
         }//if
+
     }//getTemplate
 
 
 
     /**
-     *      Get the current template
+     *      Retrieve a specified tempalte from disk
      *
+     *
+     *      @param string $path the path to the tempalte
+     *      @return string 
+    */
+    private function getTemplateFromDisk($path){
+
+        if(file_exists($path)){
+            return file_get_contents($path);
+        }//if
+
+    }//getTempalteFromDisk
+
+
+
+    /**
+     *      Set the tempalte in the running memcached server if there is 
+     *      one available and connected.
+     *
+     *
+     *      @param string $path the path to the template
+     *      @param string $name the name of the template
+     *      @return void
+    */
+    private function cacheTemplate($path,$name){
+
+        $this->templates[$name]=$this->getTemplateFromDisk($path);
+        Cache::set($path.'-last-modified',$lastModified);
+        Cache::set($path,$this->templates[$name]);
+
+    }//cacheTemplate
+
+
+
+    /**
+     *      Get the current template
      *
      *      @return string
     */
@@ -79,9 +136,7 @@ Class BaseTemplate {
     /**
      *      work on a specific template
      *
-     *
-     *      @param string $name the template to work on
-     *      @return object $this
+     *      @return object
      */
     public function name($name){
         $this->workingTemplate=$name;
@@ -93,7 +148,6 @@ Class BaseTemplate {
 
     /**
      *      get the markup of the active template
-     *
      *
      *      @return string
     */
@@ -107,10 +161,8 @@ Class BaseTemplate {
      *      build a template and push its html
      *      onto the Views html stack
      *
-     *
-     *      @param string $name the template name
-     *      @param array $data the data to embed
-     *      @return void
+     *      @param string $name
+     *      @param array $data
     */
     public function with($name,$data=Array()){
         View::html($this->build($name,$data));
@@ -121,10 +173,9 @@ Class BaseTemplate {
     /**
      *      build a template 
      *
-     *
-     *      @param string $name the tempalte name
-     *      @param array $data the data to embed
-     *      @return string $this->beingModified the build tempalte
+     *      @param string $name
+     *      @param array $data
+     *      @return string
     */
     public function build($name,$data=Array()){
         $this->workingTemplate=$name;
@@ -132,24 +183,12 @@ Class BaseTemplate {
         $this->beingModified = $this->appendTemplate($data);
 
         if(count($data)!=0){
+
+            //call set to embed the variables
             $this->set($data);
 
-            $testDelin = '({{\$[a-zA-Z0-9\s\"\']*}})';
-            preg_match("/{$testDelin}/",$this->beingModified,$matches);
-            if($matches){
-                foreach($matches as $m){
-                    $orgM=$m;
-                    $m = trim(trim($m,'{'),'}');
-                    $v = substr($m,0,stripos($m,' '));
-                    $d = "{$v}=null;if({$v}!=null)return {$v};";
-                    $else = trim(substr($m,stripos($m,' ')),' ');
-                    $else = str_replace(' ',' return ',$else);
-                    $eva = eval($d.$else.';');
-
-                    $this->beingModified = implode($eva,explode($orgM,$this->beingModified,2));
-
-                }//foreach
-            }//if
+            //cal setElses to set the else clauses
+            $this->setElses();
 
         }//if
 
@@ -160,11 +199,10 @@ Class BaseTemplate {
 
 
     /**
-     *      Set data into the template
-     *
+     *      Set data into the template. This function is recursive in nature!
      *
      *      @param array $data
-     *      @return object $this
+     *      @return object
     */
     public function set($data){
         $t = $this->beingModified;
@@ -195,12 +233,6 @@ Class BaseTemplate {
 
             $t = implode($v,explode($copy,$t));
 
-            $testDelin = '({{\$'.$td.'[a-zA-Z0-9\s\"\']*}})';
-            preg_match("/{$testDelin}/",$t,$matches);
-            if($matches)
-                $t = implode($v,explode($matches[0],$t,1));
-
-
             $this->beingModified=$t;
 
             unset($data[$k]);
@@ -228,14 +260,13 @@ Class BaseTemplate {
     /**
      *      append nested templates
      *
-     *
      *      @param array $data
-     *      @return string $t
+     *      @return string
     */
     private function appendTemplate($data){
         $t = $this->beingModified;
         if(!$data){
-             $info = $this->parseInfo('',$t);
+            $info = $this->parseInfo('',$t);
             if($info){
                 $t = $this->insertTemplate($info,'','',$t);
             }//if
@@ -256,12 +287,11 @@ Class BaseTemplate {
     /**
      *      inject the template into the calling template
      *
-     *
      *      @param array $data
      *      @param string $k
      *      @param mixed $v
      *      @param string $t
-     *      @return string $t
+     *      @return string
     */
     private function insertTemplate($data,$k,$v,$t){
         $this->loadTemplate($data['templateName']);
@@ -287,11 +317,10 @@ Class BaseTemplate {
 
     /**
      *      get any nested templates names that need to be injected
-     *
      *      
      *      @param string $k
      *      @param string $t
-     *      @return mixed $data
+     *      @return mixed
     */
     private function parseInfo($k,$t){
         $pos = stripos($t,"{{\${$k} with @");
@@ -326,6 +355,46 @@ Class BaseTemplate {
 
 
     /**
+     *      Set the else statements in the template. This is only run once 
+     *      per template build.
+     *
+     *
+     *      @return void
+     *
+    */
+    private function setElses(){
+
+        $testDelin = '({{\$[a-zA-Z0-9]+}}{{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
+        preg_match("/{$testDelin}/",$this->beingModified,$matches);
+        if($matches){
+            foreach($matches as $m){
+                $orgM=$m;
+
+                $elsePos = stripos($orgM,'else '); 
+                if($elsePos!==false)
+                    $elseContent = rtrim(substr($orgM,$elsePos+6),'\'"}');
+                else
+                    $elseContent='';
+
+                $this->beingModified = implode($elseContent,explode($orgM,$this->beingModified,2));
+
+            }//foreach
+        }//if
+
+        $testDelin = '({{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
+        preg_match("/{$testDelin}/",$this->beingModified,$matches);
+        if($matches){
+            foreach($matches as $m){
+                $this->beingModified = implode('',explode($m,$this->beingModified,2));
+
+            }//foreach
+        }//if
+
+    }//setElses
+
+
+
+    /**
      *      Determine whether or not an array is associative or numeric
      *
      *      
@@ -339,7 +408,6 @@ Class BaseTemplate {
             return true;
         }//foreach
     }//is_assoc
-
 
 
 }//Template
