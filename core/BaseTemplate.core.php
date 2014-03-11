@@ -271,7 +271,8 @@ Class BaseTemplate {
             $t = str_replace($data['textBlock'],$copies,$t);
         }//if
         else if(is_array($v)){
-            $copies = str_repeat($copies,count($v));
+            if(!$this->is_assoc($v))
+                $copies = str_repeat($copies,count($v));
             $t = str_replace($data['textBlock'],$copies,$t);
         }//if
         else {
@@ -321,6 +322,23 @@ Class BaseTemplate {
         return $data;
 
     }//parseInfo
+
+
+
+    /**
+     *      Determine whether or not an array is associative or numeric
+     *
+     *      
+     *      @param array $array
+     *      @return boolean
+    */
+    private function is_assoc(&$array) {
+        foreach($array as $k=>$v){
+            if(is_int($k))
+                return false;
+            return true;
+        }//foreach
+    }//is_assoc
 
 
 
