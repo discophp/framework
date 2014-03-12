@@ -112,7 +112,7 @@ Class BaseTemplate {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        Cache::set($path.'-last-modified',filemtime($path));
+        Cache::set($path.'-last-modified',$lastModified);
         Cache::set($path,$this->templates[$name]);
 
     }//cacheTemplate
@@ -187,10 +187,12 @@ Class BaseTemplate {
             //call set to embed the variables
             $this->set($data);
 
-            //cal setElses to set the else clauses
-            $this->setElses();
-
         }//if
+
+        //cal setElses to set the else clauses
+        $this->setElses();
+
+
 
         return $this->beingModified;
 
@@ -366,29 +368,44 @@ Class BaseTemplate {
 
         $testDelin = '({{\$[a-zA-Z0-9]+}}{{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
         preg_match("/{$testDelin}/",$this->beingModified,$matches);
-        if($matches){
-            foreach($matches as $m){
-                $orgM=$m;
+        do {
+            if($matches){
+                foreach($matches as $m){
+                    $orgM=$m;
 
-                $elsePos = stripos($orgM,'else '); 
-                if($elsePos!==false)
-                    $elseContent = rtrim(substr($orgM,$elsePos+6),'\'"}');
-                else
-                    $elseContent='';
+                    $elsePos = stripos($orgM,'else '); 
+                    if($elsePos!==false)
+                        $elseContent = rtrim(substr($orgM,$elsePos+6),'\'"}');
+                    else
+                        $elseContent='';
 
-                $this->beingModified = implode($elseContent,explode($orgM,$this->beingModified,2));
+                    $this->beingModified = implode($elseContent,explode($orgM,$this->beingModified));
 
-            }//foreach
-        }//if
+                }//foreach
+            }//if
 
-        $testDelin = '({{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
-        preg_match("/{$testDelin}/",$this->beingModified,$matches);
-        if($matches){
-            foreach($matches as $m){
-                $this->beingModified = implode('',explode($m,$this->beingModified,2));
+            if($matches)
+                preg_match("/{$testDelin}/",$this->beingModified,$matches);
 
-            }//foreach
-        }//if
+        } while($matches);
+
+
+        do {
+
+            $testDelin = '({{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
+            preg_match("/{$testDelin}/",$this->beingModified,$matches);
+            if($matches){
+                foreach($matches as $m){
+                    $this->beingModified = implode('',explode($m,$this->beingModified));
+                }//foreach
+            }//if
+
+            if($matches)
+                preg_match("/{$testDelin}/",$this->beingModified,$matches);
+
+
+        } while($matches);
+
 
     }//setElses
 
