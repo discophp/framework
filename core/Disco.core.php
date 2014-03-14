@@ -253,5 +253,14 @@ Disco::make('Event',function(){
 });
 
 
+/**
+*       Make our Data Facding using
+*       - core/BaseData.core.php
+*       - core/facade/Data.facade.php
+*/
+Disco::make('Data',function(){
+    return new BaseData();
+});
+
 
 ?>
