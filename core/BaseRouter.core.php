@@ -33,6 +33,15 @@ class BaseRouter {
     private $variableRestrictions = Array();
 
 
+    private $standardMatchConditions = Array(
+        'alpha'=>'^[a-zA-Z\s\-]+$',
+        'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
+        'integer'=>'^[0-9]+$',
+        'numeric'=>'^[0-9\.]+$',
+        'all'=>'[.]*'
+    );
+
+
 
     /*
      *      When we tear down the object is when we do the work
@@ -84,7 +93,7 @@ class BaseRouter {
      *      @return object $this
      */
     public function get($param,$function){
-        if(count($_POST)>0){
+        if(count($_POST)>0 || count(Data::put()->all())>0 || count(Data::delete()->all())>0){
             $this->function=null;
             $this->param=null;
             return $this;
@@ -134,6 +143,48 @@ class BaseRouter {
 
 
     /**
+     *      Match a put url route
+     *
+     *
+     *      @param string   $param the url to match
+     *      @param mixed    $function the action to take if there is a match
+     *      @return object $this
+     */
+    public function put($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='PUT'){
+            $this->param=null; 
+            $this->function=null;
+            return $this;
+        }//if
+        $this->param=$param;
+        $this->function=$function;
+        return $this;
+    }//put
+
+
+
+    /**
+     *      Match a delete url route
+     *
+     *
+     *      @param string   $param the url to match
+     *      @param mixed    $function the action to take if there is a match
+     *      @return object $this
+     */
+    public function delete($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='DELETE'){
+            $this->param=null; 
+            $this->function=null;
+            return $this;
+        }//if
+        $this->param=$param;
+        $this->function=$function;
+        return $this;
+    }//put
+
+
+
+    /**
      *      Add where variables restrictions
      *
      *
@@ -165,6 +216,8 @@ class BaseRouter {
             $this->variables=null;
             return true;
         }//if
+        else if(count($this->variableRestrictions)<=0)
+            return false;
 
         preg_match_all('/({[a-zA-Z0-9]+})+/',$param,$matches);
         if($matches){
@@ -198,9 +251,13 @@ class BaseRouter {
 
             foreach($variables as $k=>$v){
                 if(isset($this->variableRestrictions[$k])){
-                    if(!preg_match("/{$this->variableRestrictions[$k]}/",$v)){
+                    $matchCondition = $this->variableRestrictions[$k];
+
+                    if(isset($this->standardMatchConditions[$matchCondition]))
+                        $matchCondition=$this->standardMatchConditions[$matchCondition];
+
+                    if(!preg_match("/{$matchCondition}/",$v))
                         return false;
-                    }//if
                 }//if
                 $param = str_replace("{{$k}}",$v,$param);
             }//foreach
@@ -217,6 +274,7 @@ class BaseRouter {
 
         return false;
     }//match
+
 
 }//Router
 
@@ -240,6 +298,16 @@ class Router {
     public static function any($param,$function){
         return Disco::router()->any($param,$function);
     }//any
+
+    public static function put($param,$function){
+        return Disco::router()->put($param,$function);
+    }//any
+
+
+    public static function delete($param,$function){
+        return Disco::router()->delete($param,$function);
+    }//any
+
 
 }//Router
 
