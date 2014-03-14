@@ -1,11 +1,44 @@
 <?php
+/**
+ *      This file holds the BaseData class
+*/
 
+
+/**
+ *      BaseData class.
+ *      Provides easy wrapper around using HTTP data centric around
+ *      the RESTful priciples PUT,POST,GET,DELETE
+*/
 class BaseData {
+
+    /**
+     *      Holds the PUT data
+     */
     private $putData=Array();
+
+    /**
+     *      Holds the DELETE data
+     */
     private $deleteData=Array();
+
+    /**
+     *      Type of REST request 
+     */
     private $workingDataType;
+
+    /**
+     *      Should returned value be sql escaped 
+     */
     private $escapeValue=false;
 
+
+
+    /**
+     *      Construct PUT and DELETE data
+     *
+     *
+     *      @return void
+    */
     public function __construct(){
         switch($_SERVER['REQUEST_METHOD']) {
             case 'PUT':
@@ -15,6 +48,15 @@ class BaseData {
         }//switch 
     }//construct
 
+
+
+    /**
+     *      Set data of the selected type
+     *
+     *
+     *      @param string $type the type of REST request
+     *      @return void
+    */
     private function setData($type){
         $string='';
         $putStream = fopen('php://input','r');
@@ -35,11 +77,28 @@ class BaseData {
 
     }//setPutData
 
+
+
+    /**
+     *      SQL escape the returned string
+     *
+     *
+     *      @return object $this
+    */
     public function escape(){
         $this->escapeValue=true;
         return $this;
     }//escape
 
+
+
+    /**
+     *      return a GET variable
+     *
+     *
+     *      @param string $g the key
+     *      @return mixed  
+    */
     public function get($g=null){
         if($g==null){
             $this->workingDataType='GET';
@@ -56,7 +115,16 @@ class BaseData {
             return false;
     }//get
 
-   public function post($p=null){
+
+
+    /**
+     *      return a POST variable
+     *
+     *
+     *      @param string $p the key
+     *      @return mixed  
+    */
+    public function post($p=null){
         if($p==null){
             $this->workingDataType='POST';
             return $this;
@@ -72,6 +140,15 @@ class BaseData {
             return false;
     }//post
 
+
+
+    /**
+     *      return a DELETE variable
+     *
+     *
+     *      @param string $d the key
+     *      @return mixed  
+    */
     public function delete($d=null){
         if($d==null){
             $this->workingDataType='DELETE';
@@ -88,6 +165,15 @@ class BaseData {
             return false;
     }//delete
 
+
+
+    /**
+     *      return a PUT variable
+     *
+     *
+     *      @param string $p the key
+     *      @return mixed  
+    */
     public function put($p=null){
         if($p==null){
             $this->workingDataType='PUT';
@@ -104,13 +190,22 @@ class BaseData {
             return false;
     }//put
 
+
+
+    /**
+     *      SET a selected type of REST variable 
+     *
+     *
+     *      @param string $p the key
+     *      @return mixed  
+    */
     public function set($k=null,$v){
         if($this->workingDataType==null ||  $k==null)
             return;
 
         switch($this->workingDataType){
-        case 'PUT':
-            $this->putData[$k]=$v;
+            case 'PUT':
+                $this->putData[$k]=$v;
             case 'DELETE':
                 $this->deleteData[$k]=$v;
             case 'POST':
@@ -119,6 +214,28 @@ class BaseData {
                 $_GET[$k]=$v;
         }//switch
     }//set
+
+
+
+    /**
+     *      Return all of the selected type of REST data 
+     *
+     *
+     *      @return array
+    */
+    public function all(){
+        switch($this->workingDataType){
+            case 'PUT':
+                return $this->putData;
+            case 'DELETE':
+                return $this->deleteData;
+            case 'POST':
+                return $_POST;
+            case 'GET':
+                return $_GET;
+        }//switch
+
+    }//all
 
 
 }//BaseData
