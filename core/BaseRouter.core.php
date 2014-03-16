@@ -32,6 +32,11 @@ class BaseRouter {
     */
     private $variableRestrictions = Array();
 
+    /**
+     *      Is route HTTPS
+    */
+    private $secureRoute=false;
+
 
 
     /*
@@ -74,6 +79,33 @@ class BaseRouter {
     }//destruct
 
 
+    /**
+     *      Only allow match on route if request method 
+     *      was HTTPS
+     *
+     *      
+     *      @return object $this
+    */
+    public function secure(){
+        $this->secureRoute=true;    
+        return $this;
+    }//secure
+
+
+
+    /**
+     *      When a route is not a match this function essentially destroys it
+     *
+     *
+     *      @return object $this
+    */
+    private function whiteOutRoute(){
+        $this->function=null;
+        $this->param=null;
+        return $this;
+    }//whiteOutRoute
+
+
 
     /**
      *      Match a get url route
@@ -84,11 +116,11 @@ class BaseRouter {
      *      @return object $this
      */
     public function get($param,$function){
-        if(count($_POST)>0 || count(Data::put()->all())>0 || count(Data::delete()->all())>0){
-            $this->function=null;
-            $this->param=null;
-            return $this;
-        }//if
+        if(count($_POST)>0 || count(Data::put()->all())>0 || count(Data::delete()->all())>0)
+            return $this->whiteOutRoute();
+        else if($this->secureRoute && empty($_SERVER['HTTPS']))
+            return $this->whiteOutRoute();
+
         $this->function=$function;
         $this->param=$param;
         return $this;
@@ -105,6 +137,9 @@ class BaseRouter {
      *      @return object $this
      */
     public function any($param,$function){
+        if($this->secureRoute && empty($_SERVER['HTTPS']))
+            return $this->whiteOutRoute();
+
         $this->param=$param;
         $this->function=$function;
         return $this;
@@ -122,10 +157,11 @@ class BaseRouter {
      */
     public function post($param,$function){
         if(count($_POST)==0){
-            $this->param=null;
-            $this->function=null;
-            return $this;
+            return $this->whiteOutRoute();
         }//if
+        else if($this->secureRoute && empty($_SERVER['HTTPS']))
+            return $this->whiteOutRoute();
+
         $this->param=$param;
         $this->function=$function;
         return $this;
@@ -143,10 +179,11 @@ class BaseRouter {
      */
     public function put($param,$function){
         if($_SERVER['REQUEST_METHOD']!='PUT'){
-            $this->param=null; 
-            $this->function=null;
-            return $this;
+            return $this->whiteOutRoute();
         }//if
+        else if($this->secureRoute && empty($_SERVER['HTTPS']))
+            return $this->whiteOutRoute();
+
         $this->param=$param;
         $this->function=$function;
         return $this;
@@ -164,10 +201,11 @@ class BaseRouter {
      */
     public function delete($param,$function){
         if($_SERVER['REQUEST_METHOD']!='DELETE'){
-            $this->param=null; 
-            $this->function=null;
-            return $this;
+            return $this->whiteOutRoute();
         }//if
+        else if($this->secureRoute && empty($_SERVER['HTTPS']))
+            return $this->whiteOutRoute();
+
         $this->param=$param;
         $this->function=$function;
         return $this;
@@ -298,6 +336,11 @@ class Router {
     public static function delete($param,$function){
         return Disco::router()->delete($param,$function);
     }//any
+
+    public static function secure(){
+        return Disco::router()->secure();
+    }//any
+
 
 
 }//Router
