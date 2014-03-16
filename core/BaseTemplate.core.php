@@ -112,7 +112,7 @@ Class BaseTemplate {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        Cache::set($path.'-last-modified',$lastModified);
+        Cache::set($path.'-last-modified',filemtime($path));
         Cache::set($path,$this->templates[$name]);
 
     }//cacheTemplate
