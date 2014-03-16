@@ -33,18 +33,6 @@ class BaseRouter {
     private $variableRestrictions = Array();
 
 
-    /**
-     *      standard regex matching conditions
-    */
-    private $standardMatchConditions = Array(
-        'alpha'=>'^[a-zA-Z\s\-]+$',
-        'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
-        'integer'=>'^[0-9]+$',
-        'numeric'=>'^[0-9\.]+$',
-        'all'=>'[.]*'
-    );
-
-
 
     /*
      *      When we tear down the object is when we do the work
@@ -256,8 +244,8 @@ class BaseRouter {
                 if(isset($this->variableRestrictions[$k])){
                     $matchCondition = $this->variableRestrictions[$k];
 
-                    if(isset($this->standardMatchConditions[$matchCondition]))
-                        $matchCondition=$this->standardMatchConditions[$matchCondition];
+                    if(isset(Disco::$defaultMatchCondition[$matchCondition]))
+                        $matchCondition=Disco::$defaultMatchCondition[$matchCondition];
 
                     if(!preg_match("/{$matchCondition}/",$v))
                         return false;

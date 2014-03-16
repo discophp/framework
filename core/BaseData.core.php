@@ -91,6 +91,37 @@ class BaseData {
     }//escape
 
 
+    /**
+     *      Determine if the specific data matches the found value  
+     *
+     *
+     *      @param string $k the key of the data
+     *      @param string $v the regex pattern or default matching condition to use
+     *      @return mixed 
+    */
+    public function where($k,$v){
+        $dataType=$this->all();
+
+        if(isset($dataType[$k])){
+            $matchCondition = $v;
+            if(isset(Disco::$defaultMatchCondition[$v]))
+                $matchCondition = Disco::$defaultMatchCondition[$v];
+            if(!preg_match("/{$matchCondition}/",$dataType[$k]))
+                return false;
+
+            if($this->escapeValue){
+                $this->escapeValue=false;
+                return DB::clean($dataType[$k]);
+            }//if
+
+            return $dataType[$k];
+        }//if
+        else 
+            return false;
+
+    }//where
+
+
 
     /**
      *      return a GET variable

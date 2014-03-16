@@ -38,6 +38,18 @@ Class Disco {
     public static $facades=Array();
 
 
+    /**
+     *      default regex matching conditions
+    */
+    public static $defaultMatchCondition = Array(
+        'alpha'=>'^[a-zA-Z\s\-]+$',
+        'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
+        'integer'=>'^[0-9]+$',
+        'numeric'=>'^[0-9\.]+$',
+        'all'=>'[.]*'
+    );
+
+
 
     /**
      *      Store a facade for potential use at
@@ -129,6 +141,21 @@ Class Disco {
             require($routerPath);
         }//if
     }//useRouter
+
+
+
+    /**
+     *      Add a default matching condition for
+     *      use with Router and Data
+     *
+     *
+     *      @param string $k the key name
+     *      @param string $v the regex value
+     *      @return void 
+    */
+    public static function addCondition($k,$v){
+        Disco::$defaultMatchCondition[$k]=$v;
+    }//addCondition
 
 
 }//Disco
