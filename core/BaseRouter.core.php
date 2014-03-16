@@ -33,6 +33,9 @@ class BaseRouter {
     private $variableRestrictions = Array();
 
 
+    /**
+     *      standard regex matching conditions
+    */
     private $standardMatchConditions = Array(
         'alpha'=>'^[a-zA-Z\s\-]+$',
         'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
