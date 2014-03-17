@@ -122,9 +122,11 @@ class BaseEmail {
             $port = $this->settings->{$type}->{'PORT'};
 
             $type = strtolower($type);
+            if($type=='smtp')
+                $type='';
 
             $transport = Swift_SmtpTransport::newInstance($server,$port,$type);
-            $transport->setUsername($this->settings->{$account}->{'USER'});
+            $transport->setUsername($this->settings->{$account}->{'NAME'});
             $transport->setPassword($this->settings->{$account}->{'PASSWORD'});
             
             // Create the Mailer using the Transport
