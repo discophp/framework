@@ -26,7 +26,7 @@ class BaseCrypt {
         $key256 = pack('H*',$_SERVER["AES_KEY256"]);
 
         $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
-        $iv = mcrypt_create_iv($iv_size,MCRYPT_RAND);
+        $iv = mcrypt_create_iv($iv_size,MCRYPT_DEV_URANDOM);
 
         $cipherText = mcrypt_encrypt(MCRYPT_RIJNDAEL_128,$key256,$input,MCRYPT_MODE_CBC,$iv);
 
