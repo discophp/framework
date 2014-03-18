@@ -268,10 +268,10 @@ class BaseRouter {
                 
                 $url = substr($url,strlen($value)+1);
 
-                $slashCheck = stripos($value,'/');
-                if($slashCheck!==false){
-                    $value=substr($value,0,$slashCheck);
-                }//if
+                //$slashCheck = stripos($value,'/');
+                //if($slashCheck!==false){
+                //    $value=substr($value,0,$slashCheck);
+                //}//if
 
                 $name = trim(trim($m,'{'),'}');
                 $variables[$name]=$value;
