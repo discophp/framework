@@ -44,8 +44,8 @@ Class Disco {
     public static $defaultMatchCondition = Array(
         'alpha'=>'^[a-zA-Z\s\-]+$',
         'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
-        'integer'=>'^[0-9]+$',
-        'numeric'=>'^[0-9\.]+$',
+        'integer'=>'^[\-0-9]+$',
+        'numeric'=>'^[\-0-9\.]+$',
         'all'=>'[.]*'
     );
 
