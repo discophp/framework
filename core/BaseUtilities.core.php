@@ -5,7 +5,7 @@ class BaseUtilities {
     public $emailRegExPattern = "/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/";
 
     public function decodeURL($inc){
-        $inc = $this->disco->db->clean(urldecode($inc));
+        $inc = urldecode($inc);
         $inc = str_replace('-',' ',$inc);
         return $inc;
     }//decodeURL
