@@ -37,6 +37,12 @@ class BaseView {
 
 
     /**
+     *      hold head script(js) URLs 
+    */
+    private $headScriptSrcs = Array();
+
+
+    /**
      *      hold style(css) bits
     */
     private $styles = Array();
@@ -211,6 +217,7 @@ class BaseView {
                             
                 %3\$s
                 %4\$s
+                %8\$s
         
                 </head>
             <body class='%5\$s'>
@@ -223,7 +230,8 @@ class BaseView {
             $this->printStyleSrcs(),
             $this->bodyStyles(),
             $this->indexes[$this->activeIndex],
-            $this->favIcon
+            $this->favIcon,
+            $this->printScriptSrcs($this->headScriptSrcs)
         );
 
     }//buildMetaHeader
@@ -302,7 +310,7 @@ class BaseView {
     */
     public function printFooter(){
         echo "
-            {$this->printScriptSrcs()}
+            {$this->printScriptSrcs($this->scriptSrcs)}
             {$this->printScripts()}
             </body>
          </html>";
@@ -370,8 +378,10 @@ class BaseView {
     public function prop($k,$v){
         if($this->lastCallType=='script')
             $this->scriptSrcs[count($this->scriptSrcs)-1]['props'][$k]=$v;
-        else 
+        else if($this->lastCallType=='style')
             $this->styleSrcs[count($this->styleSrcs)-1]['props'][$k]=$v;
+        else 
+            $this->headScriptSrcs[count($this->headScriptSrcs)-1]['props'][$k]=$v;
     }//prop
 
 
@@ -405,6 +415,23 @@ class BaseView {
         $this->lastCallType='script';
         return $this;
     }//pushScriptSrc
+
+
+    /**
+     *      Add a Javascript file to the page head by URL
+     *
+     *
+     *      @param string $s a url path to a javascript file
+     *      @return object $this
+    */
+    public function headScriptSrc($s){
+
+        $this->headScriptSrcs[]=Array('src'=>$s,'props'=>Array());
+
+        $this->lastCallType='headScript';
+        return $this;
+    }//pushScriptSrc
+
 
 
 
@@ -464,11 +491,12 @@ class BaseView {
      *      Create the html that includes the needed JavaScript files
      *
      *
+     *      @param array $sData Array of scripts to print
      *      @return string
     */
-    private function printScriptSrcs(){
+    private function printScriptSrcs($sData){
         $scripts='';
-        foreach($this->scriptSrcs as $s){
+        foreach($sData as $s){
             $props='';
             foreach($s['props'] as $k=>$v)
                 $props.="{$k}='{$v}' ";
