@@ -15,6 +15,11 @@
 class BaseView {
 
     /**
+     *      Flips between script and style
+    */
+    private $lastCallType;
+
+    /**
     *       hold html bits
     */
     private $html = Array();
@@ -24,10 +29,12 @@ class BaseView {
     */
     private $scripts = Array();
 
+
     /**
      *      hold script(js) URLs 
     */
     private $scriptSrcs = Array();
+
 
     /**
      *      hold style(css) bits
@@ -38,6 +45,7 @@ class BaseView {
      *      hold style(css) URLs 
     */
     private $styleSrcs = Array();
+
 
     /**
      * hold classes to apply to the body element
@@ -198,7 +206,7 @@ class BaseView {
                 %4\$s
         
                 </head>
-            <body class='row %5\$s'>
+            <body class='%5\$s'>
             ";
 
         return sprintf($metaHeader,
@@ -329,6 +337,13 @@ class BaseView {
     }//html
 
 
+    public function prop($k,$v){
+        if($this->lastCallType=='script')
+            $this->scriptSrcs[count($this->scriptSrcs)-1]['props'][$k]=$v;
+        else 
+            $this->styleSrcs[count($this->styleSrcs)-1]['props'][$k]=$v;
+    }//prop
+
 
     /**
      *      Add a Javascript snippet to the page
@@ -352,10 +367,11 @@ class BaseView {
      *      @param string $s a url path to a javascript file
     */
     public function scriptSrc($s){
-        if(is_array($s))
-            array_merge($this->scriptSrcs,$s);
-        else
-            $this->scriptSrcs[]=$s;
+
+        $this->scriptSrcs[]=Array('src'=>$s,'props'=>Array());
+
+        $this->lastCallType='script';
+        return $this;
     }//pushScriptSrc
 
 
@@ -379,10 +395,10 @@ class BaseView {
      *      @param string $s a url path to a CSS file
     */
     public function styleSrc($s){
-        if(is_array($s))
-            array_merge($this->styleSrcs,$s);
-        else 
-            $this->styleSrcs[]=$s;
+        $this->styleSrcs[]=Array('src'=>$s,'props'=>Array());
+
+        $this->lastCallType='style';
+        return $this;
     }//pushStyleSrc
 
 
@@ -420,7 +436,10 @@ class BaseView {
     private function printScriptSrcs(){
         $scripts='';
         foreach($this->scriptSrcs as $s){
-           $scripts.="<script type='text/javascript' src='{$s}'></script>"; 
+            $props='';
+            foreach($s['props'] as $k=>$v)
+                $props.="{$k}='{$v}' ";
+           $scripts.="<script type='text/javascript' src='{$s['src']}' {$props}></script>"; 
         }//foreach
         return $scripts;
     }//printScriptSrcs
@@ -451,7 +470,10 @@ class BaseView {
     private function printStyleSrcs(){
         $styles = '';
         foreach($this->styleSrcs as $s){
-            $styles.= "<link rel='stylesheet' href='{$s}' type='text/css'/>";
+            $props='';
+            foreach($s['props'] as $k=>$v)
+                $props.="{$k}='{$v}' ";
+            $styles.= "<link rel='stylesheet' href='{$s['src']}' type='text/css' {$props}/>";
         }//foreach
         return $styles;
     }//printStyleSrcs
