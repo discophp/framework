@@ -287,6 +287,8 @@ class BaseRouter {
 
                     if(!preg_match("/{$matchCondition}/",$v))
                         return false;
+
+                    Data::get()->set($k,$v);
                 }//if
                 $param = str_replace("{{$k}}",$v,$param);
             }//foreach
