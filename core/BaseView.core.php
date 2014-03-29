@@ -62,6 +62,13 @@ class BaseView {
     */
     public $description;
 
+
+    /**
+     *      Path to favicon
+    */
+    public $favIcon='/favicon.png';
+
+
     /**
      *      set this to the path of your working project
     */
@@ -196,7 +203,7 @@ class BaseView {
                 <title> %1\$s </title>
                 <meta name='description' content='%2\$s'>
         
-                <link type='image/x-icon' href='/favicon.png' rel='shortcut icon'>
+                <link type='image/x-icon' href='%7\$s' rel='shortcut icon'>
                 
                 <!--[if IE]>
                 <script type='text/javascript'>var isIE=true;</script>
@@ -215,7 +222,8 @@ class BaseView {
             $this->printStyles(),
             $this->printStyleSrcs(),
             $this->bodyStyles(),
-            $this->indexes[$this->activeIndex]
+            $this->indexes[$this->activeIndex],
+            $this->favIcon
         );
 
     }//buildMetaHeader
@@ -337,12 +345,35 @@ class BaseView {
     }//html
 
 
+    /**
+     *      Set the favicon to be used by the page
+     *
+     *
+     *      @param string $v the path to the favicon
+     *      @return void
+    */
+    public function favIcon($v){
+        $this->favIcon=$v;
+    }//favIcon
+
+
+
+
+    /**
+     *      Set a property on a script or style
+     *
+     *
+     *      @param string $k the key name
+     *      @param string $v the value
+     *      @return void 
+    */
     public function prop($k,$v){
         if($this->lastCallType=='script')
             $this->scriptSrcs[count($this->scriptSrcs)-1]['props'][$k]=$v;
         else 
             $this->styleSrcs[count($this->styleSrcs)-1]['props'][$k]=$v;
     }//prop
+
 
 
     /**
@@ -365,6 +396,7 @@ class BaseView {
      *
      *
      *      @param string $s a url path to a javascript file
+     *      @return object $this
     */
     public function scriptSrc($s){
 
@@ -393,6 +425,7 @@ class BaseView {
      *
      *
      *      @param string $s a url path to a CSS file
+     *      @return object $this
     */
     public function styleSrc($s){
         $this->styleSrcs[]=Array('src'=>$s,'props'=>Array());
