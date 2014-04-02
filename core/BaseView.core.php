@@ -143,6 +143,19 @@ class BaseView {
 
 
     /**
+     *      Specify that the output of this view should be json
+     *
+     *
+     *      @return void
+    */
+    public function json(){
+        View::isAjax();
+        header('Content-type: application/json');
+    }//json
+
+
+
+    /**
      *      Get the markup set for the view header
      *  
      *
