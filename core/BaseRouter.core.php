@@ -221,7 +221,7 @@ class BaseRouter {
      *      @param mixed    $v either null or a string
      *      @return void
      */
-    public function where($k,$v){
+    public function where($k,$v=null){
         if(is_array($k)){
             $this->variableRestrictions = $k;
             return;
