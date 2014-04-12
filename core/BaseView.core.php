@@ -29,18 +29,15 @@ class BaseView {
     */
     private $scripts = Array();
 
-
     /**
      *      hold script(js) URLs 
     */
     private $scriptSrcs = Array();
 
-
     /**
      *      hold head script(js) URLs 
     */
     private $headScriptSrcs = Array();
-
 
     /**
      *      hold style(css) bits
@@ -51,7 +48,6 @@ class BaseView {
      *      hold style(css) URLs 
     */
     private $styleSrcs = Array();
-
 
     /**
      * hold classes to apply to the body element
@@ -68,12 +64,10 @@ class BaseView {
     */
     public $description;
 
-
     /**
      *      Path to favicon
     */
     public $favIcon='/favicon.png';
-
 
     /**
      *      set this to the path of your working project
@@ -89,6 +83,11 @@ class BaseView {
      *      name of your default javascript file
     */
     public $script = 'js';
+
+    /**
+     *      Extra elements (added by user as a string) to go in the head of the page
+    */
+    public $headExtra = '';
 
     /**
      *      html mark up of our header
@@ -119,6 +118,21 @@ class BaseView {
      *      standard scrape
     */
     public $activeIndex=0;
+
+    /**
+     *      default language
+    */
+    public $lang='en';
+
+    /**
+     *      default charset 
+    */
+    public $charset='utf-8';
+
+    /**
+     *      SEO view?
+    */
+    public $seo=false;
 
 
 
@@ -204,6 +218,58 @@ class BaseView {
 
 
     /**
+     *      Set the lang of the page
+     *
+     *
+     *      @param string $lang the language to set the page as
+     *      @return void
+    */
+    public function lang($lang){
+        $this->lang=$lang;
+    }//lang
+
+
+
+    /**
+     *      Set the charset of the page
+     *
+     *
+     *      @param string $charset the charset the page should use 
+     *      @return void
+    */
+    public function charset($charset){
+        $this->charset=$charset;
+    }//charset
+
+
+
+    /**
+     *      Set extra elements in the header as a string
+     *      
+     *
+     *      @param string $extra the markup to put in the head of the page
+     *      @return void
+    */
+    public function headExtra($extra){
+        $this->headExtra.=$extra;
+    }//headExtra
+
+
+
+    /**
+     *      Set extra elements in the header as a string
+     *      
+     *
+     *      @param string $extra the markup to put in the head of the page
+     *      @return void
+    */
+    public function seo($bool=true){
+        $this->seo=$bool;
+    }//seo
+
+
+
+    /**
      *      Return the markup for the Views <head></head> element
      *
      *
@@ -213,38 +279,38 @@ class BaseView {
 
         $metaHeader = " 
         <!doctype html>
-            <html class='no-js' lang='en'>
+            <html lang='%1\$s'>
             <head>
-                <meta charset='utf-8' />
-                <meta content='%6\$s' name='robots'>
+                <meta charset='%2\$s' />
+                <meta content='%3\$s' name='robots'>
                 <meta name='viewport' content='width=device-width, initial-scale=1.0' />
                 
-                <title> %1\$s </title>
-                <meta name='description' content='%2\$s'>
+                <title>%4\$s</title>
+                <meta name='description' content='%5\$s'>
         
-                <link type='image/x-icon' href='%7\$s' rel='shortcut icon'>
-                
-                <!--[if IE]>
-                <script type='text/javascript'>var isIE=true;</script>
-                <![endif]-->
+                <link type='image/x-icon' href='%6\$s' rel='shortcut icon'>
                             
-                %3\$s
-                %4\$s
+                %7\$s
                 %8\$s
+                %9\$s
+                %10\$s
         
                 </head>
-            <body class='%5\$s'>
+            <body class='%11\$s'>
             ";
 
         return sprintf($metaHeader,
+            $this->lang,
+            $this->charset,
+            $this->indexes[$this->activeIndex],
             $this->title,
             $this->description,
-            $this->printStyles(),
-            $this->printStyleSrcs(),
-            $this->bodyStyles(),
-            $this->indexes[$this->activeIndex],
             $this->favIcon,
-            $this->printScriptSrcs($this->headScriptSrcs)
+            $this->printStyleSrcs(),
+            $this->printStyles(),
+            $this->printScriptSrcs($this->headScriptSrcs),
+            $this->headExtra,
+            $this->bodyStyles()
         );
 
     }//buildMetaHeader
@@ -268,21 +334,20 @@ class BaseView {
         //print the metaheader
         echo $this->metaHeader();
 
-        //print the body
-        echo '<div id="body">';
-            $this->HTMLDump();
-        echo '</div>';
+        $header = '<div id="header">'.(($this->header=='')?$this->header():$this->header).'</div>';
+        $footer = '<div id="footer">'.($this->footer=='')?$this->footer():$this->footer).'</div>';
+        $body = '<div id="body">'.$this->HTMLDump().'</div>';
 
-        //print the header  & footer
-        echo "
-            <div id='header'>
-            ".(($this->header=='')?$this->header():$this->header)."
-            </div>
-
-            <div id='footer'>
-            ".(($this->footer=='')?$this->footer():$this->footer)."
-            </div>
-            ";
+        if($this->seo){
+            echo $body;
+            echo $header;
+            echo $footer;
+        }//if
+        else {
+            echo $header;
+            echo $body;
+            echo $footer;
+        }//el
 
         //print the closing page info and markup 
         $this->printFooter();
