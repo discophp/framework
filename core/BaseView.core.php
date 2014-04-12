@@ -331,11 +331,14 @@ class BaseView {
             return;
         }//isAjax
 
+        if($this->seo)
+            $this->bodyStyle('seo');
+
         //print the metaheader
         echo $this->metaHeader();
 
         $header = '<div id="header">'.(($this->header=='')?$this->header():$this->header).'</div>';
-        $footer = '<div id="footer">'.($this->footer=='')?$this->footer():$this->footer).'</div>';
+        $footer = '<div id="footer">'.(($this->footer=='')?$this->footer():$this->footer).'</div>';
         $body = '<div id="body">'.$this->HTMLDump().'</div>';
 
         if($this->seo){
