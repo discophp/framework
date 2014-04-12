@@ -332,23 +332,26 @@ class BaseView {
         }//isAjax
 
         if($this->seo)
-            $this->bodyStyle('seo');
+            $this->bodyStyle('disco-seo');
 
         //print the metaheader
         echo $this->metaHeader();
 
         $header = '<div id="header">'.(($this->header=='')?$this->header():$this->header).'</div>';
         $footer = '<div id="footer">'.(($this->footer=='')?$this->footer():$this->footer).'</div>';
-        $body = '<div id="body">'.$this->HTMLDump().'</div>';
 
         if($this->seo){
-            echo $body;
+            echo '<div id="body">';
+            $this->HTMLDump();
+            echo '</div>';
             echo $header;
             echo $footer;
         }//if
         else {
             echo $header;
-            echo $body;
+            echo '<div id="body">';
+            $this->HTMLDump();
+            echo '</div>';
             echo $footer;
         }//el
 
