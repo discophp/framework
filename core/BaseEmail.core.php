@@ -19,6 +19,11 @@ class BaseEmail {
     */
     private $settings;
 
+
+    /**
+     *      Send emails as plain text only?
+    */
+    public $plainTextOnly=false;
     
     /**
      *      get our email settings
@@ -32,6 +37,10 @@ class BaseEmail {
         }//if
     }//construct
 
+
+    public function plainText($bool=true){
+        $this->plainTextOnly=$bool;
+    }//plainText
 
 
     /**
@@ -102,11 +111,16 @@ class BaseEmail {
         else 
             $message->setTo($toEmail);
 
-        //add the plain text verision to the email
-        $message->addPart(strip_tags($body),'text/plain');
+        if($this->plainTextOnly){
+            $message->setBody($body,'text/plain');
+        }//if
+        else {
+            //add the plain text verision to the email
+            $message->addPart(strip_tags($body),'text/plain');
 
-        // Give it a body
-        $message->setBody($body,'text/html');
+            // Give it a body
+            $message->setBody($body,'text/html');
+        }//el
 
         //attach attachments to message if any
         if($attach!=null){
