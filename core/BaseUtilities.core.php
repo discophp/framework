@@ -21,6 +21,8 @@ class BaseUtilities {
     }//cleanInput
 
     public function buildTime($cTime) {
+        if($cTime==0 || $cTime=='')
+            return;
         $timeSince=abs(round(time()-$cTime));$now;
         if(!($timeSince>60)){ $now=$timeSince; $now.=($now==1)?' second ago':' seconds ago'; return $now; }//endif
         elseif(!($timeSince>3600)){ $now=round(($timeSince/60)); $now.=($now==1)?' minute ago':' minutes ago'; return $now; }//end elseif
