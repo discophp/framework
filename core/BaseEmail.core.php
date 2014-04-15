@@ -32,8 +32,8 @@ class BaseEmail {
      *      @return void
      */
     public function __construct(){
-        if(is_file('../.mail.settings.json')){
-            $this->settings=json_decode(file_get_contents('../.mail.settings.json'));
+        if(is_file(Disco::$path.'/.mail.settings.json')){
+            $this->settings=json_decode(file_get_contents(Disco::$path.'/.mail.settings.json'));
         }//if
     }//construct
 

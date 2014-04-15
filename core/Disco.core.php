@@ -13,7 +13,13 @@
 
 
 $composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
-require("../{$composerPath}/autoload.php");
+
+//set the path
+Disco::$path = explode('/',$_SERVER['DOCUMENT_ROOT']);
+unset(Disco::$path[count(Disco::$path)-1]); 
+Disco::$path = implode('/',Disco::$path); 
+
+require(Disco::$path."/{$composerPath}/autoload.php");
 
 require('Prep.core.php');
 
@@ -30,6 +36,11 @@ Class Disco {
     */
     public static $routeMatch=false;
 
+
+    /**
+     *      Absolute Path of project
+    */
+    public static $path;
 
 
     /**
@@ -135,7 +146,7 @@ Class Disco {
     *       @return void
     */
     public static function useRouter($router){
-        $routerPath = "../app/router/$router.router.php";
+        $routerPath = Disco::$path."/app/router/$router.router.php";
         if(file_exists($routerPath)){
             Disco::$routeMatch=false;
             require($routerPath);

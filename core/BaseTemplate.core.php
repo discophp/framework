@@ -51,7 +51,7 @@ Class BaseTemplate {
      *      @return void
     */
     private function loadTemplate($name){
-        $path = "../app/template/{$name}.template.html";
+        $path = Disco::$path."/app/template/{$name}.template.html";
 
         if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
             if(Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
