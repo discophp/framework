@@ -16,6 +16,9 @@ $composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'ve
 
 //set the path
 Disco::$path = explode('/',$_SERVER['DOCUMENT_ROOT']);
+if(Disco::$path[count(Disco::$path)-1]==''){
+    unset(Disco::$path[count(Disco::$path)-1]);
+}//if
 unset(Disco::$path[count(Disco::$path)-1]); 
 Disco::$path = implode('/',Disco::$path); 
 
