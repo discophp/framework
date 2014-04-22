@@ -42,10 +42,14 @@ class BaseMySQLiDatabase extends mysqli {
      *
      *      @return void
      */
-    public function __construct() {
+    public function __construct($host=null,$user=null,$pw=null,$db=null) {
 
-        parent::__construct($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
-        //$this->mysqli = @new mysqli($_SERVER['DB_HOST'], $_SERVER['DB_USER'], $_SERVER['DB_PASSWORD'], $_SERVER['DB_DB']);
+        if($host==null){
+            $host=$_SERVER['DB_HOST'];$user=$_SERVER['DB_USER'];$pw=$_SERVER['DB_PASSWORD'];$db=$_SERVER['DB_DB'];
+        }//if
+
+        parent::__construct($host, $user, $pw, $db);
+
         if($this->connect_error){
             TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
             Util::death();
