@@ -173,6 +173,8 @@ class BaseMySQLiDatabase extends mysqli {
      *      @return mixed $arg
     */
     private function prepareType($arg){
+        if($arg==null || $arg=='null')
+            return 'NULL';
         $arg = $this->clean($arg);
         if(!is_numeric($arg))
             return "'$arg'";
