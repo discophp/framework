@@ -341,16 +341,22 @@ class BaseView {
         $footer = '<div id="footer">'.(($this->footer=='')?$this->footer():$this->footer).'</div>';
 
         if($this->seo){
-            echo '<div id="body">';
-            $this->HTMLDump();
+            echo '<div id="body-wrapper">';
+                echo '<div id="body">';
+                $this->HTMLDump();
+                echo '</div>';
+                echo $header;
+                echo '<div id="footer-spacing"></div>';
             echo '</div>';
-            echo $header;
             echo $footer;
         }//if
         else {
-            echo $header;
-            echo '<div id="body">';
-            $this->HTMLDump();
+            echo '<div id="body-wrapper">';
+                echo $header;
+                echo '<div id="body">';
+                $this->HTMLDump();
+                echo '</div>';
+                echo '<div id="footer-spacing"></div>';
             echo '</div>';
             echo $footer;
         }//el
