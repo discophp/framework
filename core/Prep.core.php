@@ -14,6 +14,21 @@ ini_set('session.use_trans_sid',0);
 ini_set('session.use_only_cookies',1);
 
 
+//if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+$_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
+
+
+//set the absolute path of the working project
+Disco::$path = explode('/',$_SERVER['DOCUMENT_ROOT']);
+
+if(Disco::$path[count(Disco::$path)-1]==''){
+    unset(Disco::$path[count(Disco::$path)-1]);
+}//if
+
+unset(Disco::$path[count(Disco::$path)-1]); 
+Disco::$path = implode('/',Disco::$path); 
+
+
 
 //Load our local settings
 $hostName = trim(shell_exec('hostname'),"\n");
@@ -33,6 +48,8 @@ else if(is_file(Disco::$path.'/.env.json')){
     }//foreach
 
 }//elif
+
+
 
 
 

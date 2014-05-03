@@ -11,20 +11,10 @@
 */
 
 
-
-$composerPath = (isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
-
-//set the path
-Disco::$path = explode('/',$_SERVER['DOCUMENT_ROOT']);
-if(Disco::$path[count(Disco::$path)-1]==''){
-    unset(Disco::$path[count(Disco::$path)-1]);
-}//if
-unset(Disco::$path[count(Disco::$path)-1]); 
-Disco::$path = implode('/',Disco::$path); 
-
-require(Disco::$path."/{$composerPath}/autoload.php");
-
 require('Prep.core.php');
+
+require(Disco::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
+
 
 
 /**
