@@ -52,8 +52,8 @@ class BaseRouter {
     public function __destruct(){
 
         //have no match already and this matches?
-        if(!Disco::routeMatch() && $this->match($this->param)){
-            Disco::routeMatch(true);
+        if(!Router::routeMatch() && $this->match($this->param)){
+            Router::routeMatch(true);
 
             if(!$this->function instanceof Closure){
 
@@ -268,11 +268,6 @@ class BaseRouter {
                 
                 $url = substr($url,strlen($value)+1);
 
-                //$slashCheck = stripos($value,'/');
-                //if($slashCheck!==false){
-                //    $value=substr($value,0,$slashCheck);
-                //}//if
-
                 $name = trim(trim($m,'{'),'}');
                 $variables[$name]=$value;
             }//foreach
@@ -310,41 +305,5 @@ class BaseRouter {
 }//Router
 
 
-/**
- *      We use the Router class as a static access point to a 
- *      factory generator for routers method of Disco by calling Disco::router()
- *      we also get a new instance returned.
- *
- */
-class Router {
-
-    public static function get($param,$function){
-        return Disco::router()->get($param,$function);
-    }//get
-
-    public static function post($param,$function){
-        return Disco::router()->post($param,$function);
-    }//post
-
-    public static function any($param,$function){
-        return Disco::router()->any($param,$function);
-    }//any
-
-    public static function put($param,$function){
-        return Disco::router()->put($param,$function);
-    }//any
-
-
-    public static function delete($param,$function){
-        return Disco::router()->delete($param,$function);
-    }//any
-
-    public static function secure(){
-        return Disco::router()->secure();
-    }//any
-
-
-
-}//Router
 
 ?>

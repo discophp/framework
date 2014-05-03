@@ -25,12 +25,6 @@ Class Disco {
 
 
     /**
-     *      Has a router matched a request.
-    */
-    public static $routeMatch=false;
-
-
-    /**
      *      Absolute Path of project
     */
     public static $path;
@@ -103,36 +97,7 @@ Class Disco {
 
 
     /**
-     *      a router instance 
-     *
-     *
-     *      @return core/BaseRouter
-     */
-    public static function router(){
-        return new BaseRouter();
-    }//router
-
-
-    /**
-     *      Once a router has found a match we notify disco so we dont perform more match attempts.
-     *      Unless we have a nested router, in which case we will flip the flag back to false
-     *      to allow further processing.
-     *
-     *
-     *      @param boolean $m
-     *      @return boolean
-     */
-    public static function routeMatch($m=null){
-        if($m!=null)
-            Disco::$routeMatch=$m;
-
-        return Disco::$routeMatch;
-
-    }//routerMatch
-
-
-    /**
-    *       Set a router.
+    *       Load a router.
     *
     *
     *       @param string $router
@@ -141,7 +106,7 @@ Class Disco {
     public static function useRouter($router){
         $routerPath = Disco::$path."/app/router/$router.router.php";
         if(file_exists($routerPath)){
-            Disco::$routeMatch=false;
+            Router::$routeMatch=false;
             require($routerPath);
         }//if
     }//useRouter
