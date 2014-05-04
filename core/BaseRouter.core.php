@@ -283,7 +283,6 @@ class BaseRouter {
                     if(!preg_match("/{$matchCondition}/",$v))
                         return false;
 
-                    Data::get()->set($k,$v);
                 }//if
                 $param = str_replace("{{$k}}",$v,$param);
             }//foreach
@@ -291,6 +290,11 @@ class BaseRouter {
 
             if($param==$_SERVER['REQUEST_URI']){
                 $this->variables=$variables;
+
+                foreach($variables as $k=>$v){
+                    $_GET[$k]=$v;
+                }//foreach
+
                 return true;
             }//if
             else 
