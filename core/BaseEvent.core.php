@@ -63,7 +63,15 @@ class BaseEvent {
             foreach($keys as $k){
                 $action = $this->events[$event]['actions'][$k];
                 if($action instanceof Closure){
-                    call_user_func($action);
+                    if($data==null){
+                        call_user_func($action);
+                    }//if
+                    else { 
+                        if(!is_array($data)){
+                            $data = Array($data);
+                        }//if
+                        call_user_func_array($action,$data);
+                    }//el
                 }//if
                 else {
                     $method='work';
