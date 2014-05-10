@@ -19,7 +19,7 @@
             "core/facades/"
         ],
         "psr-4": {
-            "Disco":"core/"
+            "Disco\\":"core/"
         }
     },
     "extra": {
