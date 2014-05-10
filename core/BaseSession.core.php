@@ -1,4 +1,7 @@
 <?php
+
+namespace Disco;
+
 /**
  *      This file holds the BaseSession class
 */

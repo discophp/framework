@@ -1,4 +1,7 @@
 <?php
+
+namespace Disco;
+
 /**
  *      This file contains the BaseCache class
 */

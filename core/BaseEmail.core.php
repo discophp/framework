@@ -1,4 +1,7 @@
 <?php
+
+namespace Disco;
+
 /**
  *      This file holds the BaseEmail class
  */
