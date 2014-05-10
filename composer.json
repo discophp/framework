@@ -17,7 +17,10 @@
         "classmap":[
             "core/",
             "core/facades/"
-        ]
+        ],
+        "psr-4": {
+            "Disco":"core/"
+        }
     },
     "extra": {
         "branch-alias":{

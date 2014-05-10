@@ -149,7 +149,7 @@ Disco::make('DB',function(){
 *       - core/facade/View.facade.php
 */
 Disco::make('View',function(){
-    return new BaseView();
+    return new Disco\BaseView();
 });
 
 
