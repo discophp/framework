@@ -46,7 +46,7 @@ class Router {
      *      @return core/BaseRouter
      */
     private static function instance(){
-        return new BaseRouter();
+        return new Disco\BaseRouter();
     }//instance
 
 
