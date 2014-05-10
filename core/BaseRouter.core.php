@@ -38,9 +38,18 @@ class BaseRouter {
     private $secureRoute=false;
 
 
+    /**
+     *      Store authentication requirements on route
+    */
+    private $auth=null;
+
+
 
     /*
-     *      When we tear down the object is when we do the work
+     *      When we tear down the object is when we do the work.
+     *      Since the BaseRouter instance is instantiated and never referenced is it destroyed as soon as it is 
+     *      called and its method chain has been executed.
+     *
      *      Find if there is a match and take the appropriate action:
      *          - Execute an instance of a Closure
      *          - Resolve the requested Controller and method
@@ -51,9 +60,23 @@ class BaseRouter {
     */
     public function __destruct(){
 
+        //if the route should be authenticated and no action should be taken
+        if($this->auth!=null && $this->auth['action']==null){
+            if(!$this->authenticated()){
+                return;
+            }//if
+        }//if
+
         //have no match already and this matches?
         if(!Router::routeMatch() && $this->match($this->param)){
             Router::routeMatch(true);
+
+            //if the route should be authenticated and an action should be taken
+            if($this->auth!=null){
+                if(!$this->authenticated()){
+                    header('Location:'.$this->auth['action']);
+                }//if
+            }//if
 
             if(!$this->function instanceof Closure){
 
@@ -80,6 +103,36 @@ class BaseRouter {
 
 
     /**
+     *      Return whether or not the request is authenticated by a session
+     *
+     *
+     *      @return boolean
+    */
+    private function authenticated(){
+
+        if(is_array($this->auth['session'])){
+            $has=false;
+            foreach($this->auth['session'] as $s){
+                if(Session::has($s)){
+                    $has=true;
+                }//if
+            }//foreach
+            if(!$has){
+                return false;
+            }//if
+        }//if
+        else {
+            if(!Session::has($this->auth['session'])){
+                return false;
+            }//if
+        }//el
+
+        return true;
+
+    }//authenticated
+
+
+    /**
      *      Only allow match on route if request method 
      *      was HTTPS
      *
@@ -90,6 +143,32 @@ class BaseRouter {
         $this->secureRoute=true;    
         return $this;
     }//secure
+
+
+    /**
+     *      Protect a route via the exsistence of a  session
+     *
+     *
+     *      @param mixed $session Either the session name, or an array of session names
+     *      @param mixed $action a URL string to redirect to if the route matches and the user isn't authenticated
+     *      @return object $this
+     *
+    */
+    public function auth($session,$action=null){
+
+        $this->auth = Array('session'=>null,'action'=>null);
+
+        if(is_array($session)){
+            $this->auth['session'] = $session;
+        }//if
+        else {
+            $this->auth['session']=$session;
+        }//el
+
+        $this->auth['action']=$action;
+
+        return $this;
+    }//auth
 
 
 
@@ -227,6 +306,7 @@ class BaseRouter {
             return;
         }//if
         $this->variableRestrictions[$k]=$v;
+        return $this;
     }//where
 
 
