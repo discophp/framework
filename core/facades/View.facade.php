@@ -1,6 +1,6 @@
 <?php
 
-class View extends Disco\Facade {
+class View extends Facade {
 
     protected static function returnFacadeId(){
         return 'View';
