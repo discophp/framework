@@ -84,7 +84,7 @@ class Event {
                         $method = $method[1];
                     }//if
                     $instance = new $action();
-                    Disco::handle($instance,$method,$data);
+                    \Disco::handle($instance,$method,$data);
                 }//el
             }//foreach
 

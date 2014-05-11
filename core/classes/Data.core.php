@@ -107,8 +107,8 @@ class Data {
 
         if(isset($dataType[$k])){
             $matchCondition = $v;
-            if(isset(Disco::$defaultMatchCondition[$v]))
-                $matchCondition = Disco::$defaultMatchCondition[$v];
+            if(isset(\Disco::$defaultMatchCondition[$v]))
+                $matchCondition = \Disco::$defaultMatchCondition[$v];
             if(!preg_match("/{$matchCondition}/",$dataType[$k]))
                 return false;
 
