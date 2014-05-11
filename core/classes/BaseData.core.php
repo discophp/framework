@@ -1,6 +1,6 @@
 <?php
 
-namespace Disco\classes;
+namespace Disco;
 
 /**
  *      This file holds the BaseData class
