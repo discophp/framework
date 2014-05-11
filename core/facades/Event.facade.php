@@ -1,6 +1,6 @@
 <?php
 
-class Event extends Disco\Facade {
+class Event extends Facade {
     
     protected static function returnFacadeId(){
         return 'Event';

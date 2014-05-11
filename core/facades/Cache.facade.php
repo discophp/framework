@@ -1,6 +1,6 @@
 <?php
 
-class Cache extends Disco\Facade {
+class Cache extends Facade {
 
     protected static function returnFacadeId(){
         return 'Cache';

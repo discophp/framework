@@ -1,6 +1,6 @@
 <?php
 
-Class Template extends Disco\Facade {
+Class Template extends Facade {
 
     protected static function returnFacadeId(){
         return 'Template';
