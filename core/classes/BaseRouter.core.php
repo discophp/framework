@@ -71,8 +71,8 @@ class BaseRouter {
         }//if
 
         //have no match already and this matches?
-        if(!Router::routeMatch() && $this->match($this->param)){
-            Router::routeMatch(true);
+        if(!\Router::routeMatch() && $this->match($this->param)){
+            \Router::routeMatch(true);
 
             //if the route should be authenticated and an action should be taken
             if($this->auth!=null){
@@ -81,7 +81,7 @@ class BaseRouter {
                 }//if
             }//if
 
-            if(!$this->function instanceof Closure){
+            if(!$this->function instanceof \Closure){
 
                 //is a controller being requested?
                 if(stripos($this->function,'@')!==false){
@@ -93,7 +93,7 @@ class BaseRouter {
                         foreach($this->variables as $k=>$v)
                             $vars[]=$v;
 
-                    Disco::handle($obj,$ctrl[1],$vars);
+                    \Disco::handle($obj,$ctrl[1],$vars);
                 }//if
             }//if
             else if($this->variables)
@@ -360,8 +360,8 @@ class BaseRouter {
                 if(isset($this->variableRestrictions[$k])){
                     $matchCondition = $this->variableRestrictions[$k];
 
-                    if(isset(Disco::$defaultMatchCondition[$matchCondition]))
-                        $matchCondition=Disco::$defaultMatchCondition[$matchCondition];
+                    if(isset(\Disco::$defaultMatchCondition[$matchCondition]))
+                        $matchCondition=\Disco::$defaultMatchCondition[$matchCondition];
 
                     if(!preg_match("/{$matchCondition}/",$v))
                         return false;
