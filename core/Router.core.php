@@ -38,6 +38,12 @@ class Router {
         return self::instance()->secure();
     }//any
 
+    public static function auth($session,$action=null){
+        return self::instance()->auth($session,$action);
+    }//any
+
+
+
 
     /**
      *      a router instance 
