@@ -20,6 +20,7 @@
         ],
         "psr-4": {
             "Disco\\":"core/"
+            "Disco\\classes\\":"core/classes/"
         }
     },
     "extra": {
