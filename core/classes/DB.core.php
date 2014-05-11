@@ -14,7 +14,7 @@ namespace Disco\classes;
  *      Settings in .env.*.json must be set in order to establish a connection to the server.
  *
 */
-class DB extends mysqli {
+class DB extends \mysqli {
 
 
     /**
