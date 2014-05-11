@@ -57,16 +57,16 @@ Class Template {
         $path = \Disco::$path."/app/template/{$name}.template.html";
 
         if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
-            if(Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
+            if(\Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
 
-                $lastModifiedCache = Cache::get($path.'-last-modified');
+                $lastModifiedCache = \Cache::get($path.'-last-modified');
                 if($lastModifiedCache){
                     $lastModified = filemtime($path);
                     if($lastModifiedCache!=$lastModified){
                         $this->cacheTemplate($path,$name);
                     }//if
                     else {
-                        $this->templates[$name]=Cache::get($path);
+                        $this->templates[$name]=\Cache::get($path);
                     }//el
                 }//if
                 else {
@@ -115,8 +115,8 @@ Class Template {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        Cache::set($path.'-last-modified',filemtime($path));
-        Cache::set($path,$this->templates[$name]);
+        \Cache::set($path.'-last-modified',filemtime($path));
+        \Cache::set($path,$this->templates[$name]);
 
     }//cacheTemplate
 
@@ -168,7 +168,7 @@ Class Template {
      *      @param array $data
     */
     public function with($name,$data=Array()){
-        View::html($this->build($name,$data));
+        \View::html($this->build($name,$data));
     }//with
 
 
