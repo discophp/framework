@@ -16,7 +16,7 @@
     "autoload": {
         "classmap":[
             "core/",
-            "core/facades/",
+            "core/facades/"
         ],
         "psr-4": {
             "Disco\\":"core/"
