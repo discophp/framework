@@ -1,6 +1,6 @@
 <?php
 
-namespace Disco;
+namespace Disco\classes;
 
 /**
  *      This file contains the class BaseCrypt

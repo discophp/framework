@@ -1,6 +1,6 @@
 <?php
 
-namespace Disco;
+namespace Disco\classes;
 
 /**
  *      This file hold the class BaseEvent

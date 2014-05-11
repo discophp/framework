@@ -1,4 +1,7 @@
 <?php
+
+namespace Disco\classes;
+
 /**
  *      This file hold the BaseModel class
 */

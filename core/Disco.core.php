@@ -137,7 +137,7 @@ Class Disco {
 *       - core/facade/DB.facade.php
 */
 Disco::make('DB',function(){
-    return new Disco\BaseMySQLiDatabase();
+    return new Disco\classes\BaseMySQLiDatabase();
 });
 
 
@@ -149,7 +149,7 @@ Disco::make('DB',function(){
 *       - core/facade/View.facade.php
 */
 Disco::make('View',function(){
-    return new Disco\BaseView();
+    return new Disco\classes\BaseView();
 });
 
 
@@ -162,7 +162,7 @@ Disco::make('View',function(){
 *
 */
 Disco::make('Template',function(){
-    return new Disco\BaseTemplate();
+    return new Disco\classes\BaseTemplate();
 });
 
 
@@ -175,7 +175,7 @@ Disco::make('Template',function(){
 *
 */
 Disco::make('Model',function(){
-    return new Disco\ModelFactory();
+    return new Disco\classes\ModelFactory();
 });
 
 
@@ -187,7 +187,7 @@ Disco::make('Model',function(){
 *
 */
 Disco::make('Util',function(){
-    return new Disco\BaseUtilities();
+    return new Disco\classes\BaseUtilities();
 });
 
 
@@ -199,7 +199,7 @@ Disco::make('Util',function(){
 *
 */
 Disco::make('Cache',function(){
-    return new Disco\BaseCache();
+    return new Disco\classes\BaseCache();
 });
 
 
@@ -211,7 +211,7 @@ Disco::make('Cache',function(){
 *
 */
 Disco::make('Crypt',function(){
-    return new Disco\BaseCrypt();
+    return new Disco\classes\BaseCrypt();
 });
 
 
@@ -222,7 +222,7 @@ Disco::make('Crypt',function(){
 *
 */
 Disco::make('Email',function(){
-    return new Disco\BaseEmail();
+    return new Disco\classes\BaseEmail();
 });
 
 
@@ -234,7 +234,7 @@ Disco::make('Email',function(){
 *
 */
 Disco::make('Session',function(){
-    return new Disco\BaseSession();
+    return new Disco\classes\BaseSession();
 });
 
 
@@ -245,7 +245,7 @@ Disco::make('Session',function(){
 *
 */
 Disco::make('Event',function(){
-    return new Disco\BaseEvent();
+    return new Disco\classes\BaseEvent();
 });
 
 
@@ -255,7 +255,7 @@ Disco::make('Event',function(){
 *       - core/facade/Data.facade.php
 */
 Disco::make('Data',function(){
-    return new Disco\BaseData();
+    return new Disco\classes\BaseData();
 });
 
 
