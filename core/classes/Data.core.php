@@ -12,7 +12,7 @@ namespace Disco\classes;
  *      Provides easy wrapper around using HTTP data centric around
  *      the RESTful priciples PUT,POST,GET,DELETE
 */
-class BaseData {
+class Data {
 
     /**
      *      Holds the PUT data

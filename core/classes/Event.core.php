@@ -14,7 +14,7 @@ namespace Disco\classes;
  *      Implements a Broadcast/Receiver pattern.
  *
 */
-class BaseEvent {
+class Event {
 
 
 

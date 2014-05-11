@@ -13,7 +13,7 @@ namespace Disco\classes;
 *       See documentation online at discophp.com/docs/Tempalte
 *
 */
-Class BaseTemplate {
+Class Template {
 
     /**
      *      Store our accessed templates

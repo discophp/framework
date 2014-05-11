@@ -10,7 +10,7 @@ namespace Disco\classes;
 /**
 *       The BaseCache class extends Memcache
 */
-class BaseCache extends Memcache {
+class Cache extends Memcache {
 
 
     /**

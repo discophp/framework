@@ -13,7 +13,7 @@ namespace Disco\classes;
  *      Used to resove a RESTful endpoint to an action, either a Closure or a Controller.
  *
 */
-class BaseRouter {
+class Router {
 
     /**
      *      url path to match

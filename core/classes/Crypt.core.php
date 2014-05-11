@@ -13,7 +13,7 @@ namespace Disco\classes;
  *      Provides easy wrapper around mcryp php module
  *
 */
-class BaseCrypt {
+class Crypt {
 
 
 

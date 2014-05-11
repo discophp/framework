@@ -15,7 +15,7 @@ namespace Disco\classes;
  *
  *      See the docs at discophp.com/docs/View
 */
-class BaseView {
+class View {
 
     /**
      *      Flips between script and style

@@ -137,7 +137,7 @@ Class Disco {
 *       - core/facade/DB.facade.php
 */
 Disco::make('DB',function(){
-    return new Disco\classes\BaseMySQLiDatabase();
+    return new Disco\classes\DB();
 });
 
 
@@ -149,7 +149,7 @@ Disco::make('DB',function(){
 *       - core/facade/View.facade.php
 */
 Disco::make('View',function(){
-    return new Disco\classes\BaseView();
+    return new Disco\classes\View();
 });
 
 
@@ -162,7 +162,7 @@ Disco::make('View',function(){
 *
 */
 Disco::make('Template',function(){
-    return new Disco\classes\BaseTemplate();
+    return new Disco\classes\Template();
 });
 
 
@@ -187,7 +187,7 @@ Disco::make('Model',function(){
 *
 */
 Disco::make('Util',function(){
-    return new Disco\classes\BaseUtilities();
+    return new Disco\classes\Util();
 });
 
 
@@ -199,7 +199,7 @@ Disco::make('Util',function(){
 *
 */
 Disco::make('Cache',function(){
-    return new Disco\classes\BaseCache();
+    return new Disco\classes\Cache();
 });
 
 
@@ -211,7 +211,7 @@ Disco::make('Cache',function(){
 *
 */
 Disco::make('Crypt',function(){
-    return new Disco\classes\BaseCrypt();
+    return new Disco\classes\Crypt();
 });
 
 
@@ -222,7 +222,7 @@ Disco::make('Crypt',function(){
 *
 */
 Disco::make('Email',function(){
-    return new Disco\classes\BaseEmail();
+    return new Disco\classes\Email();
 });
 
 
@@ -234,7 +234,7 @@ Disco::make('Email',function(){
 *
 */
 Disco::make('Session',function(){
-    return new Disco\classes\BaseSession();
+    return new Disco\classes\Session();
 });
 
 
@@ -245,7 +245,7 @@ Disco::make('Session',function(){
 *
 */
 Disco::make('Event',function(){
-    return new Disco\classes\BaseEvent();
+    return new Disco\classes\Event();
 });
 
 
@@ -255,7 +255,7 @@ Disco::make('Event',function(){
 *       - core/facade/Data.facade.php
 */
 Disco::make('Data',function(){
-    return new Disco\classes\BaseData();
+    return new Disco\classes\Data();
 });
 
 

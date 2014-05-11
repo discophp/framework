@@ -15,7 +15,7 @@ namespace Disco\classes;
  *      This class relies on the settings set in .mail.settings.json
  *
 */
-class BaseEmail {
+class Email {
 
     /**
      *      holds json from ../.mail.settings.json

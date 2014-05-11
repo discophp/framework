@@ -11,7 +11,7 @@ namespace Disco\classes;
  *      Convient wrapper around using $_SESSION variables.
  *      Helps add a security layer around the use of sessions by checking for session hijacking
 */
-class BaseSession {
+class Session {
 
 
 
