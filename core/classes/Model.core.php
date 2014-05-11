@@ -16,7 +16,7 @@ namespace Disco\classes;
  *      These extending classes must set $table and $ids to use the ORM.
  *
 */
-class BaseModel {
+class Model {
 
     /**
     *       The SQL Table associated with this model
@@ -170,8 +170,8 @@ class BaseModel {
         $values = rtrim($values,',');
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
-        $this->lastQuery = DB::set($query,$tempValues);
-        return DB::query($this->lastQuery);
+        $this->lastQuery = \DB::set($query,$tempValues);
+        return \DB::query($this->lastQuery);
 
     }//insert
 
@@ -189,7 +189,7 @@ class BaseModel {
         $this->clearData();
         $this->where = $this->prepareCondition(func_get_args(),'AND');
         $this->lastQuery = "DELETE FROM {$this->table} WHERE {$this->where}";
-        return DB::query($this->lastQuery);
+        return \DB::query($this->lastQuery);
     }//delete
 
 
@@ -336,7 +336,7 @@ class BaseModel {
             $where='WHERE '.$where;
 
         $this->lastQuery ="UPDATE {$this->table} SET {$update} {$where}"; 
-        return DB::query($this->lastQuery);
+        return \DB::query($this->lastQuery);
 
     }//do
 
@@ -406,9 +406,9 @@ class BaseModel {
 
         $this->lastQuery = "SELECT {$select} FROM {$this->table} {$joinOn} {$where} {$order} {$limit}";
 
-        DB::query($this->lastQuery); 
+        \DB::query($this->lastQuery); 
 
-        return DB::last();
+        return \DB::last();
 
     }//fetchData
 
@@ -452,7 +452,7 @@ class BaseModel {
 
             }//for
 
-            $where = DB::set(rtrim($where,','),$values);
+            $where = \DB::set(rtrim($where,','),$values);
 
             if($this->where!='')
                 $where = " {$conjunction} {$where} ";
