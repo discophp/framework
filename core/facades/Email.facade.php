@@ -1,6 +1,6 @@
 <?php
 
-class Email extends Facade {
+class Email extends Disco\classes\Facade {
 
     protected static function returnFacadeId(){
         return 'Email';

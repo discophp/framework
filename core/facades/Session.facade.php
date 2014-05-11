@@ -1,6 +1,6 @@
 <?php
 
-class Session extends Facade {
+class Session extends Disco\classes\Facade {
     protected static function returnFacadeId(){
         return 'Session';
     }//returnFacadeId

@@ -1,6 +1,6 @@
 <?php
 
-class Util extends Facade {
+class Util extends Disco\classes\Facade {
 
     protected static function returnFacadeId(){
         return 'Util';

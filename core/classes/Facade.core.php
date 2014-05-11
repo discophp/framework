@@ -1,5 +1,6 @@
 <?php
 
+namespace Disco\classes;
 
 /**
  *      This file holds the Facade class
@@ -40,14 +41,14 @@ abstract class Facade {
      */
     public static function __callStatic($method,$args){
 
-        $instance = Disco::$facades[static::returnFacadeId()];
+        $instance = \Disco::$facades[static::returnFacadeId()];
 
-        if($instance instanceof Closure){
+        if($instance instanceof \Closure){
             $instance=call_user_func($instance);
-            Disco::$facades[static::returnFacadeId()]=$instance;
+            \Disco::$facades[static::returnFacadeId()]=$instance;
         }//if
 
-        return Disco::handle($instance,$method,$args);
+        return \Disco::handle($instance,$method,$args);
 
     }//callStatic
 
@@ -60,11 +61,11 @@ abstract class Facade {
      */
     public static function instance(){
 
-        $instance = Disco::$facades[static::returnFacadeId()];
+        $instance = \Disco::$facades[static::returnFacadeId()];
 
-        if($instance instanceof Closure){
+        if($instance instanceof \Closure){
             $instance=call_user_func($instance);
-            Disco::$facades[static::returnFacadeId()]=$instance;
+            \Disco::$facades[static::returnFacadeId()]=$instance;
         }//if
 
         return $instance;
