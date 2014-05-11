@@ -1,6 +1,6 @@
 <?php
 
-class Crypt extends Facade {
+class Crypt extends Disco\Facade {
 
     protected static function returnFacadeId(){
         return 'Crypt';
