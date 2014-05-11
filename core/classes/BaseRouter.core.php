@@ -198,7 +198,7 @@ class BaseRouter {
      *      @return object $this
      */
     public function get($param,$function){
-        if(count($_POST)>0 || count(Data::put()->all())>0 || count(Data::delete()->all())>0)
+        if(count($_POST)>0 || count(\Data::put()->all())>0 || count(\Data::delete()->all())>0)
             return $this->whiteOutRoute();
         else if($this->secureRoute && empty($_SERVER['HTTPS']))
             return $this->whiteOutRoute();
