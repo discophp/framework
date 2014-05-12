@@ -114,7 +114,7 @@ class Data {
 
             if($this->escapeValue){
                 $this->escapeValue=false;
-                return DB::clean($dataType[$k]);
+                return \DB::clean($dataType[$k]);
             }//if
 
             return $dataType[$k];
@@ -141,7 +141,7 @@ class Data {
         else if(isset($_GET[$g])){
             if($this->escapeValue){
                 $this->escapeValue=false;
-                return DB::clean($_GET[$g]);
+                return \DB::clean($_GET[$g]);
             }//if
             return $_GET[$g];
         }//if
@@ -166,7 +166,7 @@ class Data {
         else if(isset($_POST[$p])){
             if($this->escapeValue){
                 $this->escapeValue=false;
-                return DB::clean($_POST[$p]);
+                return \DB::clean($_POST[$p]);
             }//if
             return $_POST[$p];
         }//if
@@ -191,7 +191,7 @@ class Data {
         else if(isset($this->deleteData[$d])){
             if($this->escapeValue){
                 $this->escapeValue=false;
-                return DB::clean($this->deleteData[$d]);
+                return \DB::clean($this->deleteData[$d]);
             }//if
             return $this->deleteData[$d];
         }//if
@@ -216,7 +216,7 @@ class Data {
         else if(isset($this->putData[$p])){
             if($this->escapeValue){
                 $this->escapeValue=false;
-                return DB::clean($this->putData[$p]);
+                return \DB::clean($this->putData[$p]);
             }//if
             return $this->putData[$p];
         }//if
