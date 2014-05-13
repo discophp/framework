@@ -199,7 +199,35 @@ Class Template {
 
         return $this->beingModified;
 
-    }//returnData
+    }//build
+
+
+
+    /**
+     *      treat dynamic markup as a template to be processed 
+     *
+     *      @param string $name
+     *      @param array $data
+     *      @return string
+    */
+    public function live($markup,$data=Array()){
+        $this->beingModified = $markup;
+        $this->beingModified = $this->appendTemplate($data);
+
+        if(count($data)!=0){
+
+            //call set to embed the variables
+            $this->set($data);
+
+        }//if
+
+        //cal setElses to set the else clauses
+        $this->setElses();
+
+
+        return $this->beingModified;
+
+    }//live
 
 
 
