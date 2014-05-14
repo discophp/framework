@@ -22,6 +22,11 @@
         "psr-4": {
             "Disco\\":"core/"
         }
+    },
+    "extra": {
+        "branch-alias":{
+            "v2.0":"2.0.x-stable"
+        }
     }
     
 }
