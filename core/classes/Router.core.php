@@ -306,7 +306,7 @@ class Router {
     public function where($k,$v=null){
         if(is_array($k)){
             $this->variableRestrictions = $k;
-            return;
+            return $this;
         }//if
         $this->variableRestrictions[$k]=$v;
         return $this;
