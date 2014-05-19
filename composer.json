@@ -11,12 +11,14 @@
     "minimum-stability": "dev",
     "require": {
         "php":">=5.4.0",
-        "swiftmailer/swiftmailer":"v5.0.3"
+        "swiftmailer/swiftmailer":"v5.0.3",
+        "jeremeamia/superclosure":"~1.0"
     },
     "autoload": {
         "classmap":[
             "core/",
             "core/facades/",
+            "core/manage/",
             "core/classes/"
         ],
         "psr-4": {
