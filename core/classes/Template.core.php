@@ -302,6 +302,8 @@ Class Template {
 
             do {
                 $info = $this->parseInfo('',$t);
+                if($info['templateName']=='' || $info['templateName']=='.')
+                    return $t;
                 $t = $this->insertTemplate($info,'','',$t);
             } while($info);
 
@@ -312,6 +314,8 @@ Class Template {
 
             do {
                 $info = $this->parseInfo($k,$t);
+                if($info['templateName']=='' || $info['templateName']=='.')
+                    return $t;
                 $t = $this->insertTemplate($info,$k,$v,$t);
             } while($info);
         }//foreach
