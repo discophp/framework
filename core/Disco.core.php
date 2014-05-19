@@ -35,6 +35,18 @@ Class Disco {
     */
     public static $facades=Array();
 
+    //private static $defaults=Array(
+    //    'Cache'=>new Closure(function(){ return new \Disco\classes\Cache;}),
+    //    'Crypt'=>function(){ return new \Disco\classes\Crypt;},
+    //    'Data'=>function(){ return new \Disco\classes\Data;},
+    //    'DB'=>function(){ return new \Disco\classes\DB;},
+    //    'Event'=>function(){ return new \Disco\classes\Event;},
+    //    'Model'=>function(){ return new \Disco\classes\Model;},
+    //    'Session'=>function(){ return new \Disco\classes\Session;},
+    //    'Template'=>function(){ return new \Disco\classes\Template;},
+    //    'View'=>function(){ return new \Disco\classes\View;}
+    //);
+
 
     /**
      *      default regex matching conditions
@@ -127,136 +139,145 @@ Class Disco {
     }//addCondition
 
 
+    public static function registerDefaults(){
+        //foreach($this->defaults as $k=>$v){
+        //    Disco::make($k,$v);
+        //}//foreach
+
+        /**
+        *       Make our DB Facade using
+        *       - core/BaseMySQLiDatabase.core.php
+        *       - core/facade/DB.facade.php
+        */
+        Disco::make('DB',function(){
+            return new Disco\classes\DB();
+        });
+        
+        
+        
+        /**
+        *       Make our View Facade using
+        *       - core/BaseView.core.php
+        *       - core/facade/View.facade.php
+        */
+        Disco::make('View',function(){
+            return new Disco\classes\View();
+        });
+        
+        
+        
+        
+        /**
+        *       Make our Template Facade using
+        *       - core/BaseTemplate.core.php
+        *       - core/facade/Template.facade.php
+        *
+        */
+        Disco::make('Template',function(){
+            return new Disco\classes\Template();
+        });
+        
+        
+        
+        
+        /**
+        *       Make our Model Facade using
+        *       - core/ModelFactory.core.php
+        *       - core/facade/Model.facade.php
+        *
+        */
+        Disco::make('Model',function(){
+            return new Disco\classes\ModelFactory();
+        });
+        
+        
+        
+        /**
+        *       Make our Util Facade using
+        *       - core/BaseUtilities.core.php
+        *       - core/facade/Util.facade.php
+        *
+        */
+        Disco::make('Util',function(){
+            return new Disco\classes\Util();
+        });
+        
+        
+        
+        /**
+        *       Make our Cache Facade using
+        *       - core/BaseUtilities.core.php
+        *       - core/facade/Util.facade.php
+        *
+        */
+        Disco::make('Cache',function(){
+            return new Disco\classes\Cache();
+        });
+        
+        
+        
+        /**
+        *       Make our Crypt Facade using
+        *       - core/BaseCrypt.core.php
+        *       - core/facade/Crypt.facade.php
+        *
+        */
+        Disco::make('Crypt',function(){
+            return new Disco\classes\Crypt();
+        });
+        
+        
+        /**
+        *       Make our Email Facade using
+        *       - core/BaseEmail.core.php
+        *       - core/facade/Email.facade.php
+        *
+        */
+        Disco::make('Email',function(){
+            return new Disco\classes\Email();
+        });
+        
+        
+        
+        /**
+        *       Make our Session Facade using
+        *       - core/BaseSession.core.php
+        *       - core/facade/Session.facade.php
+        *
+        */
+        Disco::make('Session',function(){
+            return new Disco\classes\Session();
+        });
+        
+        
+        /**
+        *       Make our Event Facade using
+        *       - core/BaseEvent.core.php
+        *       - core/facade/Event.facade.php
+        *
+        */
+        Disco::make('Event',function(){
+            return new Disco\classes\Event();
+        });
+        
+        
+        /**
+        *       Make our Data Facding using
+        *       - core/BaseData.core.php
+        *       - core/facade/Data.facade.php
+        */
+        Disco::make('Data',function(){
+            return new Disco\classes\Data();
+        });
+
+
+
+    }//registerDefaults
+
+
 }//Disco
 
-
-
-/**
-*       Make our DB Facade using
-*       - core/BaseMySQLiDatabase.core.php
-*       - core/facade/DB.facade.php
-*/
-Disco::make('DB',function(){
-    return new Disco\classes\DB();
-});
-
-
-
-
-/**
-*       Make our View Facade using
-*       - core/BaseView.core.php
-*       - core/facade/View.facade.php
-*/
-Disco::make('View',function(){
-    return new Disco\classes\View();
-});
-
-
-
-
-/**
-*       Make our Template Facade using
-*       - core/BaseTemplate.core.php
-*       - core/facade/Template.facade.php
-*
-*/
-Disco::make('Template',function(){
-    return new Disco\classes\Template();
-});
-
-
-
-
-/**
-*       Make our Model Facade using
-*       - core/ModelFactory.core.php
-*       - core/facade/Model.facade.php
-*
-*/
-Disco::make('Model',function(){
-    return new Disco\classes\ModelFactory();
-});
-
-
-
-/**
-*       Make our Util Facade using
-*       - core/BaseUtilities.core.php
-*       - core/facade/Util.facade.php
-*
-*/
-Disco::make('Util',function(){
-    return new Disco\classes\Util();
-});
-
-
-
-/**
-*       Make our Cache Facade using
-*       - core/BaseUtilities.core.php
-*       - core/facade/Util.facade.php
-*
-*/
-Disco::make('Cache',function(){
-    return new Disco\classes\Cache();
-});
-
-
-
-/**
-*       Make our Crypt Facade using
-*       - core/BaseCrypt.core.php
-*       - core/facade/Crypt.facade.php
-*
-*/
-Disco::make('Crypt',function(){
-    return new Disco\classes\Crypt();
-});
-
-
-/**
-*       Make our Email Facade using
-*       - core/BaseEmail.core.php
-*       - core/facade/Email.facade.php
-*
-*/
-Disco::make('Email',function(){
-    return new Disco\classes\Email();
-});
-
-
-
-/**
-*       Make our Session Facade using
-*       - core/BaseSession.core.php
-*       - core/facade/Session.facade.php
-*
-*/
-Disco::make('Session',function(){
-    return new Disco\classes\Session();
-});
-
-
-/**
-*       Make our Event Facade using
-*       - core/BaseEvent.core.php
-*       - core/facade/Event.facade.php
-*
-*/
-Disco::make('Event',function(){
-    return new Disco\classes\Event();
-});
-
-
-/**
-*       Make our Data Facding using
-*       - core/BaseData.core.php
-*       - core/facade/Data.facade.php
-*/
-Disco::make('Data',function(){
-    return new Disco\classes\Data();
-});
+Disco::registerDefaults();
 
 
 ?>

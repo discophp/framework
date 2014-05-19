@@ -299,18 +299,21 @@ Class Template {
     private function appendTemplate($data){
         $t = $this->beingModified;
         if(!$data){
-            $info = $this->parseInfo('',$t);
-            if($info){
+
+            do {
+                $info = $this->parseInfo('',$t);
                 $t = $this->insertTemplate($info,'','',$t);
-            }//if
+            } while($info);
+
             return $t;
         }//if
 
         foreach($data as $k=>$v){
-            $info = $this->parseInfo($k,$t);
-            if($info){
+
+            do {
+                $info = $this->parseInfo($k,$t);
                 $t = $this->insertTemplate($info,$k,$v,$t);
-            }//if
+            } while($info);
         }//foreach
         return $t;
     }//appendTemplate
