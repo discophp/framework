@@ -67,13 +67,13 @@ class Event {
                 $action = $this->events[$event]['actions'][$k];
                 if($action instanceof \Closure){
                     if($data==null){
-                        call_user_func($action);
+                        return call_user_func($action);
                     }//if
                     else { 
                         if(!is_array($data)){
                             $data = Array($data);
                         }//if
-                        call_user_func_array($action,$data);
+                        return call_user_func_array($action,$data);
                     }//el
                 }//if
                 else {
@@ -84,7 +84,7 @@ class Event {
                         $method = $method[1];
                     }//if
                     $instance = new $action();
-                    \Disco::handle($instance,$method,$data);
+                    return \Disco::handle($instance,$method,$data);
                 }//el
             }//foreach
 
