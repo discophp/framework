@@ -97,10 +97,10 @@ class Email {
     public function send($account,$toEmail,$subject,$body,$attach=null){
 
         // Approach 1: Change the global setting (suggested)
-        Swift_Preferences::getInstance()->setCharset('iso-8859-2');
+        \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
 
         //Create the message
-        $message = Swift_Message::newInstance();
+        $message = \Swift_Message::newInstance();
          
         // Give the message a subject
         $message->setSubject($subject);
@@ -128,7 +128,7 @@ class Email {
         //attach attachments to message if any
         if($attach!=null){
             for($i=0;$i<count($attach);$i++){
-                $message->attach(Swift_Attachment::fromPath($attach[$i]));
+                $message->attach(\Swift_Attachment::fromPath($attach[$i]));
             }//for
         }//if
          
@@ -142,12 +142,12 @@ class Email {
             if($type=='smtp')
                 $type='';
 
-            $transport = Swift_SmtpTransport::newInstance($server,$port,$type);
+            $transport = \Swift_SmtpTransport::newInstance($server,$port,$type);
             $transport->setUsername($this->settings->{$account}->{'NAME'});
             $transport->setPassword($this->settings->{$account}->{'PASSWORD'});
             
             // Create the Mailer using the Transport
-            $mailer = Swift_Mailer::newInstance($transport);
+            $mailer = \Swift_Mailer::newInstance($transport);
             
             // Send the message
             $result = $mailer->send($message);
@@ -156,10 +156,10 @@ class Email {
 
             return $result;
         }//try
-        catch(Swift_TransportException $e){
+        catch(\Swift_TransportException $e){
             echo $e;
         }//catch
-        catch(Exception $e){
+        catch(\Exception $e){
             echo $e;
         }//catch
 
