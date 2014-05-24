@@ -336,6 +336,9 @@ class Router {
         $urlPieces = explode('/',$url);
 
         foreach($urlPieces as $k=>$urlPiece){
+            if(!isset($paramPieces[$k])){
+                return false;
+            }//if
             $paramPiece = $paramPieces[$k];
 
             if(substr($paramPiece,0,1)!='{'){
