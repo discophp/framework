@@ -459,6 +459,25 @@ class View {
 
 
 
+    /**
+     *      When we create full path links to resources and the browser is using SSL/HTTPS
+     *      we need to make sure we request that resource as such in order to avoid mixed content errors
+     *
+     *
+     *      @param string $p the path of the resource
+     *      @h string $h the host of the resource ( if not local)
+    */
+    public function url($p,$h=null){
+        if(!empty($_SERVER['HTTPS']) && $h==null && substr($p,0,1)=='/'){
+            $p = 'https://'.$_SERVER['URL'].$p;                                                                             
+        }//if                                                                                                               
+        else if($h!=null && substr($h,0,3)!='http'){                                                                        
+            $p = 'http://'.$h.$p;                                                                                           
+        }//elif   
+        return $p;
+    }//url
+
+
 
     /**
      *      Set a property on a script or style
@@ -593,6 +612,7 @@ class View {
             $props='';
             foreach($s['props'] as $k=>$v)
                 $props.="{$k}='{$v}' ";
+            $s['src'] = $this->url($s['src']);
            $scripts.="<script type='text/javascript' src='{$s['src']}' {$props}></script>"; 
         }//foreach
         return $scripts;
@@ -627,6 +647,7 @@ class View {
             $props='';
             foreach($s['props'] as $k=>$v)
                 $props.="{$k}='{$v}' ";
+            $s['src'] = $this->url($s['src']);
             $styles.= "<link rel='stylesheet' href='{$s['src']}' type='text/css' {$props}/>";
         }//foreach
         return $styles;
