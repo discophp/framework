@@ -116,7 +116,7 @@ class Router {
         if(is_array($this->auth['session'])){
             $has=false;
             foreach($this->auth['session'] as $s){
-                if(Session::has($s)){
+                if(\Session::has($s)){
                     $has=true;
                 }//if
             }//foreach
@@ -125,7 +125,7 @@ class Router {
             }//if
         }//if
         else {
-            if(!Session::has($this->auth['session'])){
+            if(!\Session::has($this->auth['session'])){
                 return false;
             }//if
         }//el
