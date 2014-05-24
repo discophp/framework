@@ -42,6 +42,13 @@ class Router {
 
 
     /**
+     *      Is this Router a Filter Router?
+    */
+    private $isFilter=false;
+
+    private $useRouter=null;
+
+    /**
      *      Store authentication requirements on route
     */
     private $auth=null;
@@ -50,7 +57,7 @@ class Router {
 
     /*
      *      When we tear down the object is when we do the work.
-     *      Since the BaseRouter instance is instantiated and never referenced is it destroyed as soon as it is 
+     *      Since the (this)Router instance is instantiated and never referenced is it destroyed as soon as it is 
      *      called and its method chain has been executed.
      *
      *      Find if there is a match and take the appropriate action:
@@ -70,14 +77,29 @@ class Router {
             }//if
         }//if
 
+        if(!\Router::routeMatch() && $this->isFilter && $this->filterMatch($this->param)){
+            //if the route should be authenticated and an action should be taken
+            if($this->auth!=null){
+                if(!$this->authenticated()){
+                    header('Location:'.$this->auth['action']);
+                    exit;
+                }//if
+            }//if
+            if($this->secureRoute && empty($_SERVER['HTTPS'])){
+                return;
+            }//if
+
+            \Router::useRouter($this->useRouter);
+        }//if
         //have no match already and this matches?
-        if(!\Router::routeMatch() && $this->match($this->param)){
+        else if(!\Router::routeMatch() && $this->match($this->param)){
             \Router::routeMatch(true);
 
             //if the route should be authenticated and an action should be taken
             if($this->auth!=null){
                 if(!$this->authenticated()){
                     header('Location:'.$this->auth['action']);
+                    exit;
                 }//if
             }//if
 
@@ -186,6 +208,20 @@ class Router {
         $this->param=null;
         return $this;
     }//whiteOutRoute
+
+
+
+    public function filter($param){
+        $this->isFilter=true;
+        $this->param = $param;
+        return $this;
+    }//filter
+
+
+    public function to($r){
+        $this->useRouter=$r;
+        return $this;
+    }//filter
 
 
 
@@ -335,10 +371,11 @@ class Router {
         $paramPieces = explode('/',$param);
         $urlPieces = explode('/',$url);
 
+        if(count($paramPieces) != count($urlPieces)){
+            return false;
+        }//if
+
         foreach($urlPieces as $k=>$urlPiece){
-            if(!isset($paramPieces[$k])){
-                return false;
-            }//if
             $paramPiece = $paramPieces[$k];
 
             if(substr($paramPiece,0,1)!='{'){
@@ -372,6 +409,24 @@ class Router {
         return true;
 
     }//match
+
+
+    private function filterMatch($param){
+        $url = $_SERVER['REQUEST_URI'];
+
+        $i = stripos($param,'{*}');
+
+        if($i===false || $i>strlen($url)){
+            return false;
+        }//if
+
+        if(substr($param,0,$i) != substr($url,0,$i)){
+            return false;
+        }//if
+
+        return true;
+
+    }//filterMatch
 
 
 }//BaseRouter

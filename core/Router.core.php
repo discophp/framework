@@ -29,6 +29,7 @@ class Router {
         return self::instance()->put($param,$function);
     }//any
 
+
     public static function delete($param,$function){
         return self::instance()->delete($param,$function);
     }//any
@@ -41,6 +42,9 @@ class Router {
         return self::instance()->auth($session,$action);
     }//any
 
+    public static function filter($param){
+        return self::instance()->filter($param);
+    }//any
 
 
 
