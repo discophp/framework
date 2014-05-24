@@ -24,16 +24,6 @@ class Session {
     */
     public function __construct(){
         session_start();
-
-        if(!isset($_SESSION['IP_REFER_CHECK']))
-            $_SESSION['IP_REFER_CHECK']=$_SERVER['REMOTE_ADDR'];
-        else if($_SESSION['IP_REFER_CHECK']!=$_SERVER['REMOTE_ADDR']){
-            TRIGGER_ERROR(
-                "POTENTIAL SESSION HIJACKING:\nOrg: {$_SESSION['IP_REFER_CHECK']}\nAttack:{$_SERVER['REMOTE_ADDR']}",
-                E_USER_WARNING
-            ); 
-            Util::death();
-        }//elif
     }//construct
 
 

@@ -14,10 +14,16 @@ class Router {
 
 
     public static function get($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='GET'){
+            return;
+        }//if
         return self::instance()->get($param,$function);
     }//get
 
     public static function post($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='POST'){
+            return;
+        }//if
         return self::instance()->post($param,$function);
     }//post
 
@@ -26,15 +32,24 @@ class Router {
     }//any
 
     public static function put($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='PUT'){
+            return;
+        }//if
         return self::instance()->put($param,$function);
     }//any
 
 
     public static function delete($param,$function){
+        if($_SERVER['REQUEST_METHOD']!='DELETE'){
+            return;
+        }//if
         return self::instance()->delete($param,$function);
     }//any
 
     public static function secure(){
+        if(empty($_SERVER['HTTPS'])){
+            return;
+        }//if
         return self::instance()->secure();
     }//any
 

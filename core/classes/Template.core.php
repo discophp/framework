@@ -74,12 +74,12 @@ Class Template {
                 }//el
 
             }//if
-            else if(!isset($this->templates[$name]) && file_exists($path)){
-                $this->templates[$name] = file_get_contents($path);
+            else if(!isset($this->templates[$name])){
+                $this->templates[$name] = $this->getTemplateFromDisk($path);
             }//if
         }//if
-        else if(!isset($this->templates[$name]) && file_exists($path)){
-            $this->templates[$name] = file_get_contents($path);
+        else if(!isset($this->templates[$name])){
+            $this->templates[$name] = $this->getTemplateFromDisk($path);
         }//if
 
     }//getTemplate
@@ -98,6 +98,22 @@ Class Template {
         if(file_exists($path)){
             return file_get_contents($path);
         }//if
+        else {
+            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
+            $trace = Array();
+            $e = debug_backtrace();
+            $methods = Array('with','build','live');
+            foreach($e as $err){
+                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && in_array($err['function'],$methods)){
+                    $trace['args']=$err['args'];
+                    $trace['line']=$err['line'];
+                    $trace['file']=$err['file'];
+                }//if
+            }//foreach
+            $msg = "Template::Error loading template - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
+
+            TRIGGER_ERROR($msg,E_USER_ERROR);
+        }//el
 
     }//getTempalteFromDisk
 

@@ -328,64 +328,46 @@ class Router {
             $this->variables=null;
             return true;
         }//if
-        else if(count($this->variableRestrictions)<=0)
+        else if(count($this->variableRestrictions)<=0){
             return false;
+        }//elif
 
-        preg_match_all('/({[a-zA-Z0-9]+})+/',$param,$matches);
-        if($matches){
-            $variables=Array();
+        $paramPieces = explode('/',$param);
+        $urlPieces = explode('/',$url);
 
-            $orgLen=strlen($param);
-            $ns = trim($param,$url);
-            $url = substr($url,$orgLen-strlen($ns));
+        foreach($urlPieces as $k=>$urlPiece){
+            $paramPiece = $paramPieces[$k];
 
-
-            foreach($matches[0] as $m){
-                $nextChar = stripos($ns,$m)+strlen($m);
-                $nextChar = substr($ns,$nextChar,1);
-                $nextPos = stripos($url,$nextChar);
-                if($nextPos===false)
-                    $value=$url;
-                else 
-                    $value = substr($url,0,$nextPos);
-                
-                $url = substr($url,strlen($value)+1);
-
-                $name = trim(trim($m,'{'),'}');
-                $variables[$name]=$value;
-            }//foreach
-
-
-            foreach($variables as $k=>$v){
-                if(isset($this->variableRestrictions[$k])){
-                    $matchCondition = $this->variableRestrictions[$k];
-
-                    if(isset(\Disco::$defaultMatchCondition[$matchCondition]))
-                        $matchCondition=\Disco::$defaultMatchCondition[$matchCondition];
-
-                    if(!preg_match("/{$matchCondition}/",$v))
-                        return false;
-
+            if(substr($paramPiece,0,1)!='{'){
+                if($paramPiece!=$urlPiece){
+                    return false;
                 }//if
-                $param = str_replace("{{$k}}",$v,$param);
-            }//foreach
-
-
-            if($param==$_SERVER['REQUEST_URI']){
-                $this->variables=$variables;
-
-                foreach($variables as $k=>$v){
-                    $_GET[$k]=$v;
-                }//foreach
-
-                return true;
             }//if
-            else 
-                return false;
+            else {
+                $paramKey = trim($paramPiece,'{}'); 
+                if(!isset($this->variableRestrictions[$paramKey])){
+                    return false;
+                }//if
 
-        }//if
+                $condition = $this->variableRestrictions[$paramKey];
 
-        return false;
+                if(isset(\Disco::$defaultMatchCondition[$condition])){
+                    $condition=\Disco::$defaultMatchCondition[$condition];
+                }//if
+
+                if(!preg_match("/{$condition}/",$urlPiece)){
+                    return false;
+                }//if
+                else {
+                    $this->variables[$paramKey]=$urlPiece;
+                }//el
+
+            }//el
+
+        }//foreach
+
+        return true;
+
     }//match
 
 

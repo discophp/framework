@@ -35,18 +35,6 @@ Class Disco {
     */
     public static $facades=Array();
 
-    //private static $defaults=Array(
-    //    'Cache'=>new Closure(function(){ return new \Disco\classes\Cache;}),
-    //    'Crypt'=>function(){ return new \Disco\classes\Crypt;},
-    //    'Data'=>function(){ return new \Disco\classes\Data;},
-    //    'DB'=>function(){ return new \Disco\classes\DB;},
-    //    'Event'=>function(){ return new \Disco\classes\Event;},
-    //    'Model'=>function(){ return new \Disco\classes\Model;},
-    //    'Session'=>function(){ return new \Disco\classes\Session;},
-    //    'Template'=>function(){ return new \Disco\classes\Template;},
-    //    'View'=>function(){ return new \Disco\classes\View;}
-    //);
-
 
     /**
      *      default regex matching conditions
@@ -269,6 +257,17 @@ Class Disco {
         Disco::make('Data',function(){
             return new Disco\classes\Data();
         });
+
+
+        /**
+        *       Make our Data Facding using
+        *       - core/BaseData.core.php
+        *       - core/facade/Data.facade.php
+        */
+        Disco::make('Queue',function(){
+            return new Disco\classes\Queue();
+        });
+
 
 
 

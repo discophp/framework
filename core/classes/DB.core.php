@@ -55,13 +55,13 @@ class DB extends \mysqli {
 
         if($this->connect_error){
             TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
-            Util::death();
-            die(0);
+            exit;
         }//if
         else
             $this->connected = true;
 
     }//end constructor
+
 
 
     /**
@@ -121,12 +121,28 @@ class DB extends \mysqli {
         $q = $this->set($q,$args);
 
         if(!$result = parent::query($q)){
-            trigger_error('DB::Error executing query - '.$this->error,E_USER_ERROR);
+            
+            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
+            $trace = Array();
+            $trace['errno'] = $this->errno;
+            $trace['error'] = $this->error;
+
+            $e = debug_backtrace();
+            foreach($e as $err){
+                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && $err['function']=='query'){
+                    $trace['args']=$err['args'];
+                    $trace['line']=$err['line'];
+                    $trace['file']=$err['file'];
+                }//if
+            }//foreach
+            $msg = "DB::Error executing query - {$trace['args'][0]} - ErrNo: {$trace['errno']} - {$trace['error']} ,  @ line {$trace['line']} in File: {$trace['file']} ";
+            TRIGGER_ERROR($msg,E_USER_ERROR);
+
             return false;
         }//if
         else{
             $this->last = $result;
-            return $result;
+            return $this->last;
         }//el
     }//query
 
@@ -206,6 +222,22 @@ class DB extends \mysqli {
         $q = $this->set($q,$args);
 
         if(!$this->multi_query($q)){
+            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
+            $trace = Array();
+            $trace['errno'] = $this->errno;
+            $trace['error'] = $this->error;
+
+            $e = debug_backtrace();
+            foreach($e as $err){
+                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && $err['function']=='sp'){
+                    $trace['args']=$err['args'];
+                    $trace['line']=$err['line'];
+                    $trace['file']=$err['file'];
+                }//if
+            }//foreach
+            $msg = "DB::Error executing stored procedure - {$trace['args'][0]} - ErrNo: {$trace['errno']} - {$trace['error']} ,  @ line {$trace['line']} in File: {$trace['file']} ";
+            TRIGGER_ERROR($msg,E_USER_ERROR);
+
             return null;
         }//if
         do {

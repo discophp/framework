@@ -24,7 +24,7 @@ class Queue extends Disco\classes\Facade {
             $j[$k]->pId=$job[1];
             $j[$k]->time=$job[4];
             $j[$k]->delay=$job[10];
-            $j[$k]->object=$job[12];
+            $j[$k]->object=unserialize(base64_decode($job[12]));
             $j[$k]->method=$job[13];
             $j[$k]->vars=($job[14]=='disco-no-variable')?'':unserialize(base64_decode($job[14]));
         }//foreach
