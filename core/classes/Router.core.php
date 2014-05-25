@@ -89,7 +89,12 @@ class Router {
                 return;
             }//if
 
-            \Router::useRouter($this->useRouter);
+            if($this->useRouter instanceof \Closure){
+                call_user_func($this->useRouter);
+            }//if
+            else {
+                \Router::useRouter($this->useRouter);
+            }//el
         }//if
         //have no match already and this matches?
         else if(!\Router::routeMatch() && $this->match($this->param)){
