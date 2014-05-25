@@ -93,8 +93,21 @@ class Event {
             }//foreach
 
         }//if
-        else 
-            TRIGGER_ERROR('Event:: Event not found '.$event,E_USER_WARNING);
+        else {
+            $trace = Array();
+            $e = debug_backtrace();
+            foreach($e as $err){
+                if(isset($err['file']) && isset($err['function']) && $err['function']=='fire'){
+                    $trace['args']=$err['args'];
+                    $trace['line']=$err['line'];
+                    $trace['file']=$err['file'];
+                }//if
+            }//foreach
+            $msg = "Event::Error event \"{$event}\" not found - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
+
+            TRIGGER_ERROR($msg,E_USER_ERROR);
+
+        }//el
     }//fire
 
 

@@ -122,14 +122,13 @@ class DB extends \mysqli {
 
         if(!$result = parent::query($q)){
             
-            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
             $trace = Array();
             $trace['errno'] = $this->errno;
             $trace['error'] = $this->error;
 
             $e = debug_backtrace();
             foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && $err['function']=='query'){
+                if(isset($err['file']) && isset($err['function']) && $err['function']=='query'){
                     $trace['args']=$err['args'];
                     $trace['line']=$err['line'];
                     $trace['file']=$err['file'];
@@ -222,14 +221,13 @@ class DB extends \mysqli {
         $q = $this->set($q,$args);
 
         if(!$this->multi_query($q)){
-            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
             $trace = Array();
             $trace['errno'] = $this->errno;
             $trace['error'] = $this->error;
 
             $e = debug_backtrace();
             foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && $err['function']=='sp'){
+                if(isset($err['file']) && isset($err['function']) && $err['function']=='sp'){
                     $trace['args']=$err['args'];
                     $trace['line']=$err['line'];
                     $trace['file']=$err['file'];
