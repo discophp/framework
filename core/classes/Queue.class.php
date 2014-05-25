@@ -18,9 +18,10 @@ class Queue {
 
         $t = Array();
         foreach($facades as $k=>$v){
-            if(!$v instanceof \Closure){
-                $t[$k]=$v;
+            if($v instanceof \Closure){
+                $v = call_user_func($v);
             }//if
+            $t[$k]=$v;
         }//foreach
 
         $d = base64_encode(serialize($t));
@@ -28,9 +29,6 @@ class Queue {
         if($job instanceof \Closure){
             $obj = new \Jeremeamia\SuperClosure\SerializableClosure($job);
             $method = 'closure';
-            //$obj = new MagicContainer();
-            //$obj->addMethod('closure',$job);
-            //$method = 'closure';
         }//if
         else if(stripos($job,'@')!==false){
             $obj = explode('@',$job); 
@@ -45,9 +43,7 @@ class Queue {
         $obj = base64_encode(serialize($obj));
 
         $s = 'php ../disco resolve '.$delay.' '.$d.' '.$obj.' '.$method.' '.$vars.' > /dev/null 2>/dev/null &';
-        //$s = 'php ../disco resolve '.$delay.' '.$d.' '.$obj.' '.$method.' '.$vars.'';
 
-        //echo $s.PHP_EOL;
         exec($s);
 
     }//push

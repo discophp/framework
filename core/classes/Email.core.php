@@ -115,7 +115,8 @@ class Email {
         if($this->delay!=null){
             $d = $this->delay;
             $this->delay = null;
-            \Queue::push('Email@send',$d,func_get_args());
+            $body = htmlentities($body);
+            \Queue::push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attch));
             return true;
         }//if
 

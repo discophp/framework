@@ -16,8 +16,18 @@ class Manager {
         else {
             $vars = unserialize(base64_decode($vars));
             if(!is_array($vars)){
+                if(is_string($vars)){
+                    $vars = html_entity_decode($vars);
+                }//if
                 $vars = Array($vars);
             }//if
+            else {
+                foreach($vars as $k=>$v){
+                    if(is_string($v)){
+                        $vars[$k] = html_entity_decode($v);
+                    }//if
+                }//foreach
+            }//el
         }//el
 
         \Disco::$facades = array_merge(\Disco::$facades,$d);

@@ -39,6 +39,10 @@ class Event {
             $this->events[$event]=Array('actions'=>Array());
         }//if
 
+        if($action instanceof \Closure){
+            $action = new \Jeremeamia\SuperClosure\SerializableClosure($action);
+        }//if
+
         $this->events[$event]['actions'][$priority]=$action;
 
     }//listen
