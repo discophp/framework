@@ -24,6 +24,9 @@
         "psr-4": {
             "Disco\\":"core/"
         }
+    },
+    "scripts": {
+        "post-install-cmd":"Disco\manage\Manager::install"
     }
     
 }

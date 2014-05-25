@@ -76,6 +76,93 @@ class Manager {
     }//jobs
 
 
+    public static function appMode($mode=null){
+
+        if($mode!=null){
+            self::setConfig('APP_MODE',$mode);
+        }//if
+        else {
+            return self::getConfig('APP_MODE');
+        }//el
+
+    }//appMode
+
+
+    public static function setConfig($find,$value){
+        $find.='\'=>\'';
+        $f = file_get_contents('./.config.php');
+        $i = stripos($f,$find)+strlen($find);
+        $ni = stripos($f,'\'',$i);
+        $f = substr_replace($f,$value,$i,$ni-$i);
+        file_put_contents('./.config.php',$f);
+    }//setConfig
+
+
+    public static function getConfig($find){
+        $find.='\'=>\'';
+        $f = file_get_contents('./.config.php');
+        $i = stripos($f,$find)+strlen($find);
+        $ni = stripos($f,'\'',$i);
+        return substr($f,$i,$ni-$i);
+    }//setConfig
+
+
+
+
+    public static function genRand($length){
+
+        $max = ceil($length/32);
+        $rand = '';
+        for($i=0;$i<$max;$i++){
+            $rand.=md5(microtime(true).mt_rand(10000,90000));
+        }//for
+        $rand = substr($rand,0,$length);
+
+        return $rand;
+
+    }//genRand
+
+
+    public static function genAES256Key(){
+        return self::genRand(32);
+    }//genAES256Key
+
+    public static function setAES256Key($k){
+        self::setConfig('AES_KEY256',$k);
+    }//setAES256KEY
+
+    public static function genSalt($l){
+        return self::genRand($l);
+    }//genAES256Key
+
+    public static function setSaltLead($s){
+        self::setConfig('SHA512_SALT_LEAD',$s);
+    }//genAES256Key
+
+    public static function setSaltTail($s){
+        self::setConfig('SHA512_SALT_TAIL',$s);
+    }//genAES256Key
+
+
+
+    public static function install(){
+
+        echo 'Setting AES_KEY256...';
+        self::setAES256Key(self::genAES256Key());
+        echo ' done.'.PHP_EOL;
+
+        echo 'Setting SHA512_SALT_LEAD with key size 12 ...';
+        self::setSaltLead(self::genSalt(12));
+        echo ' done.'.PHP_EOL;
+
+        echo 'Setting SHA512_SALT_TAIL with key size 12 ...';
+        self::setSaltTail(self::genSalt(12));
+        echo ' done.'.PHP_EOL;
+
+
+    }//install
+
+
 }//Manager
 
 
