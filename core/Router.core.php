@@ -49,7 +49,7 @@ class Router {
 
 
     /**
-     *      a router instance 
+     *      Get a fresh router instance 
      *
      *
      *      @return core/BaseRouter
@@ -59,13 +59,12 @@ class Router {
     }//instance
 
 
+
     /**
-     *      Once a router has found a match we notify disco so we dont perform more match attempts.
-     *      Unless we have a nested router, in which case we will flip the flag back to false
-     *      to allow further processing.
+     *      Once a router has found a match we dont perform more match attempts.
      *
      *
-     *      @param boolean $m
+     *      @param  boolean $m
      *      @return boolean
      */
     public static function routeMatch($m=null){
@@ -77,8 +76,9 @@ class Router {
     }//routerMatch
 
 
+
     /**
-    *       Load a router.
+    *       Load a Router File for processing.
     *
     *
     *       @param string $router
