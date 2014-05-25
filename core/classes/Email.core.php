@@ -121,11 +121,10 @@ class Email {
         }//if
 
         if(!isset($this->settings[$key])){
-            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
             $trace = Array();
             $e = debug_backtrace();
             foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && $err['function']=='send'){
+                if(isset($err['file']) && isset($err['function']) && $err['function']=='send'){
                     $trace['args']=$err['args'];
                     $trace['line']=$err['line'];
                     $trace['file']=$err['file'];

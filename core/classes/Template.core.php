@@ -99,12 +99,11 @@ Class Template {
             return file_get_contents($path);
         }//if
         else {
-            $me = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
             $trace = Array();
             $e = debug_backtrace();
             $methods = Array('with','build','live');
             foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['file']==$me && in_array($err['function'],$methods)){
+                if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
                     $trace['args']=$err['args'];
                     $trace['line']=$err['line'];
                     $trace['file']=$err['file'];
