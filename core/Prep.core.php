@@ -18,6 +18,9 @@ Disco::$path = dirname($_SERVER['DOCUMENT_ROOT']);
 
 if(is_file(Disco::$path.'/.config.php')){
     $_SERVER = array_merge($_SERVER,require(Disco::$path.'/.config.php'));
+    if($_SERVER['APP_MODE']!='PROD' && is_file(Disco::$Path.'/.dev.config.php')){
+        $_SERVER = array_merge($_SERVER,require(Disco::$path.'/.dev.config.php'));
+    }//if
 }//if
 
 
