@@ -5,7 +5,7 @@ namespace Disco\manage;
 class Manager {
 
 
-    public static function resolve($delay,$d,$obj,$method,$vars){
+    public static function resolve($delay,$obj,$method,$vars,$d){
 
         $d = unserialize(base64_decode($d));
         $obj = unserialize(base64_decode($obj));

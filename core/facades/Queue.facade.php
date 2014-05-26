@@ -19,14 +19,14 @@ class Queue extends Disco\classes\Facade {
         }//foreach
 
         foreach($j as $k=>$job){
-            $job = explode(' ',$job);
+            $job = explode(' ',$job,15);
             $j[$k] = new \stdClass();
             $j[$k]->pId=$job[1];
             $j[$k]->time=$job[4];
             $j[$k]->delay=$job[10];
-            $j[$k]->object=unserialize(base64_decode($job[12]));
-            $j[$k]->method=$job[13];
-            $j[$k]->vars=($job[14]=='disco-no-variable')?'':unserialize(base64_decode($job[14]));
+            $j[$k]->object=unserialize(base64_decode($job[11]));
+            $j[$k]->method=$job[12];
+            $j[$k]->vars=($job[13]=='disco-no-variable')?'':unserialize(base64_decode($job[13]));
         }//foreach
 
         return $j;

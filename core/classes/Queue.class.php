@@ -42,7 +42,7 @@ class Queue {
 
         $obj = base64_encode(serialize($obj));
 
-        $s = 'php ../disco resolve '.$delay.' '.$d.' '.$obj.' '.$method.' '.$vars.' > /dev/null 2>/dev/null &';
+        $s = 'php ../disco resolve '.$delay.' '.$obj.' '.$method.' '.$vars.' '.$d.' > /dev/null 2>/dev/null &';
 
         exec($s);
 
