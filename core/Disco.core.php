@@ -1,43 +1,47 @@
 <?php
-
 /**
- *      This is the core code for the Disco PHP Framework.
- *      It is distributed under the Apache Lisence v2.0.
- *
- *      This file contains all the necessary bootstrapping code to pick the 
- *      application up off its feet and assemble the pieces needed to complete the
- *      request.
- *
+ * This is the core code for the Disco PHP Framework.
+ * It is distributed under the Apache Lisence v2.0.
+ * This file contains all the necessary bootstrapping code to pick the 
+ * application up off its feet and assemble the pieces needed to complete the
+ * request.
 */
 
 
+/**
+ * Require our Prep File that handles setting up our environment.
+*/
 require('Prep.core.php');
 
+
+/**
+ * Require the Composer Auto-Loader.
+*/
 require(Disco::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
 
 
 
 /**
- *      Our applications primary Controller. 
+ * Our applications primary Container and Controller. 
  *
 */
 Class Disco {
 
 
     /**
-     *      Absolute Path of project
+     * Absolute Path of project.
     */
     public static $path;
 
 
     /**
-     *      Facades.
+     * Facades.
     */
     public static $facades=Array();
 
 
     /**
-     *      default regex matching conditions
+     * Default regex matching conditions.
     */
     public static $defaultMatchCondition = Array(
         'alpha'=>'^[a-zA-Z\s\-]+$',
@@ -50,13 +54,13 @@ Class Disco {
 
 
     /**
-     *      Store a facade for potential use at
-     *      some point in the applications life cycle
+     * Store a facade for potential use at some point in the applications life cycle.
      *
      *
-     *      @param string $name
-     *      @param closure $callback
-     *      @return void
+     * @param string $name The Facade to make.
+     * @param \Closure $callback The Closure callback to execute when the Facades base Class is instantiated.
+     *
+     * @return void
      */
     public static function make($name,$callback){
         if(!isset(Disco::$facades[$name]))
@@ -68,15 +72,14 @@ Class Disco {
 
 
     /**
-     *      Handle/Resolve/Execute and return a 
-     *      method call on an instance 
-     *      with passed args
+     * Handle/Resolve/Execute and return a method call on an instance with passed arguments.
      *
      *
-     *      @param class $instance
-     *      @param functionName $method
-     *      @param array $args
-     *      @return mixed
+     * @param object $instance The object to call the method on.
+     * @param string $method The name of the method to call on the object.
+     * @param mixed $args The arguements to pass the method.
+     *
+     * @return mixed the result of the method call.
      */
     public static function handle($instance,$method,$args){
         switch (count($args)) {
@@ -97,11 +100,12 @@ Class Disco {
 
 
     /**
-    *       Load a router.
+    * Load a router.
     *
     *
-    *       @param string $router
-    *       @return void
+    * @param string $router The name of the Router File stored in app/router/[$router].router.php .
+    *
+    * @return void
     */
     public static function useRouter($router){
         $routerPath = Disco::$path."/app/router/$router.router.php";
@@ -114,23 +118,25 @@ Class Disco {
 
 
     /**
-     *      Add a default matching condition for
-     *      use with Router and Data
+     * Add a default matching condition for use with Router and Data. Store the $k and $v in 
+     * $this->defaultMatchConditions .
      *
      *
-     *      @param string $k the key name
-     *      @param string $v the regex value
-     *      @return void 
+     * @param string $k The conditions key. 
+     * @param string $v The conditions regex value.
+     * @return void 
     */
     public static function addCondition($k,$v){
         Disco::$defaultMatchCondition[$k]=$v;
     }//addCondition
 
 
+    /**
+     * Register the Default Disco Facades with the Application Container.
+     *
+     * @return void
+    */
     public static function registerDefaults(){
-        //foreach($this->defaults as $k=>$v){
-        //    Disco::make($k,$v);
-        //}//foreach
 
         /**
         *       Make our DB Facade using

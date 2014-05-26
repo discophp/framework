@@ -3,112 +3,111 @@
 namespace Disco\classes;
 
 /**
- *      This file holds the BaseView class
+ * This file holds the BaseView class
 */
 
 
 /**
+ * BaseView class.
+ * The BaseView class provides the functionality of dynamically creating
+ * web pages. Essentially the eventual response to the client.
  *
- *      BaseView class.
- *      The BaseView class provides the functionality of dynamically creating
- *      web pages. Essentially the eventual response to the client.
- *
- *      See the docs at discophp.com/docs/View
+ * See the docs at discophp.com/docs/View
 */
 class View {
 
     /**
-     *      Flips between script and style
+     * Flips between script and style
     */
     private $lastCallType;
 
     /**
-    *       hold html bits
+     * Hold html bits
     */
     private $html = Array();
 
     /**
-     *      hold script(js) bits
+     * Hold script(js) bits
     */
     private $scripts = Array();
 
     /**
-     *      hold script(js) URLs 
+     * Hold script(js) URLs 
     */
     private $scriptSrcs = Array();
 
     /**
-     *      hold head script(js) URLs 
+     * Hold head script(js) URLs 
     */
     private $headScriptSrcs = Array();
 
     /**
-     *      hold style(css) bits
+     * Hold style(css) bits
     */
     private $styles = Array();
 
     /**
-     *      hold style(css) URLs 
+     * Hold style(css) URLs 
     */
     private $styleSrcs = Array();
 
     /**
-     * hold classes to apply to the body element
+     * Hold classes to apply to the body element
     */
     private $bodyStyles = Array();
 
     /**
-     *      page title
+     * Page title
     */
     public $title;
 
     /**
-     *      page description
+     * Page description
     */
     public $description;
 
     /**
-     *      Path to favicon
+     * Path to favicon
     */
     public $favIcon='/favicon.png';
 
     /**
-     *      set this to the path of your working project
+     * Set this to the path of your working project
     */
     public $path;
 
     /**
-     *      name of your default stylesheet
+     * Name of your default stylesheet
     */
     public $styleSheet = 'css';
 
     /**
-     *      name of your default javascript file
+     * Name of your default javascript file
     */
     public $script = 'js';
 
     /**
-     *      Extra elements (added by user as a string) to go in the head of the page
+     * Extra elements (added by user as a string) to go in the head of the page
     */
     public $headExtra = '';
 
     /**
-     *      html mark up of our header
+     * Html mark up of our header
     */
     public $header='';
 
     /**
-     *      html mark up of our footer
+     * Html mark up of our footer
     */
     public $footer='';
 
     /**
-     *      is the request AJAX?
+     * Is the request AJAX?
     */
     private $isAjax=false;
 
     /**
-     *      how should it be scraped
+     * How should it be scraped
     */
     private $indexes = Array(
         0=>'index,follow',
@@ -118,32 +117,32 @@ class View {
     );
     
     /**
-     *      standard scrape
+     * Standard scrape for $indexes
     */
     public $activeIndex=0;
 
     /**
-     *      default language
+     * Default language
     */
     public $lang='en';
 
     /**
-     *      default charset 
+     * Default charset 
     */
     public $charset='utf-8';
 
     /**
-     *      SEO view?
+     * SEO view?
     */
     public $seo=false;
 
 
 
     /**
-    *      Default Constructor
+    * Default Constructor.
     *
     *
-    *      @return void
+    * @return void
     */
     public function __construct(){
 
@@ -160,10 +159,10 @@ class View {
 
 
     /**
-     *      Specify that the output of this view should be json
+     * Specify that the output of this view should be JSON.
      *
      *
-     *      @return void
+     * @return void
     */
     public function json(){
         View::isAjax();
@@ -173,10 +172,10 @@ class View {
 
 
     /**
-     *      Get the markup set for the view header
-     *  
+     * Get the markup set for the View header, from $this->header.
      *
-     *      @return string $this->header 
+     *
+     * @return string Return $this->header 
     */
     public function header(){
         return $this->header;;
@@ -185,10 +184,11 @@ class View {
 
 
     /**
-     *      Set the markup for the view header
-     *      
+     * Set the markup for the view header, in $this->header.
+     * 
      *
-     *      @param string $html the markup
+     * @param string $html the markup
+     * @return void
     */
     public function setHeader($html){
         $this->header = $html;
@@ -197,10 +197,10 @@ class View {
 
 
     /**
-     *      Get the markup set for the view footer
-     *      
+     * Get the markup set for the view footer.
+     * 
      *
-     *      @return string $this->footer
+     * @return string Returns $this->footer
     */
     public function footer(){
         return $this->footer;
@@ -209,10 +209,11 @@ class View {
 
 
     /**
-     *      Set the markup for the view footer
+     * Set the markup for the view footer.
      *
      *
-     *      @param string $html the markup
+     * @param string $html The markup to put in $this->footer
+     * @return void
     */
     public function setFooter($html){
         $this->footer = $html;
@@ -221,11 +222,11 @@ class View {
 
 
     /**
-     *      Set the lang of the page
+     * Set the lang of the page.
      *
      *
-     *      @param string $lang the language to set the page as
-     *      @return void
+     * @param string $lang The language to set the page as.
+     * @return void
     */
     public function lang($lang){
         $this->lang=$lang;
@@ -234,11 +235,11 @@ class View {
 
 
     /**
-     *      Set the charset of the page
+     * Set the charset of the page.
      *
      *
-     *      @param string $charset the charset the page should use 
-     *      @return void
+     * @param string $charset the charset the page should use 
+     * @return void
     */
     public function charset($charset){
         $this->charset=$charset;
@@ -247,11 +248,11 @@ class View {
 
 
     /**
-     *      Set extra elements in the header as a string
-     *      
+     * Set extra elements in the header as a string.
+     * 
      *
-     *      @param string $extra the markup to put in the head of the page
-     *      @return void
+     * @param string $extra the markup to put in the head of the page
+     * @return void
     */
     public function headExtra($extra){
         $this->headExtra.=$extra;
@@ -260,11 +261,11 @@ class View {
 
 
     /**
-     *      Set extra elements in the header as a string
-     *      
+     * Set extra elements in the header as a string.
+     * 
      *
-     *      @param string $extra the markup to put in the head of the page
-     *      @return void
+     * @param string $extra the markup to put in the head of the page
+     * @return void
     */
     public function seo($bool=true){
         $this->seo=$bool;
@@ -273,10 +274,10 @@ class View {
 
 
     /**
-     *      Return the markup for the Views <head></head> element
+     * Return the markup for the Views <head></head> element.
      *
      *
-     *      @return string 
+     * @return string Returns the <head></head> element of the page.
    */
     private function metaHeader(){
 
@@ -321,11 +322,11 @@ class View {
 
 
     /**
-     *      This function handles putting togethor
-     *      and echoing the pieces that make up the View
+     * This function handles putting togethor
+     * and echoing the pieces that make up the View.
      *
      *
-     *      @return void
+     * @return void
     */
     public function printPage(){
 
@@ -372,9 +373,10 @@ class View {
 
 
     /**
-     *      Set that a request is AJAX 
+     * Set that a request is AJAX. 
      *
-     *      @return void
+     *
+     * @return void
     */
     public function isAjax(){
         $this->isAjax=true;
@@ -383,11 +385,11 @@ class View {
 
 
     /**
-     *      Print an ajax request.
-     *      Will not contain any meta head info
-     *      only html bits and added scripts
+     * Print an ajax request. 
+     * Will not contain any meta head info only html bits and added scripts.
      *
-     *      @return void
+     *
+     * @return void
     */
     private function printAjaxPage(){
         echo $this->HTMLDump();
@@ -396,10 +398,10 @@ class View {
 
 
     /**
-     *     Return the closing of the page and the scripts and script srcs 
+     * Return the closing of the page and the scripts and script srcs.
      *
      *
-     *     @return void
+     * @return void
     */
     public function printFooter(){
         echo "
@@ -412,10 +414,10 @@ class View {
 
 
     /**
-     *      Set the title of the view.
+     * Set the title of the view.
      *
      *
-     *      @param string $t the title of the page
+     * @param string $t the title of the page
     */
     public function title($t){
         $this->title=$t;
@@ -424,10 +426,10 @@ class View {
 
 
     /**
-     *      Set the description of the view
+     * Set the description of the view.
      *
      *
-     *      @param string $d the description of the page
+     * @param string $d the description of the page
     */
     public function desc($d){
         $this->description=$d;
@@ -436,10 +438,10 @@ class View {
 
 
     /**
-     *      Add a snippet of html to the view
+     * Add a snippet of html to the view.
      *
      *
-     *      @param string $h a string to put into the view
+     * @param string $h a string to put into the view
     */
     public function html($h){
         $this->html[]=$h;
@@ -447,11 +449,11 @@ class View {
 
 
     /**
-     *      Set the favicon to be used by the page
+     * Set the favicon to be used by the page.
      *
      *
-     *      @param string $v the path to the favicon
-     *      @return void
+     * @param string $v the path to the favicon
+     * @return void
     */
     public function favIcon($v){
         $this->favIcon=$v;
@@ -460,12 +462,12 @@ class View {
 
 
     /**
-     *      When we create full path links to resources and the browser is using SSL/HTTPS
-     *      we need to make sure we request that resource as such in order to avoid mixed content errors
+     * When we create full path links to resources and the browser is using SSL/HTTPS
+     * we need to make sure we request that resource as such in order to avoid mixed content errors.
      *
      *
-     *      @param string $p the path of the resource
-     *      @h string $h the host of the resource ( if not local)
+     * @param string $p The path of the resource.
+     * @param string $h The host of the resource ( if not local).
     */
     public function url($p,$h=null){
         if(!empty($_SERVER['HTTPS']) && $h==null && substr($p,0,1)=='/'){
@@ -480,12 +482,12 @@ class View {
 
 
     /**
-     *      Set a property on a script or style
+     * Set a property on a script or style.
      *
      *
-     *      @param string $k the key name
-     *      @param string $v the value
-     *      @return void 
+     * @param string $k The key name.
+     * @param string $v The value.
+     * @return void 
     */
     public function prop($k,$v){
         if($this->lastCallType=='script')
@@ -499,10 +501,10 @@ class View {
 
 
     /**
-     *      Add a Javascript snippet to the page
+     * Add a Javascript snippet to the page.
      *
      *
-     *      @param string $s a block of javascript code
+     * @param string $s A block of javascript code.
     */
     public function script($s){
         if(is_array($s))
@@ -514,27 +516,25 @@ class View {
 
 
     /**
-     *      Add a Javascript file to the page by URL
+     * Add a Javascript file to the page by URL.
      *
      *
-     *      @param string $s a url path to a javascript file
-     *      @return object $this
+     * @param string $s A URL path to a javascript file.
+     * @return self 
     */
     public function scriptSrc($s){
-
         $this->scriptSrcs[]=Array('src'=>$s,'props'=>Array());
-
         $this->lastCallType='script';
         return $this;
     }//pushScriptSrc
 
 
     /**
-     *      Add a Javascript file to the page head by URL
+     * Add a Javascript file to the page head by URL.
      *
      *
-     *      @param string $s a url path to a javascript file
-     *      @return object $this
+     * @param string $s A URL path to a javascript file.
+     * @return self 
     */
     public function headScriptSrc($s){
 
@@ -548,10 +548,11 @@ class View {
 
 
     /**
-     *      Add a css style to the page
+     * Add a css style to the page.
      *
      *
-     *      @param string $s
+     * @param string $s The css style that should be applied to the page.
+     * @return void
     */
     public function style($s){
         $this->styles[]=$s;
@@ -560,11 +561,11 @@ class View {
 
 
     /**
-     *      Add a CSS file to the page by URL
+     * Add a CSS file to the page by URL.
      *
      *
-     *      @param string $s a url path to a CSS file
-     *      @return object $this
+     * @param string $s A url path to a CSS file.
+     * @return self 
     */
     public function styleSrc($s){
         $this->styleSrcs[]=Array('src'=>$s,'props'=>Array());
@@ -576,10 +577,10 @@ class View {
 
 
     /**
-     *      Add a body class 
+     * Add a body class.
      *
      *
-     *      @param string $s a css class
+     * @param string $s A CSS class.
     */
     public function bodyStyle($s){
         $this->bodyStyles[] = $s;
@@ -588,10 +589,10 @@ class View {
 
 
     /**
-     *      create html to include added scripts      
+     * Create html to include added scripts.
      *
      *
-     *      @return string 
+     * @return string Returns a <script></script> with the printed $this->scripts .
     */
     private function printScripts(){
         return '<script type="text/javascript">'.implode('',$this->scripts).'</script>';
@@ -600,11 +601,11 @@ class View {
 
 
     /**
-     *      Create the html that includes the needed JavaScript files
+     * Create the html that includes the needed JavaScript files.
      *
      *
-     *      @param array $sData Array of scripts to print
-     *      @return string
+     * @param array $sData Array of scripts to print.
+     * @return string Returns a list <script></script> blocks with the srcs set from $sData .
     */
     private function printScriptSrcs($sData){
         $scripts='';
@@ -621,10 +622,10 @@ class View {
 
 
     /**
-     *      return html to contain added css styles fragments
+     * Return html to contain added css styles fragments from $this->styles.
      *
      *
-     *      @return string
+     * @return string Returns a <style></style> block with the pages added CSS markup.
     */
     private function printStyles(){
         if(count($this->styles)==0){
@@ -636,10 +637,11 @@ class View {
 
 
     /** 
-     *      Create the html that includes the needed CSS stylesheets 
+     * Create the html that includes the needed CSS stylesheets from $this->styleSrcs. 
      *
      *
-     *      @return string
+     * @return string
+     * @return string Returns a list of <link rel='stylesheet'/> blocks with the hrefs set from $sData .
     */
     private function printStyleSrcs(){
         $styles = '';
@@ -656,10 +658,10 @@ class View {
 
 
     /**
-     *      Return the classes to be added to the body.
+     * Return the classes to be added to the body stored in $this->bodyStyles.
      *
      *
-     *      @return string
+     * @return string Returns a string of the CSS classes like "body row column"
     */
     private function bodyStyles(){
         return implode(' ',$this->bodyStyles);
@@ -668,10 +670,10 @@ class View {
 
 
     /**
-     *      echo all our bits
+     * Echo all our HTML bits stored in $this->html.
      *
      *
-     *      @return void
+     * @return void
     */
     private function HTMLDump(){
         foreach($this->html as $p){
@@ -682,11 +684,10 @@ class View {
 
 
     /**
-     *      set the index type to
-     *      noindex,nofollow
+     * Set the index type to noindex,nofollow , $this->activeIndex=1.
      *
      *
-     *      @return void
+     * @return void
     */
     public function noIndex(){
         $this->activeIndex=1;
@@ -695,11 +696,10 @@ class View {
 
 
     /**
-     *      set the index type to
-     *      index,nofollow
+     * Set the index type to index,nofollow, $this->activeIndex=2.
      *
      *
-     *      @return void
+     * @return void
     */
     public function indexNoFollow(){
         $this->activeIndex=2;
@@ -708,11 +708,10 @@ class View {
 
 
     /**
-     *      set the index type to
-     *      noindex,follow
+     * Set the index type to noindex,follow, $this->activeIndex=3.
      *
      *
-     *      @return void
+     * @return void
     */
     public function noIndexFollow(){
         $this->activeIndex=3;
