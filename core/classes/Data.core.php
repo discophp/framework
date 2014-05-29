@@ -1,46 +1,44 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file holds the BaseData class
+ * This file holds the Data class.
 */
 
 
 /**
- *      BaseData class.
- *      Provides easy wrapper around using HTTP data centric around
- *      the RESTful priciples PUT,POST,GET,DELETE
+ * Data class.
+ * Provides easy wrapper around using HTTP data centric around
+ * the RESTful priciples PUT,POST,GET,DELETE.
 */
 class Data {
 
     /**
-     *      Holds the PUT data
+     * @var array Holds the PUT data
      */
     private $putData=Array();
 
     /**
-     *      Holds the DELETE data
+     * @var array Holds the DELETE data
      */
     private $deleteData=Array();
 
     /**
-     *      Type of REST request 
+     * @var array Type of REST request 
      */
     private $workingDataType;
 
     /**
-     *      Should returned value be sql escaped 
+     * @var boolean Should returned value be sql escaped 
      */
     private $escapeValue=false;
 
 
 
     /**
-     *      Construct PUT and DELETE data
+     * Construct PUT and DELETE data if the REQUEST_METHOD is PUT | DELETE. 
      *
      *
-     *      @return void
+     * @return void
     */
     public function __construct(){
         switch($_SERVER['REQUEST_METHOD']) {
@@ -54,11 +52,12 @@ class Data {
 
 
     /**
-     *      Set data of the selected type
+     * Set data of the selected type from the PUT or DELETE stream php://input .
+     * We don't have to worry about handling GET or POST as Apache pre-parses those into $_GET & $_POST.
      *
      *
-     *      @param string $type the type of REST request
-     *      @return void
+     * @param string $type the type of REST request either PUT|DELETE
+     * @return void
     */
     private function setData($type){
         $string='';
@@ -83,10 +82,10 @@ class Data {
 
 
     /**
-     *      SQL escape the returned string
+     * Request that the value to be returned be SQL escaped.
      *
      *
-     *      @return object $this
+     * @return self 
     */
     public function escape(){
         $this->escapeValue=true;
@@ -95,12 +94,13 @@ class Data {
 
 
     /**
-     *      Determine if the specific data matches the found value  
+     * Determine if the specific $k data matches the found value using the regular expression $v.
      *
      *
-     *      @param string $k the key of the data
-     *      @param string $v the regex pattern or default matching condition to use
-     *      @return mixed 
+     * @param string $k The key of the data.
+     * @param string $v The regex pattern or default matching condition to use.
+     *
+     * @return string|bool|int|float 
     */
     public function where($k,$v){
         $dataType=$this->all();
@@ -127,11 +127,12 @@ class Data {
 
 
     /**
-     *      return a GET variable
+     * Return a GET variable or if $g==null return $this and set method chain to use GET.
      *
      *
-     *      @param string $g the key
-     *      @return mixed  
+     * @param null|string $g The GET key to return.
+     *
+     * @return self|string|int|float|bool 
     */
     public function get($g=null){
         if($g==null){
@@ -152,11 +153,12 @@ class Data {
 
 
     /**
-     *      return a POST variable
+     * Return a POST variable or if $p==null return $this and set method chain to use POST.
      *
      *
-     *      @param string $p the key
-     *      @return mixed  
+     * @param null|string $p The POST key to return.
+     *
+     * @return self|string|int|float|bool 
     */
     public function post($p=null){
         if($p==null){
@@ -177,11 +179,12 @@ class Data {
 
 
     /**
-     *      return a DELETE variable
+     * Return a DELETE variable or if $d==null return $this and set method chain to use DELETE.
      *
      *
-     *      @param string $d the key
-     *      @return mixed  
+     * @param null|string $d The DELETE key to return.
+     *
+     * @return self|string|int|float|bool 
     */
     public function delete($d=null){
         if($d==null){
@@ -202,11 +205,12 @@ class Data {
 
 
     /**
-     *      return a PUT variable
+     * Return a PUT variable or if $p==null return $this and set method chain to use PUT.
      *
      *
-     *      @param string $p the key
-     *      @return mixed  
+     * @param null|string $p The PUT key to return.
+     *
+     * @return self|string|int|float|bool 
     */
     public function put($p=null){
         if($p==null){
@@ -227,11 +231,13 @@ class Data {
 
 
     /**
-     *      SET a selected type of REST variable 
+     * SET a selected type of REST variable.
      *
      *
-     *      @param string $p the key
-     *      @return mixed  
+     * @param null|string $k The key to set the $v with.
+     * @param mixed $v The value of $k.
+     *
+     * @return mixed  
     */
     public function set($k=null,$v){
         if($this->workingDataType==null ||  $k==null)
@@ -252,10 +258,10 @@ class Data {
 
 
     /**
-     *      Return all of the selected type of REST data 
+     * Return all of the selected type of REST data. 
      *
      *
-     *      @return array
+     * @return array
     */
     public function all(){
         switch($this->workingDataType){
@@ -271,9 +277,5 @@ class Data {
 
     }//all
 
-
 }//BaseData
-
-
-
 ?>

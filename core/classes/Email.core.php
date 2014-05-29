@@ -1,41 +1,42 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file holds the BaseEmail class
+ * This file holds the Email class.
  */
 
 
 
 /**
- *
- *      BaseEmail class.
- *      Handle sending emails through different setup accounts.
- *      This class relies on the settings set in .mail.settings.json
- *
+ * Email class.
+ * Handle sending emails through different setup accounts.
+ * This class relies on the settings set in http://github.com/discophp/project/blob/master/.mail.config.php .
 */
 class Email {
 
     /**
-     *      holds json from ../.mail.config.php
+     * @var array Holds config data from .mail.config.php .
     */
     private $settings;
 
 
+    /**
+     * @var int The delay to apply to the next email sent.
+    */
     private $delay=null;
 
 
     /**
-     *      Send emails as plain text only?
+     * @var boolean Send emails as plain text only?
     */
     public $plainTextOnly=false;
     
+
+
     /**
-     *      get our email settings
+     * Load our Email setting from .mail.config.php . 
      *
      *
-     *      @return void
+     * @return void
      */
     public function __construct(){
         if(is_file(\Disco::$path.'/.mail.config.php')){
@@ -44,16 +45,26 @@ class Email {
     }//construct
 
 
+
+    /**
+     * Should we send the emails as plain text only?
+     *
+     *
+     * @param boolean $bool Plain text only? True, False.
+     *
+     * @return void
+    */
     public function plainText($bool=true){
         $this->plainTextOnly=$bool;
     }//plainText
 
 
+
     /**
-     *      Use SSL protocol to send email
+     * Use SSL protocol to send email.
      *
      *
-     *      @return void
+     * @return void
     */
     public function useSSL(){
         $this->settings['DEFAULT']="SSL";
@@ -62,22 +73,22 @@ class Email {
 
 
     /**
-     *      Use TLS protocol to send email 
+     * Use TLS protocol to send email.
      *
      *
-     *      @return void
+     * @return void
     */
     public function useTLS(){
         $this->settings['DEFAULT']="TLS";
-    }//useSSL
+    }//useTLS
 
 
 
     /**
-     *      Use SMTP protocol to send email
+     * Use SMTP protocol to send email.
      *
      *
-     *      @return void
+     * @return void
     */
     public function useSMTP(){
         $this->settings['DEFAULT']="SMTP";
@@ -86,11 +97,12 @@ class Email {
 
 
     /**
-     *      Push a Email job onto the Queue with a specified delay (in seconds)
+     * Push a Email job onto the Queue with a specified delay (in seconds).
      *
      *
-     *      @param numeric $s the seconds to send the email after
-     *      @return object $this
+     * @param int $s The seconds to send the email after.
+     *
+     * @return self 
     */
     public function delay($s){
         $this->delay = $s;
@@ -98,17 +110,18 @@ class Email {
     }//delay
 
 
+
     /**
-    *       Send an email through a specified account
+    * Send an email through a specified account.
     *
     *
-    *       @param string   $key
-    *       @param mixed    $toEmail
-    *       @param string   $subject
-    *       @param string   $body
-    *       @param array    $attach
+    * @param string         $key        The key of the email account in [.mail.config.php] to send this email with.
+    * @param string|array   $toEmail    The email addresses to send this email to. 
+    * @param string         $subject    The subject line of this email. 
+    * @param string         $body       The body of this email.
+    * @param null|array     $attach     The attachments to include with this email.
     *
-    *       @return boolean
+    * @return boolean Success?
     */
     public function send($key,$toEmail,$subject,$body,$attach=null){
 
@@ -204,11 +217,7 @@ class Email {
             return false;
         }//catch
 
-    }//sendEmail
+    }//send
 
-
-}//BaseEmail
-
-
-
+}//Email
 ?>

@@ -1,28 +1,25 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file contains the class BaseCrypt
+ * This file contains the class Crypt. It provides helper functions to use AES and SHA.
 */
 
 
 /**
- *
- *      BaseCrypt class.
- *      Provides easy wrapper around mcryp php module
- *
+ * Crypt class.
+ * Provides easy wrapper around mycrpt_php module.
 */
 class Crypt {
 
 
-
     /**
-     *      Encrypt with AES256
-     *      
+     * Encrypt with AES256.
+     * This method relies on the settings in [.config.php] 
+     * - $_SERVER['AES_KEY256']
+     * 
      *
-     *      @param string $input value to encrypt
-     *      @return string
+     * @param  string $input Value to encrypt using AES256.
+     * @return string The encrypted value of $input.
     */
     public function encrypt($input){
     
@@ -40,11 +37,13 @@ class Crypt {
 
 
     /**
-     *      Decrypt with AES256
+     * Decrypt with AES256.
+     * This method relies on the settings in [.config.php] 
+     * - $_SERVER['AES_KEY256']
      *
      *
-     *      @param string $crypt value to decrypt
-     *      @return string
+     * @param  string $crypt Value to decrypt using AES256.
+     * @return string The decrypted value of $crypt.
     */
     public function decrypt($crypt){
 
@@ -63,19 +62,18 @@ class Crypt {
 
 
     /**
-     *      hash with sha512
+     * Hash with sha512.
+     * This method relies on the settings in [.config.php] 
+     * - $_SERVER['SHA512_SALT_LEAD']
+     * - $_SERVER['SHA512_SALT_TAIL']
      *
      *
-     *      @param string $s value to hash
-     *      @return string
+     * @param  string $s Value to hash using SHA512.
+     * @return string The hashed value of $s.
      */
     public function hash($s){
         return hash('sha512',$_SERVER['SHA512_SALT_LEAD'].$s.$_SERVER['SHA512_SALT_TAIL']);
     }//pwHash
 
-
-
 }//BaseCrypt
-
-
 ?>

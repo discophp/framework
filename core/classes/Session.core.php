@@ -1,26 +1,21 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file holds the BaseSession class
+ * This file holds the Session class.
 */
 
 
 /**
- *      Convient wrapper around using $_SESSION variables.
- *      Helps add a security layer around the use of sessions by checking for session hijacking
+ * Convient wrapper around using $_SESSION variables.
 */
 class Session {
 
 
-
     /**
-     *      Start up our session
-     *      and do some security checks
+     * Start up our session by calling session_start() .
      *
      *
-     *      @return void
+     * @return void
     */
     public function __construct(){
         session_start();
@@ -29,11 +24,12 @@ class Session {
 
 
     /**
-     *      does a session variable exist
+     * Does a session variable exist?
      *
      *
-     *      @param mixed $k
-     *      @return boolean
+     * @param string $k The session to check.
+     *
+     * @return boolean
     */
     public function has($k){
         if(isset($_SESSION[$k]))
@@ -43,13 +39,15 @@ class Session {
     }//has
 
 
+
     /**
-     *      set a session variable 
+     * Set a SESSION variable.
      *
      *
-     *      @param mixed $k
-     *      @param mixed $v
-     *      @return void
+     * @param string $k The key to set the SESSION with.
+     * @param mixed $v The value of the $k.
+     *
+     * @return void
     */
     public function set($k,$v){
         $_SESSION[$k]=$v;
@@ -58,11 +56,12 @@ class Session {
 
 
     /**
-     *      get a session variable 
+     * Get a SESSION variable.
      *
      *
-     *      @param string $k 
-     *      @return mixed
+     * @param string $k The SESSION to get.
+     *
+     * @return mixed
     */
     public function get($k){
         return $_SESSION[$k];
@@ -71,11 +70,12 @@ class Session {
 
 
     /**
-     *      delete a session variable
+     * Delete a SESSION variable.
      *
      *
-     *      @param mixed $k
-     *      @return void
+     * @param string $k The SESSION to remove
+     *
+     * @return void
     */
     public function remove($k){
         unset($_SESSION[$k]);
@@ -84,11 +84,10 @@ class Session {
 
 
     /**
-     *      regenerate a session id
-     *      and keep the data
+     * Regenerate a SESSION id and keep the data.
      *
      *
-     *      @return void
+     * @return void
     */
     public function regen(){
         session_regenerate_id();
@@ -97,10 +96,10 @@ class Session {
 
 
     /**
-     *      reset a session
+     * Reset a SESSION.
      *
      *
-     *      @return void
+     * @return void
     */
     public function reset(){
         session_regenerate_id(true);
@@ -109,10 +108,10 @@ class Session {
 
 
     /**
-     *      Clear all session variables
+     * Clear all SESSION variables.
      *
      *
-     *      @return void
+     * @return void
     */
     public function flush(){
         session_unset();
@@ -121,17 +120,14 @@ class Session {
 
 
     /**
-     *      Destroy A session
+     * Destroy A SESSION.
      *
-     *      
-     *      @return void
+     * 
+     * @return void
      */
     public function destroy(){
         session_destroy();
     }//destroy
 
-
-
-}//BaseSession
-
+}//Session
 ?>

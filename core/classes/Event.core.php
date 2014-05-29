@@ -1,38 +1,31 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file hold the class BaseEvent
- *
+ * This file hold the class Event. 
 */
 
 
 /**
- *
- *      BaseEvent class.
- *      Implements a Broadcast/Receiver pattern.
- *
+ * Event class.
+ * Implements a Broadcast/Receiver pattern.
 */
 class Event {
 
-
-
     /**
-     *      Events to listen for
+     * @var array Events to listen for.
     */
     private $events=Array();
 
 
     /**
-     *      Register an event name with an associated action
+     * Register an event name with an associated action.
      *
      *
-     *      @param string $event name of the event
-     *      @param mixed $action Closure or class/method to execute
-     *      @param int $priority priority of event 
+     * @param string            $event      Name of the event.
+     * @param \Closure|string   $action     \Closure or class/method to execute denoted like 'Worker@work'.
+     * @param int               $priority   The priority of event.
      *
-     *      @return void
+     * @return void
     */
     public final function listen($event,$action,$priority=0){
         if(!isset($this->events[$event])){
@@ -50,13 +43,13 @@ class Event {
 
 
     /**
-     *      Fire off a registered event 
+     * Fire off a registered event.
      *
      *
-     *      @param string $event name of event to fire
-     *      @param mixed $data data to be carried to closure or method
+     * @param string    $event  Name of the event to fire.
+     * @param mixed     $data   The data to be passed to the \Closure or Class method pair.
      *
-     *      @return void
+     * @return void
     */
     public final function fire($event,$data=null){
 
@@ -108,11 +101,8 @@ class Event {
             TRIGGER_ERROR($msg,E_USER_ERROR);
 
         }//el
+
     }//fire
 
-
-
-}//BaseEvent
-
-
+}//Event
 ?>

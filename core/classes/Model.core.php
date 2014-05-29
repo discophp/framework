@@ -1,80 +1,75 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file hold the BaseModel class
+ * This file hold the Model class.
 */
 
 
 
 /**
- *      BaseModel class.
- *      Allows the creation of ORM style models through 
- *      extentions of this class.
- *
- *      These extending classes must set $table and $ids to use the ORM.
- *
+ * Model class.
+ * Allows the creation of ORM style models through extentions of this class.
+ * These extending classes must set $table and $ids to use the ORM.
 */
 class Model {
 
     /**
-    *       The SQL Table associated with this model
+    * @var string The SQL Table associated with this model.
     */
     public $table;
 
     /**
-    *       The SQL primary key or composite key associated with this model
+    * @var string|array The SQL primary key or composite key associated with this model.
     */
     public $ids;
 
     /**
-    *       The working select statement
+    * @var string The working select statement.
     */
     private $select;
 
     /**
-     *      The working update statement
+     * @var string The working update statement.
     */
     private $update;
 
     /**
-     *      The where condition or the working query 
+     * @var string The where condition or the working query.
     */
     private $where='';
 
     /**
-     *      The tables we should join on with the working query 
+     * @var array The tables we should join on with the working query.
     */
     private $joinOn=Array();
 
     /**
-     *      The result limit of the working query 
+     * @var array The result limit of the working query.
     */
     private $limit=Array();
 
     /**
-     *      The ordering of the working query 
+     * @var array The ordering of the working query. 
     */
     private $order=Array();
 
     /**
-     *      The last query this model executed 
+     * @var string The last query this model executed.
     */
     private $lastQuery;
 
     /**
-     *      The last resultSet from a query 
+     * @var \mysqli_result The last resultSet from a query.
     */
     private $lastResultSet;
 
 
 
     /**
-    *       Reset our model conditions
+    * Reset our model conditions.
     *
     *
-    *       @return void
+    * @return void
     */
     private final function clearData(){
         $this->where='';
@@ -88,12 +83,16 @@ class Model {
 
 
     /**
-     *      Prepare a SELECT condition. 
-     *      Accepts its arguements through func_get_args()
+     * Prepare a SELECT condition. 
+     * Accepts its arguements through func_get_args(). 
+     * This function takes as many string arguements as you pass to it.
      *
      *
-     *      @param string this function takes as many string arguements as you pass to it
-     *      @return object $this instance of self 
+     * @param string $attr0 An attribute to select from the table in the working query.
+     * @param string $attr1 ...
+     * @param string $attr2 ...
+     *
+     * @return self 
      */
     public final function select(){
         $this->clearData();
@@ -104,12 +103,15 @@ class Model {
 
 
     /**
-     *      Prepare an UPDATE statement.
-     *      Uses func_get_args() to accept parameters. 
+     * Prepare an UPDATE statement.
+     * Uses func_get_args() to accept parameters. 
+     * Accepts any even number of strings.
      *
      *
-     *      @param string accepts any even number of strings
-     *      @return object $this instance of self 
+     * @param string $attr0 The attribute to update in the working query.
+     * @param string $attr1 ....
+     *
+     * @return self 
     */
     public final function update(){
         $this->clearData();
@@ -135,13 +137,15 @@ class Model {
 
 
     /**
-     *      Execute an INSERT statement
-     *      Accepts its arguements through func_get_args(). Can be an associative array or strings.
+     * Execute an INSERT statement.
+     * Accepts its arguements through func_get_args(). 
+     * Can be an associative array or strings.
      *
      *
-     *      @param mixed either pass a number of strings or an associative array 
-     *      @return boolean was the insert successful 
+     * @param string|array $param0 A attribute or an Assoc Array.
+     * @param string $param1 A attribute.
      *
+     * @return boolean Was the insert successful? 
     */
     public final function insert(){
         $this->clearData();
@@ -178,12 +182,15 @@ class Model {
 
 
     /**
+     * Execute a DELETE statement. 
+     * Accepts its arguements thruogh func_get_args(). 
+     * Takes strings.
      *
-     *      Execute a DELETE statement. Accepts its arguements thruogh func_get_args(). Takes strings.
      *
+     * @param string $param0 An attribute.
+     * @param string $param1 An attribute.
      *
-     *      @param string any odd number of strings
-     *      @return boolean whether or not the delete was successful 
+     * @return boolean Whether or not the delete was successful.
     */
     public final function delete(){
         $this->clearData();
@@ -195,15 +202,21 @@ class Model {
 
 
     /**
-     *      Prepare the WHERE condition for the working query. 
-     *      Accepts its arguements through func_get_args(). 
-     *      Takes strings and numbers in pairs of 3 like 
-     *          ->where('field','>',20)
-     *          ->where('field1','=','somevalue')
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     * Takes strings and numbers in pairs of 3 like 
+     *     ->where('field','>',20)
+     *     ->where('field1','=','somevalue')
      *
      *
-     *      @param mixed number or string
-     *      @return object $this instance of self 
+     * @param string|float|int $param0 The attribute.
+     * @param string|float|int $param1 The condition.
+     * @param string|float|int $param2 The value.
+     * @param string|float|int $param3 ....
+     * @param string|float|int $param4 .... 
+     * @param string|float|int $param5 ....
+     *
+     * @return self
     */
     public final function where(){
         $this->where.= $this->prepareCondition(func_get_args(),'AND');
@@ -213,15 +226,21 @@ class Model {
 
 
     /**
-    *      Prepare an OR statement for the WHERE condition of the working query.
-    *      Accepts its arguements through func_get_args().
-    *      Takes strings and numbers in pairs of 3 like 
-    *          ->otherwise('field','>',20)
-    *          ->otherwise('field1','=','somevalue')
+    * Prepare an OR statement for the WHERE condition of the working query.
+    * Accepts its arguements through func_get_args().
+    * Takes strings and numbers in pairs of 3 like 
+    *     ->otherwise('field','>',20)
+    *     ->otherwise('field1','=','somevalue')
     *
     *
-    *      @param mixed number or string
-    *      @return object $this instance of self 
+    * @param string|float|int $param0 The attribute.
+    * @param string|float|int $param1 The condition.
+    * @param string|float|int $param2 The value.
+    * @param string|float|int $param3 ....
+    * @param string|float|int $param4 .... 
+    * @param string|float|int $param5 ....
+    *
+    * @return self 
     */
     public final function otherwise(){
         $this->where.= $this->prepareCondition(func_get_args(),'OR');
@@ -231,14 +250,15 @@ class Model {
 
 
     /**
-     *     Prepare the JOIN condition for the working SELECT query.
-     *     To join throug the ORM you must have a defined Model which extends BaseModel and 
-     *     has its $table and $ids values set as this will be used to execute the join on. 
+     * Prepare the JOIN condition for the working SELECT query.
+     * To join through the ORM you must have a defined Model which extends BaseModel and 
+     * has its $table and $ids values set as this will be used to execute the join on. 
      *
      *
-     *     @param string $modelName The name of the Model you will join on
-     *     @param string $joinOn The type of JOIN that should be used, this is hidden from the user
-     *     @return object $this instance of self
+     * @param string $modelName The name of the Model you will join on.
+     * @param string $joinOn    The type of JOIN that should be used, this is hidden from the user.
+     *
+     * @return self 
     */
     public final function join($modelName,$joinOn='INNER JOIN'){
         $joinTable = Model::m($modelName)->table;
@@ -257,12 +277,13 @@ class Model {
 
 
     /**
-     *      Read docs on join function first, this simply extends that function and 
-     *      passes in a LEFT JOIN as the second arguement.
+     * Read docs on join function first, this simply extends that function and 
+     * passes in a LEFT JOIN as the second arguement.
      *
-     *      
-     *      @param $modelName The name of the model you will join on
-     *      @return object $this instance of self
+     * 
+     * @param $modelName The name of the model you will join on.
+     *
+     * @return self 
     */
     public final function ljoin($modelName){
         $this->join($modelName,'LEFT JOIN');
@@ -272,12 +293,13 @@ class Model {
 
 
     /**
-     *      Read docs on join function first, this simply extends that function and 
-     *      passes in a RIGHT JOIN as the second arguement.
+     * Read docs on join function first, this simply extends that function and 
+     * passes in a RIGHT JOIN as the second arguement.
      *
-     *      
-     *      @param $modelName The name of the model you will join on
-     *      @return object $this instance of self
+     * 
+     * @param $modelName The name of the model you will join on
+     *
+     * @return self 
     */
     public final function rjoin($modelName){
         $this->join($modelName,'RIGHT JOIN');
@@ -287,12 +309,15 @@ class Model {
 
 
     /**
-     *      Set an ORDER BY condition for the current SELECT query.
-     *      Accepts its parameters through func_get_args(). Takes strings and numbers.
+     * Set an ORDER BY condition for the current SELECT query.
+     * Accepts its parameters through func_get_args(). 
+     * Takes strings and numbers.
      *
-     *      
-     *      @param mixed func_get_args()
-     *      @return object $this instace of self
+     * 
+     * @param string $param0 The attributes to order by. 
+     * @param string $param1 .... 
+     *
+     * @return self 
     */
     public final function order(){
         $this->order = array_merge($this->order,func_get_args());
@@ -300,15 +325,16 @@ class Model {
     }//order
 
 
+
     /**
-     *      Set a LIMIT condition on the current SELECT query.
+     * Set a LIMIT condition on the current SELECT query.
      *
      *
-     *      @param int $start Starting position of LIMIT or the number of tuples to return contigent upon the 
-     *      exsistance of the second parameter $limit
-     *      @param int $limit The number of tuples to return, default to 0
-     *      @return object $this instance of self
+     * @param int $start Starting position of LIMIT or the number of tuples to return contigent upon the 
+     * exsistance of the second parameter $limit.
+     * @param int $limit The number of tuples to return, default to 0.
      *
+     * @return self 
     */
     public final function limit($start,$limit=0){
         $this->limit[]=$start;
@@ -320,13 +346,11 @@ class Model {
 
 
 
-
-
     /**
-     *      Execute the UPDATE statement that was previously prepared.
+     * Execute the UPDATE statement that was previously prepared.
      *
      *
-     *      @return boolean return whether the update was successful
+     * @return boolean Return whether the update was successful.
     */
     public final function finalize(){
 
@@ -343,9 +367,9 @@ class Model {
 
 
     /**
-     *      Return the data from the execution of the previous query.
+     * Return the data from the execution of the previous query.
      *
-     *      @return resultSet MySQL result set of last query
+     * @return \mysqli_result MySQLi result set of last query.
     */
     public final function data(){
         if($this->lastResultSet)
@@ -358,12 +382,12 @@ class Model {
 
 
     /**
-     *      If used is working with a direct instance of the Model and not 
-     *      through the Facade then they can invoke the class as a method
-     *      and get the data return
+     * If working with a direct instance of the Model and not 
+     * through the Facade then they can invoke the class as a method
+     * and get the data return.
      *
      *
-     *      @return resultSet 
+     * @return resultSet 
      */
     public function __invoke(){
         return $this->data();
@@ -372,10 +396,10 @@ class Model {
 
 
     /**
-     *      Execute the previous query and set the returned data
+     * Execute the previous query and set the returned data.
      *
      *
-     *      @return resultSet
+     * @return \mysqli_result  
     */
     private final function fetchData(){
         $select = implode(',',array_values($this->select));
@@ -415,27 +439,27 @@ class Model {
 
 
     /**
-     *      Prepare a condition to be used in the query.
-     *          For example $data contains:
-     *              - 'price'
-     *              - '>'
-     *              - 59.99
+     * Prepare a condition to be used in the query.
+     *     For example $data contains:
+     *         - 'price'
+     *         - '>'
+     *         - 59.99
      *
-     *          We want to make this a DML statement like: 
-     *              - tablename.price>59.99
+     *     We want to make this a DML statement like: 
+     *         - tablename.price>59.99
      *
-     *          But we also will likely have another condition that will precede the first one we are passed,
-     *          that is where the $conjuction paramater comes into play. 
-     *          Its value will be a literal conjuction such as 'AND' or 'OR' or ','
+     *     But we also will likely have another condition that will precede the first one we are passed,
+     *     that is where the $conjuction paramater comes into play. 
+     *     Its value will be a literal conjuction such as 'AND' or 'OR' or ','
      *
-     *      This function uses the DB method set() to safely bind the passed variables into the DML statement.
+     * This function uses the DB method set() to safely bind the passed variables into the DML statement.
      *
      *
      *
-     *      @param array $data pieces of the condition that needs to be prepared
-     *      @param string $conjunction The conjuction to be used if more than one condition is present
-     *      @return mixed $where Either return the condition or false if there was no condition to prepare
+     * @param array $data Pieces of the condition that needs to be prepared.
+     * @param string $conjunction The conjuction to be used if more than one condition is present.
      *
+     * @return mixed $where Either return the condition or false if there was no condition to prepare.
     */
     private final function prepareCondition($data,$conjunction){
         if(count($data)>0){
@@ -465,9 +489,5 @@ class Model {
 
     }//prepareCondition
 
-
-
 }//Model
-
-
 ?>

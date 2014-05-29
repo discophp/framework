@@ -1,57 +1,55 @@
 <?php
-
 namespace Disco\classes;
-
 /**
-*       This file holds the BaseTemplate class
+ * This file holds the Template class.
 */
 
 
 /**
-*       BaseTemplate class.
-*       Provide support for using tempaltes that are stored in ../app/template/
-*       See documentation online at discophp.com/docs/Tempalte
-*
+ * Template class.
+ * Provide support for using tempaltes that are stored in ../app/template/ .
+ * See documentation online at http://discophp.com/docs/Template .
 */
 Class Template {
 
     /**
-     *      Store our accessed templates
+     * @var array Store our accessed templates.
     */
     public $templates = Array();
 
 
     /**
-     *      name of the working template
+     * @var string Name of the working template.
     */
     private $workingTemplate='';
 
 
     /**
-     *      html of template being manipulated 
+     * @var string HTML of template being manipulated.
     */
     private $beingModified='';
 
 
     /**
-     *      how we access variables
+     * @var string How we access variables.
      */
     private $delin = "{{\$%1\$s}}";
 
 
     /**
-     *      how we access copies of a variable
+     * @var string How we access copies of a variable.
     */
     private $copy = "{{&\$%1\$s}}";
 
 
 
     /**
-     *      Load a template from disk/Cache
+     * Load a template from disk/Cache.
      *
      *
-     *      @param string $name
-     *      @return void
+     * @param string $name The name of the template.
+     *
+     * @return void
     */
     private function loadTemplate($name){
         $path = \Disco::$path."/app/template/{$name}.template.html";
@@ -87,11 +85,12 @@ Class Template {
 
 
     /**
-     *      Retrieve a specified tempalte from disk
+     * Retrieve a specified tempalte from disk.
      *
      *
-     *      @param string $path the path to the tempalte
-     *      @return string 
+     * @param string $path The path to the tempalte.
+     *
+     * @return string 
     */
     private function getTemplateFromDisk($path){
 
@@ -119,13 +118,13 @@ Class Template {
 
 
     /**
-     *      Set the tempalte in the running memcached server if there is 
-     *      one available and connected.
+     * Set the tempalte in the running memcached server if there is one available and connected.
      *
      *
-     *      @param string $path the path to the template
-     *      @param string $name the name of the template
-     *      @return void
+     * @param string $path The path to the template.
+     * @param string $name The name of the template.
+     *
+     * @return void
     */
     private function cacheTemplate($path,$name){
 
@@ -138,9 +137,10 @@ Class Template {
 
 
     /**
-     *      Get the current template
+     * Get the current template.
      *
-     *      @return string
+     *
+     * @return string
     */
     private function getWorkingTemplate(){
         if(!isset($this->templates[$this->workingTemplate])){
@@ -152,9 +152,12 @@ Class Template {
 
 
     /**
-     *      work on a specific template
+     * Work on a specific template.
      *
-     *      @return object
+     *
+     * @param string $name The name of the template to work on.
+     *
+     * @return self 
      */
     public function name($name){
         $this->workingTemplate=$name;
@@ -165,9 +168,10 @@ Class Template {
 
 
     /**
-     *      get the markup of the active template
+     * Get the markup of the active template.
      *
-     *      @return string
+     *
+     * @return string
     */
     public function html(){
        return $this->beingModified; 
@@ -176,11 +180,13 @@ Class Template {
 
 
     /**
-     *      build a template and push its html
-     *      onto the Views html stack
+     * Build a template and push its html onto the Views html stack.
      *
-     *      @param string $name
-     *      @param array $data
+     *
+     * @param string $name The template name.
+     * @param array $data The data to pass the template.
+     *
+     * @return void
     */
     public function with($name,$data=Array()){
         \View::html($this->build($name,$data));
@@ -189,11 +195,13 @@ Class Template {
 
 
     /**
-     *      build a template 
+     * Build a template.
      *
-     *      @param string $name
-     *      @param array $data
-     *      @return string
+     *
+     * @param string $name The template name.
+     * @param array $data The data to pass the template.
+     *
+     * @return string
     */
     public function build($name,$data=Array()){
         $this->workingTemplate=$name;
@@ -219,11 +227,13 @@ Class Template {
 
 
     /**
-     *      treat dynamic markup as a template to be processed 
+     * Treat dynamic markup as a template to be processed.
      *
-     *      @param string $name
-     *      @param array $data
-     *      @return string
+     *
+     * @param string    $markup The string to treat as a template.
+     * @param array     $data   The data to pass to the $markup.
+     *
+     * @return string
     */
     public function live($markup,$data=Array()){
         $this->beingModified = $markup;
@@ -247,10 +257,12 @@ Class Template {
 
 
     /**
-     *      Set data into the template. This function is recursive in nature!
+     * Set data into the template. This function is recursive in nature!
      *
-     *      @param array $data
-     *      @return object
+     *
+     * @param array $data The data to set into the template.
+     *
+     * @return self 
     */
     public function set($data){
         $t = $this->beingModified;
@@ -306,10 +318,12 @@ Class Template {
 
 
     /**
-     *      append nested templates
+     * Append nested templates.
      *
-     *      @param array $data
-     *      @return string
+     *
+     * @param array $data The data to carry to the nested template.
+     *
+     * @return string
     */
     private function appendTemplate($data){
         $t = $this->beingModified;
@@ -340,13 +354,14 @@ Class Template {
 
 
     /**
-     *      inject the template into the calling template
+     * Inject the template into the calling template.
      *
-     *      @param array $data
-     *      @param string $k
-     *      @param mixed $v
-     *      @param string $t
-     *      @return string
+     *
+     * @param array $data The data to use in the template.
+     * @param string $k The template name to inject.
+     * @param mixed $v  
+     * @param string $t
+     * @return string
     */
     private function insertTemplate($data,$k,$v,$t){
         $this->loadTemplate($data['templateName']);

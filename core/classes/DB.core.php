@@ -1,49 +1,41 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- *      This file holds the class BaseMySQLiDatabase
+ * This file holds the class DB which extends \mysqli. 
  */
 
 
 
 /**
- *      Class BaseMySQLiDatabase.
- *      Provides access to a MySQL server and the ability to run DML statements on it. 
- *      Settings in .env.*.json must be set in order to establish a connection to the server.
- *
+ * Class DB.
+ * Provides access to a MySQL server and the ability to run DML statements on it. 
+ * This class depends on settings in [.config.php] in order to establish a connection the the MySQL Server.
 */
 class DB extends \mysqli {
 
-
     /**
-     *      Are we connected to the MySQL server?
+     * @var boolean Are we connected to the MySQL server?
     */
     public $connected=false;
 
     /**
-     *      Cache of queries we executed
-     */
-    private $queryCache = array();
-
-    /**
-     *      Cache of results we received
-     */
-    private $dataCache = array();
-
-    /**
-     *      The last result of a query
+     * @var \mysqli_result The last result of a query.
      */
     public $last;
 
 
 
     /**
-     *      Connect to the MySQL server 
+     * Connect to the MySQL server.
+     * See http://discophp.com/docs/facades/DataBase to learn about extending and multiple DB connections.
      *
      *
-     *      @return void
+     * @param null|string $host The host to connect to.
+     * @param null|string $user The user to connect with $host to.
+     * @param null|string $pw   The users password to connect with $host to.
+     * @param null|string $db   The Schema to connect to on $host.
+     *
+     * @return void
      */
     public function __construct($host=null,$user=null,$pw=null,$db=null) {
 
@@ -65,10 +57,10 @@ class DB extends \mysqli {
 
 
     /**
-     *      Tear down the connection
+     * Tear down the connection by calling $this->close() which is a method of the parent \mysqli.
      *
      *
-     *      @return void
+     * @return void
     */
     public function __destruct(){
         if($this->connected)
@@ -78,10 +70,10 @@ class DB extends \mysqli {
 
 
     /**
-     *      Access the last query resultSet 
+     * Access the last query mysqli_result object.
      *
-     *      
-     *      @return object $this->last A MySQL ResultSet
+     * 
+     * @return \mysqli_result Returns $this->last A mysqli_result
      */
     public function last(){
         return $this->last;
@@ -90,11 +82,11 @@ class DB extends \mysqli {
 
 
     /**
-     *      Sanatize a string before trying to use it in the DML
+     * Sanatize a string before trying to use it in the DML.
      *
      *
-     *      @param string $inc query to clean
-     *      @return string $inc cleaned query
+     * @param string  $inc The query to sanatize.
+     * @return string The sanatized query.
     */
     public function clean($inc){
         if(get_magic_quotes_gpc()){
@@ -109,12 +101,13 @@ class DB extends \mysqli {
 
 
     /**
-     *      Execute a query
+     * Execute a query.
      *
      *
-     *      @param string $q the query to execute
-     *      @param mixed $args the variables to bind to the query string
-     *      @return object $result a mysql resultset
+     * @param string       $q    The query to execute.
+     * @param null|string|array $args The variables to bind to the query string.
+     *
+     * @return \mysqli_result 
     */
     public function query($q,$args=null){
 
@@ -148,10 +141,10 @@ class DB extends \mysqli {
 
 
     /**
-     *      Return the last generated Auto Increment ID
+     * Return the last generated Auto Increment ID
      *
      *
-     *      @return int $this->insert_id
+     * @return int Return the value $this->insert_id
     */
     public function lastId(){
         return $this->insert_id;
@@ -160,13 +153,14 @@ class DB extends \mysqli {
 
 
     /**
-     *      Bind passed variables into a query string and do proper type checking
-     *      and escaping before binding
+     * Bind passed variables into a query string and do proper type checking
+     * and escaping before binding.
      *
      *
-     *      @param string $q the query string
-     *      @param mixed $args the variables to bind to the query
-     *      @return string $q the query with variables bound into it
+     * @param string        $q      The query string.
+     * @param string|array  $args   The variables to bind to the $q.
+     *
+     * @return string               The $q with $args bound into it.
     */
     public function set($q,$args){
         if($args!=null){
@@ -187,12 +181,12 @@ class DB extends \mysqli {
 
 
     /**
-     *      Determine the type of variable being bound into the query.
-     *      Ex String, Int
+     * Determine the type of variable being bound into the query, either a String or Numeric.
      *
      *
-     *      @param mixed $arg
-     *      @return mixed $arg
+     * @param  string|int|float $arg  The variable to prepare.
+     *
+     * @return string|int|float The $arg prepared.
     */
     private function prepareType($arg){
         if($arg==null || $arg=='null')
@@ -207,13 +201,13 @@ class DB extends \mysqli {
 
 
     /**
-     *      Execute a Stored Procedure on the Server
+     * Execute a Stored Procedure in the Remote Hosts Schema.
      *
      *
-     *      @param string $q the stored procedure to execute
-     *      @param mixed $args the variables to bind the the stored procedure
-     *      @return array $rows the tuples returned by the stored procedure
+     * @param string        $q The stored procedure to execute.
+     * @param null|string|array  $args The variables to bind to the $q.
      *
+     * @return array The tuples returned by the stored procedure.
     */
     public function sp($q,$args=null){
         $rows = Array();
@@ -256,10 +250,5 @@ class DB extends \mysqli {
         return $rows;
     }//executeSP
 
-
-
-
-}//class DataBase
-
-
+}//DB
 ?>

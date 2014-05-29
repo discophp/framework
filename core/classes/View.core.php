@@ -1,15 +1,13 @@
 <?php
-
 namespace Disco\classes;
-
 /**
- * This file holds the BaseView class
+ * This file holds the Disco\classes\View class
 */
 
 
 /**
- * BaseView class.
- * The BaseView class provides the functionality of dynamically creating
+ * Disco\classes\View class.
+ * The View class provides the functionality of dynamically creating
  * web pages. Essentially the eventual response to the client.
  *
  * See the docs at discophp.com/docs/View
@@ -17,97 +15,97 @@ namespace Disco\classes;
 class View {
 
     /**
-     * Flips between script and style
+     * @var string Flips between script and style
     */
     private $lastCallType;
 
     /**
-     * Hold html bits
+     * @var array Hold html bits
     */
     private $html = Array();
 
     /**
-     * Hold script(js) bits
+     * @var array Hold script(js) bits
     */
     private $scripts = Array();
 
     /**
-     * Hold script(js) URLs 
+     * @var array Hold script(js) URLs 
     */
     private $scriptSrcs = Array();
 
     /**
-     * Hold head script(js) URLs 
+     * @var array Hold head script(js) URLs 
     */
     private $headScriptSrcs = Array();
 
     /**
-     * Hold style(css) bits
+     * @var array Hold style(css) bits
     */
     private $styles = Array();
 
     /**
-     * Hold style(css) URLs 
+     * @var array Hold style(css) URLs 
     */
     private $styleSrcs = Array();
 
     /**
-     * Hold classes to apply to the body element
+     * @var array Hold classes to apply to the body element
     */
     private $bodyStyles = Array();
 
     /**
-     * Page title
+     * @var string Page title
     */
     public $title;
 
     /**
-     * Page description
+     * @var string Page description
     */
     public $description;
 
     /**
-     * Path to favicon
+     * @var string Path to favicon
     */
     public $favIcon='/favicon.png';
 
     /**
-     * Set this to the path of your working project
+     * @var string Set this to the path of your working project
     */
     public $path;
 
     /**
-     * Name of your default stylesheet
+     * @var string Name of your default stylesheet
     */
     public $styleSheet = 'css';
 
     /**
-     * Name of your default javascript file
+     * @var string Name of your default javascript file
     */
     public $script = 'js';
 
     /**
-     * Extra elements (added by user as a string) to go in the head of the page
+     * @var string Extra elements (added by user as a string) to go in the head of the page
     */
     public $headExtra = '';
 
     /**
-     * Html mark up of our header
+     * @var string Html mark up of our header
     */
     public $header='';
 
     /**
-     * Html mark up of our footer
+     * @var string Html mark up of our footer
     */
     public $footer='';
 
     /**
-     * Is the request AJAX?
+     * @var boolean Is the request AJAX?
     */
     private $isAjax=false;
 
     /**
-     * How should it be scraped
+     * @var array How should it be scraped
     */
     private $indexes = Array(
         0=>'index,follow',
@@ -117,22 +115,22 @@ class View {
     );
     
     /**
-     * Standard scrape for $indexes
+     * @var integer Standard scrape for $indexes
     */
     public $activeIndex=0;
 
     /**
-     * Default language
+     * @var string Default language
     */
     public $lang='en';
 
     /**
-     * Default charset 
+     * @var string Default charset 
     */
     public $charset='utf-8';
 
     /**
-     * SEO view?
+     * @var boolean SEO view?
     */
     public $seo=false;
 
@@ -261,10 +259,10 @@ class View {
 
 
     /**
-     * Set extra elements in the header as a string.
+     * Set whether or not this View should be printed as SEO.
      * 
      *
-     * @param string $extra the markup to put in the head of the page
+     * @param boolean $bool 
      * @return void
     */
     public function seo($bool=true){

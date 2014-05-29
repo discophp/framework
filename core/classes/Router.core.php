@@ -1,7 +1,5 @@
 <?php
-
 namespace Disco\classes;
-
 /**
  *      This file holds the class Router 
 */
@@ -9,67 +7,67 @@ namespace Disco\classes;
 
 
 /**
- *      Router class.
- *      Used to resove a RESTful endpoint to an action, either a Closure or a Controller.
- *
+ * Router class.
+ * Used to resove a RESTful endpoint to an action, either a \Closure or a Controller.
 */
 class Router {
 
     /**
-     *      url path to match
+     * @var string URI path to match.
     */
     private $param;
 
     /**
-     *      action to take if matched
+     * @var \Closure|string Action to take if matched.
     */
     private $function;
 
     /**
-     *      did we find a match?
+     * @var boolean Did we find a match?
     */
     private $haveMatch = false;
 
     /**
-     *      where restrictions
+     * @var array The routers where restrictions.
     */
     private $variableRestrictions = Array();
 
     /**
-     *      Is route HTTPS
+     * @var boolean Is route HTTPS?
     */
     private $secureRoute=false;
 
     /**
-     *      Is this Router a Filter Router?
+     * @var boolean Is this Router a Filter Router?
     */
     private $isFilter=false;
 
     /**
-     *      Send a filtered route to Router file, or Closure
+     * @var null|string|\Closure Send a filtered route to Router file, or Closure.
     */
     private $useRouter=null;
 
     /**
-     *      Store authentication requirements on route
+     * @var null|string|array Store authentication requirements on route.
     */
     private $auth=null;
 
 
 
     /*
-     *      When we tear down the object is when we do the work.
-     *      Since the (this)Router instance is instantiated and never referenced is it destroyed as soon as it is 
-     *      called and its method chain has been executed.
+     * When we tear down the object is when we do the work.
      *
-     *      Find if there is a match and take the appropriate action:
-     *          - Execute an instance of a Closure
-     *          - Resolve the requested Controller and method
-     *          - Bind the passed data into the Closure function or class method
-     *          - Filter routes to another Router or Closure
+     * Since the (this)Router instance is instantiated and never referenced is it destroyed as soon as it is 
+     * called and its method chain has been executed.
+     *
+     * Find if there is a match and take the appropriate action:
+     *     - Execute an instance of a Closure
+     *     - Resolve the requested Controller and method
+     *     - Bind the passed data into the Closure function or class method
+     *     - Filter routes to another Router or Closure
      *
      *
-     *      @return void
+     * @return void
     */
     public function __destruct(){
 
@@ -145,10 +143,10 @@ class Router {
 
 
     /**
-     *      Return whether or not the request is authenticated by a session
+     * Return whether or not the request is authenticated by a session.
      *
      *
-     *      @return boolean
+     * @return boolean
     */
     private function authenticated(){
 
@@ -176,11 +174,10 @@ class Router {
 
 
     /**
-     *      Only allow match on route if request method 
-     *      was HTTPS
+     * Only allow match on route if request method was HTTPS.
      *
-     *      
-     *      @return object $this
+     * 
+     * @return self 
     */
     public function secure(){
         $this->secureRoute=true;    
@@ -190,13 +187,13 @@ class Router {
 
 
     /**
-     *      Protect a route via the exsistence of a  session
+     * Protect a route via the exsistence of a SESSION.
      *
      *
-     *      @param mixed $session Either the session name, or an array of session names
-     *      @param mixed $action a URL string to redirect to if the route matches and the user isn't authenticated
-     *      @return object $this
+     * @param string|array $session Either the session name, or an array of session names.
+     * @param null|string $action a URI string to redirect to if the route matches and the user isn't authenticated.
      *
+     * @return self 
     */
     public function auth($session,$action=null){
 
@@ -217,10 +214,10 @@ class Router {
 
 
     /**
-     *      When a route is not a match this function essentially destroys it
+     * When a route is not a match this function essentially destroys it.
      *
      *
-     *      @return object $this
+     * @return self 
     */
     private function whiteOutRoute(){
         $this->function=null;
@@ -231,11 +228,11 @@ class Router {
 
 
     /**
-     *      Filter a url route using {*} notation
+     * Filter a url route using {*} notation.
      *
      *
-     *      @param  string  $param the url filter
-     *      @return object  $this
+     * @param  string  $param the URI filter
+     * @return self 
     */
     public function filter($param){
         $this->isFilter=true;
@@ -246,12 +243,13 @@ class Router {
 
 
     /**
-     *      When a Router is used as a Filter and the filter matches 
-     *      there needs to be either a Router File or a Closure passed to handle the filtering
+     * When a Router is used as a Filter and the filter matches 
+     * there needs to be either a Router File or a Closure passed to handle the filtering.
      *
      *
-     *      @param  mixed  $r     A string representing a Router File, or a Closure
-     *      @return object $this
+     * @param  string|\Closure $r     A string representing a Router File, or a Closure
+     *
+     * @return self 
     */
     public function to($r){
         $this->useRouter=$r;
@@ -261,12 +259,13 @@ class Router {
 
 
     /**
-     *      Match a get url route
+     * Match a GET URI route.
      *
      *
-     *      @param  string   $param    the url to match
-     *      @param  mixed    $function the action to take if there is a match
-     *      @return object   $this
+     * @param  string           $param    The URI to match.
+     * @param  string|\Closure  $function The action to take if there is a match.
+     *
+     * @return self 
      */
     public function get($param,$function){
         if(count($_POST)>0 || count(\Data::put()->all())>0 || count(\Data::delete()->all())>0)
@@ -282,12 +281,13 @@ class Router {
 
 
     /**
-     *      Match a any url route
+     * Match any URI route.
      *
      *
-     *      @param  string   $param    the url to match
-     *      @param  mixed    $function the action to take if there is a match
-     *      @return object   $this
+     * @param  string           $param    The URI to match.
+     * @param  string|\Closure  $function The action to take if there is a match.
+     *
+     * @return self 
      */
     public function any($param,$function){
         if($this->secureRoute && empty($_SERVER['HTTPS']))
@@ -301,12 +301,13 @@ class Router {
 
 
     /**
-     *      Match a post url route
+     * Match a POST URI route.
      *
      *
-     *      @param  string  $param    the url to match
-     *      @param  mixed   $function the action to take if there is a match
-     *      @return object  $this
+     * @param  string           $param    The URI to match.
+     * @param  string|\Closure  $function The action to take if there is a match.
+     *
+     * @return self 
      */
     public function post($param,$function){
         if(count($_POST)==0){
@@ -323,12 +324,13 @@ class Router {
 
 
     /**
-     *      Match a put url route
+     * Match a PUT URI route.
      *
      *
-     *      @param  string   $param    the url to match
-     *      @param  mixed    $function the action to take if there is a match
-     *      @return object   $this
+     * @param  string           $param    The URI to match.
+     * @param  string|\Closure  $function The action to take if there is a match.
+     *
+     * @return self 
      */
     public function put($param,$function){
         if($_SERVER['REQUEST_METHOD']!='PUT'){
@@ -345,12 +347,13 @@ class Router {
 
 
     /**
-     *      Match a delete url route
+     * Match a DELETE URI route
      *
      *
-     *      @param  string   $param    the url to match
-     *      @param  mixed    $function the action to take if there is a match
-     *      @return object   $this
+     * @param  string           $param    The url to match.
+     * @param  string|\Closure  $function The action to take if there is a match.
+     *
+     * @return self 
      */
     public function delete($param,$function){
         if($_SERVER['REQUEST_METHOD']!='DELETE'){
@@ -367,12 +370,13 @@ class Router {
 
 
     /**
-     *      Add where variables restrictions
+     * Add where variables restrictions to the URI route.
      *
      *
-     *      @param  mixed  $k Either a string key or an array
-     *      @param  mixed  $v either null or a string
-     *      @return void
+     * @param  string|array $k Either a string key or an array.
+     * @param  null|string  $v Either null or a string.
+     *
+     * @return void
      */
     public function where($k,$v=null){
         if(is_array($k)){
@@ -386,11 +390,12 @@ class Router {
 
 
     /**
-     *      Match a url route against the $param
+     * Match a URI route against the $param.
      *
      *
-     *      @param  string  $param the url
-     *      @return boolean
+     * @param  string  $param The URI to match the route against.  
+     *
+     * @return boolean Was this $param a match to the REQUEST_URI?
      */
     private function match($param){
         $url = $_SERVER['REQUEST_URI'];
@@ -461,12 +466,14 @@ class Router {
     }//match
 
 
+
     /**
-     *      Filter a url route against the $param
+     * Filter a URI route against the $param.
      *
      *
-     *      @param  string  $param the url
-     *      @return boolean
+     * @param  string  $param The URI to filter. 
+     *
+     * @return boolean
      */
     private function filterMatch($param){
         $url = $_SERVER['REQUEST_URI'];
@@ -488,9 +495,5 @@ class Router {
 
     }//filterMatch
 
-
-}//BaseRouter
-
-
-
+}//Router
 ?>

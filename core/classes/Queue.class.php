@@ -1,10 +1,26 @@
 <?php
-
 namespace Disco\classes;
+/**
+ * This file holds the Queue class. 
+*/
 
-
+/**
+ * Queue class. 
+ * Allow simulation of parallel processing of jobs either immediatly or after a set delay.
+ * The classes objective is to allow large jobs that would cause lag or generally take a long time and
+ * are expensive in processing to be executed without interupting the applications response.
+*/
 class Queue {
 
+    /**
+     *  Push a job onto the Queue for processing. 
+     *
+     *  @param \Closure|string      $job    Either a \Closure to execute or a Class method pair like 'DB@query'.
+     *  @param int                  $delay  The delay to wait before begining execution of the $job.
+     *  @param null|string|array    $vars   The variables to pass to the $job.
+     *
+     *  @return void
+    */
     public function push($job,$delay=0,$vars=null){
 
         if($vars==null){
@@ -48,12 +64,5 @@ class Queue {
 
     }//push
 
-
-
-
-
 }//Queue
-
-
-
 ?>
