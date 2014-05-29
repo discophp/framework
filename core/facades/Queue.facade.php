@@ -8,6 +8,8 @@ class Queue extends Disco\classes\Facade {
     /**
      * Get the jobs that are currently queued. Returns the jobs as objects
      * structured like :
+     * 
+     *
      *  - pId = process ID of job.
      *  - time = time job was enetered.
      *  - delay = delay the job was told to wait before execution.
