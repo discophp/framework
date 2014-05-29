@@ -9,9 +9,9 @@
 
 
 /**
- * Require our Prep File that handles setting up our environment.
+ * Prep the App.
 */
-require('Prep.core.php');
+Disco::prep();
 
 
 /**
@@ -20,10 +20,14 @@ require('Prep.core.php');
 require(Disco::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
 
 
+/**
+ * Register the default Facades with Disco.
+*/
+Disco::registerDefaults();
+
 
 /**
  * Our applications primary Container and Controller. 
- *
 */
 Class Disco {
 
@@ -131,6 +135,41 @@ Class Disco {
     }//addCondition
 
 
+
+    /**
+     * Prepare the Application for usage by loading the [.config.php] 
+     * http://github.com/discophp/project/blob/master/.config.php and potentially overriding it 
+     * with a [.dev.config.php] file if the application is in DEV mode and the file exists. 
+     *
+     * Also, set some php.ini setting:
+     *      - session.use_trans_sid = 0
+     *      - session.use_only_cookies = 1
+     *
+     * 
+     * @return void
+    */
+    public static function prep(){
+        //disable apache from append session ids to requests
+        ini_set('session.use_trans_sid',0);
+        //only allow sessions to be used with cookies
+        ini_set('session.use_only_cookies',1);
+        
+        self::$path = dirname($_SERVER['DOCUMENT_ROOT']);
+        
+        if(is_file(self::$path.'/.config.php')){
+            $_SERVER = array_merge($_SERVER,require(self::$path.'/.config.php'));
+            if($_SERVER['APP_MODE']!='PROD' && is_file(self::$path.'/.dev.config.php')){
+                $_SERVER = array_merge($_SERVER,require(self::$path.'/.dev.config.php'));
+            }//if
+        }//if
+        
+        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+        $_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
+
+    }//prep
+
+
+
     /**
      * Register the Default Disco Facades with the Application Container.
      *
@@ -222,11 +261,12 @@ Class Disco {
             return new Disco\classes\Queue();
         });
 
+        /**
+         * Give the Router a MockBox instance to pass back after a RouteMatch has been made.
+        */
+        Router::$mockBox = new Disco\classes\MockBox;
+
     }//registerDefaults
 
 }//Disco
-
-Disco::registerDefaults();
-
-
 ?>

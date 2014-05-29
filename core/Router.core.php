@@ -1,58 +1,56 @@
 <?php
+/**
+ *  This file holds the Router class.
+*/
 
 
 /**
- *      The Router Class acts as a singlton one time consumer
- *
+ *      The Router Class acts as a Controller and Factory for
+ *      all instances of \Disco\classes\Router.
  */
 class Router {
 
     /**
-     *      Has a router matched a request.
+     * @var boolean Has a Disco\classes\Router matched a request?
     */
     public static $routeMatch=false;
 
 
-    public static function get($param,$function){
-        return self::instance()->get($param,$function);
-    }//get
-
-    public static function post($param,$function){
-        return self::instance()->post($param,$function);
-    }//post
-
-    public static function any($param,$function){
-        return self::instance()->any($param,$function);
-    }//any
-
-    public static function put($param,$function){
-        return self::instance()->put($param,$function);
-    }//any
+    /**
+     * @var \Disco\classes\MockBox A MockBox instance.
+    */
+    public static $mockBox;
 
 
-    public static function delete($param,$function){
-        return self::instance()->delete($param,$function);
-    }//any
+    /**
+     * Give access to \Disco\classes\Router methods via the overloading of call static.
+     * If there is already a Router that resolved an endpoint return the self::$mockBox which
+     * can emulate an object that has the methods of \Disco\classes\Router in order to allow the method
+     * chain specified by the originating call to continue without a Fatal error.
+     *
+     *
+     * @param callable $method The method to be called.
+     * @param array $args The arguements that were passed to $method.
+     *
+     * @return \Disco\classes\Router|\disco\classes\MockBox 
+    */
+    public static function __callStatic($method,$args){
 
-    public static function secure(){
-        return self::instance()->secure();
-    }//any
+        if(!self::$routeMatch){
+            return call_user_func_array(Array(self::instance(),$method),$args);
+        }//if
 
-    public static function auth($session,$action=null){
-        return self::instance()->auth($session,$action);
-    }//any
+        return self::$mockBox;
 
-    public static function filter($param){
-        return self::instance()->filter($param);
-    }//any
+    }//__callStatic
 
 
 
     /**
-     *      Get a fresh router instance 
+     * Get a fresh router instance. 
      *
      *
-     *      @return core/BaseRouter
+     * @return \Disco\classes\Router 
      */
     private static function instance(){
         return new Disco\classes\Router();
@@ -61,11 +59,13 @@ class Router {
 
 
     /**
-     *      Once a router has found a match we dont perform more match attempts.
+     * Once a router has found a match we dont perform more match attempts. 
+     * This function is both a setter and a getter.
      *
      *
-     *      @param  boolean $m
-     *      @return boolean
+     * @param  boolean $m
+     *
+     * @return boolean
      */
     public static function routeMatch($m=null){
         if($m!=null)
@@ -78,11 +78,11 @@ class Router {
 
 
     /**
-    *       Load a Router File for processing.
+    * Load a Router File for processing.
     *
     *
-    *       @param string $router
-    *       @return void
+    * @param string $router
+    * @return void
     */
     public static function useRouter($router){
         $routerPath = Disco::$path."/app/router/$router.router.php";
@@ -92,15 +92,5 @@ class Router {
         }//if
     }//useRouter
 
-
-
 }//Router
-
-
-
-
-
-
-
-
 ?>
