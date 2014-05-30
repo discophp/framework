@@ -129,7 +129,7 @@ class Email {
             $d = $this->delay;
             $this->delay = null;
             $body = htmlentities($body);
-            \Queue::push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attch));
+            \Queue::push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attach));
             return true;
         }//if
 
