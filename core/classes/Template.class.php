@@ -327,12 +327,13 @@ Class Template {
     */
     private function appendTemplate($data){
         $t = $this->beingModified;
-        if(!$data){
+        if(count($data)==0){
 
             do {
                 $info = $this->parseInfo('',$t);
-                if($info['templateName']=='' || $info['templateName']=='.')
-                    return $t;
+                if($info==null){
+                    continue;
+                }//if
                 $t = $this->insertTemplate($info,'',$t);
             } while($info);
 
@@ -343,8 +344,9 @@ Class Template {
 
             do {
                 $info = $this->parseInfo($k,$t);
-                if($info['templateName']=='' || $info['templateName']=='.')
-                    return $t;
+                if($info==null){
+                    continue;
+                }//if
                 $t = $this->insertTemplate($info,$v,$t);
             } while($info);
         }//foreach
