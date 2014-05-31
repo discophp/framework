@@ -7,23 +7,7 @@
  * request.
 */
 
-
-/**
- * Prep the App.
-*/
-Disco::prep();
-
-
-/**
- * Require the Composer Auto-Loader.
-*/
-require(Disco::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
-
-
-/**
- * Register the default Facades with Disco.
-*/
-Disco::registerDefaults();
+Disco::assemble();
 
 
 /**
@@ -39,14 +23,17 @@ Class Disco {
 
 
     /**
-     * @var array Facades.
+     * @var array The applications Facades.
     */
     public static $facades=Array();
 
     /**
-     * @var array Facades.
+     * @var array Where we keep instances of objects requested through with().
     */
     public static $objects=Array();
+
+
+    public static $maintenance=null;
 
 
     /**
@@ -61,6 +48,156 @@ Class Disco {
     );
 
 
+    /**
+     * Assemble the pieces of the application that make it all tick.
+     * 
+     *
+     * @return void
+    */
+    public static final function assemble(){
+
+        /**
+         * Prep the App.
+        */
+        self::prep();
+        
+        
+        /**
+         * Require the Composer Auto-Loader.
+        */
+        require(self::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
+        
+        
+        /**
+         * Register the default Facades with Disco.
+        */
+        self::registerDefaults();
+        
+        /**
+         * Register the default Facades with Disco.
+        */
+        self::handleMaintanance();
+
+        /**
+         * Give the Router a MockBox instance to pass back after a RouteMatch has been made.
+        */
+        Router::$mockBox = new Disco\classes\MockBox;
+
+    }//assemble
+
+
+
+    /**
+     * Make sure a \Disco\classes\Router matched against the requested URI.
+     *
+     *
+     * @return void
+    */
+    public static final function tearDownApp(){
+
+        //did this requested URI not find a match? If so thats a 404.
+        if(!Router::$routeMatch){
+            header('HTTP/1.0 404 Not Found');
+            self::handle404();
+        }//if
+
+        /**
+         * Print out the Current View.
+        */
+        View::printPage();
+
+    }//tearDownApp
+
+
+
+    /**
+     * Prepare the Application for usage by loading the [.config.php] 
+     * http://github.com/discophp/project/blob/master/.config.php and potentially overriding it 
+     * with a [.dev.config.php] file if the application is in DEV mode and the file exists. 
+     *
+     * Also, set some php.ini setting:
+     *      - session.use_trans_sid = 0
+     *      - session.use_only_cookies = 1
+     *
+     * 
+     * @return void
+    */
+    public static final function prep(){
+        //disable apache from append session ids to requests
+        ini_set('session.use_trans_sid',0);
+        //only allow sessions to be used with cookies
+        ini_set('session.use_only_cookies',1);
+        
+        self::$path = dirname($_SERVER['DOCUMENT_ROOT']);
+        
+        if(is_file(self::$path.'/.config.php')){
+            $_SERVER = array_merge($_SERVER,require(self::$path.'/.config.php'));
+            if($_SERVER['APP_MODE']!='PROD' && is_file(self::$path.'/.dev.config.php')){
+                $_SERVER = array_merge($_SERVER,require(self::$path.'/.dev.config.php'));
+            }//if
+        }//if
+        
+        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+        $_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
+
+    }//prep
+
+
+    /*
+     * When MAINTANANCE_MODE=true in .config.php the application is in maintance mode and the \Closure function 
+     * returned from app/maintanance.php should be executed.
+     *
+     *
+     * @return void 
+    */
+    public static final function handleMaintanance(){
+        if(!$_SERVER['MAINTANANCE_MODE']){
+            return;
+        }//if
+        $file = Disco::$path.'/app/maintanance.php';
+        if(is_file($file)){
+            $action = require($file);
+        }//if
+        else {
+            $action = function(){ View::html('<h1>This site is currently undering going maintance.</h1><p>It will be back up shortly.</p>');};
+        }//el
+
+        call_user_func($action);
+
+        View::printPage();
+        exit;
+
+    }//handleMaintanance
+
+
+
+    /*
+     * Handle a 404 page by either loading the \Closure function from the file /app/404.php and executing it or by 
+     * a default message set by the function.
+     *
+     *
+     * @return void 
+    */
+    public static final function handle404(){
+        $file = Disco::$path.'/app/404.php';
+        if(is_file($file)){
+            $action = require($file);
+        }//if
+        else {
+            $action = function(){ View::html('<h1>404 This page was not found.</h1>');};
+        }//el
+
+        call_user_func($action);
+
+    }//handle404
+
+
+
+
+
+
+
+
 
     /**
      * Access a instance of a object/class out of the container thats auto-loadable via composers autoload.php .
@@ -70,7 +207,7 @@ Class Disco {
      *
      * @return object Return an instance of the requested $obj from the container.
     */
-    public final function with($obj){
+    public static final function with($obj){
         if(isset($this->objects[$obj])){
             return $this->objects[$obj];
         }//if
@@ -91,7 +228,7 @@ Class Disco {
      *
      * @return void
      */
-    public static function make($name,$callback){
+    public static final function make($name,$callback){
         if(!isset(Disco::$facades[$name])){
             Disco::$facades[$name]=$callback;
         }//if
@@ -112,7 +249,7 @@ Class Disco {
      *
      * @return mixed the result of the method call.
      */
-    public static function handle($instance,$method,$args){
+    public static final function handle($instance,$method,$args){
         switch (count($args)) {
             case 0:
                 return $instance->$method();
@@ -138,7 +275,7 @@ Class Disco {
     *
     * @return void
     */
-    public static function useRouter($router){
+    public static final function useRouter($router){
         $routerPath = Disco::$path."/app/router/$router.router.php";
         if(file_exists($routerPath)){
             Router::$routeMatch=false;
@@ -157,43 +294,10 @@ Class Disco {
      * @param string $v The conditions regex value.
      * @return void 
     */
-    public static function addCondition($k,$v){
+    public static final function addCondition($k,$v){
         Disco::$defaultMatchCondition[$k]=$v;
     }//addCondition
 
-
-
-    /**
-     * Prepare the Application for usage by loading the [.config.php] 
-     * http://github.com/discophp/project/blob/master/.config.php and potentially overriding it 
-     * with a [.dev.config.php] file if the application is in DEV mode and the file exists. 
-     *
-     * Also, set some php.ini setting:
-     *      - session.use_trans_sid = 0
-     *      - session.use_only_cookies = 1
-     *
-     * 
-     * @return void
-    */
-    public static function prep(){
-        //disable apache from append session ids to requests
-        ini_set('session.use_trans_sid',0);
-        //only allow sessions to be used with cookies
-        ini_set('session.use_only_cookies',1);
-        
-        self::$path = dirname($_SERVER['DOCUMENT_ROOT']);
-        
-        if(is_file(self::$path.'/.config.php')){
-            $_SERVER = array_merge($_SERVER,require(self::$path.'/.config.php'));
-            if($_SERVER['APP_MODE']!='PROD' && is_file(self::$path.'/.dev.config.php')){
-                $_SERVER = array_merge($_SERVER,require(self::$path.'/.dev.config.php'));
-            }//if
-        }//if
-        
-        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
-        $_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
-
-    }//prep
 
 
 
@@ -202,7 +306,7 @@ Class Disco {
      *
      * @return void
     */
-    public static function registerDefaults(){
+    public static final function registerDefaults(){
 
         /**
         * Make our DB Facade 
@@ -288,10 +392,6 @@ Class Disco {
             return new Disco\classes\Queue();
         });
 
-        /**
-         * Give the Router a MockBox instance to pass back after a RouteMatch has been made.
-        */
-        Router::$mockBox = new Disco\classes\MockBox;
 
     }//registerDefaults
 
