@@ -151,7 +151,7 @@ Class Disco {
      * @return void 
     */
     public static final function handleMaintanance(){
-        if(!$_SERVER['MAINTANANCE_MODE']){
+        if(strtolower($_SERVER['MAINTANANCE_MODE'])!='yes'){
             return;
         }//if
         $file = Disco::$path.'/app/maintanance.php';

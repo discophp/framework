@@ -131,6 +131,27 @@ class Manager {
 
 
     /**
+     * Set or Get the MAINTANANCE_MODE in .config.php .
+     *
+     *
+     * @param string|null $mode Should the app be in maintanance mode? 
+     *
+     * @return void
+    */
+    public static function maintananceMode($mode=null){
+
+        if($mode!=null){
+            self::setConfig('MAINTANANCE_MODE',$mode);
+        }//if
+        else {
+            return self::getConfig('MAINTANANCE_MODE');
+        }//el
+
+    }//appMode
+
+
+
+    /**
      * Set a variable in .config.php .
      *
      * @param string $find  The variable to change.
@@ -139,10 +160,12 @@ class Manager {
      * @return void
     */
     public static function setConfig($find,$value){
+
         $find.='\'=>\'';
         $f = file_get_contents('./.config.php');
         $i = stripos($f,$find)+strlen($find);
         $ni = stripos($f,'\'',$i);
+
         $f = substr_replace($f,$value,$i,$ni-$i);
         file_put_contents('./.config.php',$f);
     }//setConfig
@@ -162,6 +185,7 @@ class Manager {
         $f = file_get_contents('./.config.php');
         $i = stripos($f,$find)+strlen($find);
         $ni = stripos($f,'\'',$i);
+
         return substr($f,$i,$ni-$i);
     }//setConfig
 
