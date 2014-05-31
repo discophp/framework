@@ -43,6 +43,11 @@ Class Disco {
     */
     public static $facades=Array();
 
+    /**
+     * @var array Facades.
+    */
+    public static $objects=Array();
+
 
     /**
      * @var array Default regex matching conditions.
@@ -58,6 +63,26 @@ Class Disco {
 
 
     /**
+     * Access a instance of a object/class out of the container thats auto-loadable via composers autoload.php .
+     *
+     *
+     * @param string $obj The obj or class.
+     *
+     * @return object Return an instance of the requested $obj from the container.
+    */
+    public final function with($obj){
+        if(isset($this->objects[$obj])){
+            return $this->objects[$obj];
+        }//if
+
+        $this->objects[$obj]=new $obj();
+        return $this->objects[$obj];
+
+    }//use
+
+
+
+    /**
      * Store a facade for potential use at some point in the applications life cycle.
      *
      *
@@ -67,10 +92,12 @@ Class Disco {
      * @return void
      */
     public static function make($name,$callback){
-        if(!isset(Disco::$facades[$name]))
+        if(!isset(Disco::$facades[$name])){
             Disco::$facades[$name]=$callback;
-        else 
+        }//if
+        else {
             Disco::$facades[$name]=$callback;
+        }//el
     }//make
 
 
