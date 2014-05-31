@@ -174,7 +174,7 @@ class DB extends \mysqli {
             }//el
         }//if
 
-        return $q;
+        return $this->resetQuestionMarks($q);
 
     }//set
 
@@ -192,11 +192,21 @@ class DB extends \mysqli {
         if($arg==null || $arg=='null')
             return 'NULL';
         $arg = $this->clean($arg);
-        if(!is_numeric($arg))
+        if(!is_numeric($arg)){
+            $arg = $this->replaceQuestionMarks($arg);
             return "'$arg'";
+        }//if
         return $arg;
     }//wrapStrings
 
+
+    private function replaceQuestionMarks($arg){
+        return str_replace('?','+:-|:-+',$arg);
+    }//escapeQuestionMarks
+
+    private function resetQuestionMarks($arg){
+        return str_replace('+:-|:-+','?',$arg);
+    }//escapeQuestionMarks
 
 
 
