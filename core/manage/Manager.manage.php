@@ -289,12 +289,16 @@ class Manager {
             $dirs = scandir($dir);
             unset($dirs[0]);unset($dirs[1]);
             foreach($dirs as $d){
-                $testDir = $dir.'/'.$d.'/addon';
-                if(is_dir($testDir)){
-                    foreach($fileMap as $fileExt){
-                        $files[$fileExt] = self::getFilesRec($fileExt,$testDir,Array()); 
-                    }//foreach
-                }//if
+                $packageDirs = scandir($dir.'/'.$d);
+                unset($packageDirs[0]);unset($packageDirs[1]);
+                foreach($packageDirs as $pDir){
+                    $testDir = $dir.'/'.$d.'/'.$pDir.'/addon';
+                    if(is_dir($testDir)){
+                        foreach($fileMap as $fileExt){
+                            $files[$fileExt] = self::getFilesRec($fileExt,$testDir,Array()); 
+                        }//foreach
+                    }//if
+                }//foreach
             }//foreach
 
         }//if
