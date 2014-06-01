@@ -52,7 +52,8 @@ Class Template {
      * @return void
     */
     private function loadTemplate($name){
-        $path = \Disco::$path."/app/template/{$name}.template.html";
+
+        $path = $this->templatePath($name);
 
         if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
             if(\Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
@@ -83,6 +84,32 @@ Class Template {
     }//getTemplate
 
 
+    private function templatePath($name){
+
+        $userPath = \Disco::$path."/app/template/{$name}.template.html";
+
+        if(is_file($userPath)){
+            return $userPath;
+        }//if
+        else {
+
+            $templates = \Disco::addonAutoloads();
+            $templates = $templates['.template.html'];
+            foreach($templates as $t){
+                $test = substr($t,0,strlen($t)-strlen('.template.html'));
+                $tail = substr($test,strlen($test)-strlen($name),strlen($name));
+                if($name==$tail && is_file($t)){
+                    return $t;
+                }//if
+            }//foreach
+
+        }//el
+
+        return $userPath;
+        
+    }//templateInfo
+
+
 
     /**
      * Retrieve a specified tempalte from disk.
@@ -99,7 +126,7 @@ Class Template {
         }//if
         else {
             $trace = Array();
-            $e = debug_backtrace();
+            $e = debug_backtrace(TRUE, 12);
             $methods = Array('with','build','live');
             foreach($e as $err){
                 if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
@@ -109,7 +136,6 @@ Class Template {
                 }//if
             }//foreach
             $msg = "Template::Error loading template - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
-
             TRIGGER_ERROR($msg,E_USER_ERROR);
         }//el
 

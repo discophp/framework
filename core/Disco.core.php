@@ -7,6 +7,33 @@
  * request.
 */
 
+//function disco_error_handler($level, $message, $file, $line, $context) {
+//    if((!error_reporting() & $level)){
+//        return;
+//    }//if
+//
+//    switch($level){
+//    case E_USER_ERROR:
+//        error_log('PHP Fatal Error on line '.$line.' in file '.$file.'  ---  '.$message,0);
+//        exit(1);
+//        break;
+//
+//    }//switch
+//
+//    if($level==E_USER_ERROR){
+//        return true;
+//    }//if
+//    return false;
+//}
+//
+//set_error_handler('disco_error_handler');
+//
+//function disco_error($message, $level) {
+//    trigger_error($message.' in '.__FILE__.' on line '.__LINE__.'', $level);
+//}//disco_error
+
+
+
 Disco::assemble();
 
 
@@ -33,7 +60,15 @@ Class Disco {
     public static $objects=Array();
 
 
+    /**
+     * @var null|\Closure The \Closure function to execute if the application is in maintanance mode.
+    */
     public static $maintenance=null;
+
+    /**
+     * @var null|array The autoload paths of addons
+    */
+    public static $addonAutoloads=null;
 
 
     /**
@@ -193,7 +228,31 @@ Class Disco {
 
 
 
+    /**
+     * Get the file contents of vendor/discophp/framework/addon-autoloads.php which is generated after updates
+     * and unserialize it then return it.
+     *
+     *
+     * @return array
+    */
+    public static function addonAutoloads(){
 
+        if(self::$addonAutoloads==null){
+            $p = self::$path.'/'.$_SERVER['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
+            if(is_file($p)){
+                self::$addonAutoloads = unserialize(file_get_contents($p));
+                if(!is_array(self::$addonAutoloads)){
+                    self::$addonAutoloads = Array();
+                }//if
+            }//if
+            else {
+                self::$addonAutoloads = Array();
+            }//el
+        }//el
+
+        return self::$addonAutoloads;
+
+    }//addonAutoloads
 
 
 
@@ -276,11 +335,7 @@ Class Disco {
     * @return void
     */
     public static final function useRouter($router){
-        $routerPath = Disco::$path."/app/router/$router.router.php";
-        if(file_exists($routerPath)){
-            Router::$routeMatch=false;
-            require($routerPath);
-        }//if
+        Router::useRouter($router);
     }//useRouter
 
 

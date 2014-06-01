@@ -89,7 +89,36 @@ class Router {
         if(file_exists($routerPath)){
             self::$routeMatch=false;
             require($routerPath);
+            return;
         }//if
+        else {
+            $routers = Disco::addonAutoloads();
+            $routers = $routers['.router.php'];
+            foreach($routers as $r){
+                $test = substr($r,0,strlen($r)-strlen('.template.html'));
+                $tail = substr($test,strlen($test)-strlen($router),strlen($router));
+                if($router==$tail && is_file($r)){
+                    self::$routeMatch=false;
+                    require($r);
+                    return;
+                }//if
+            }//foreach
+        }//el
+
+        $trace = Array();
+        $e = debug_backtrace(FALSE,40);
+        $e = array_reverse($e);
+        $methods = Array('unknown','useRouter');
+        foreach($e as $err){
+            if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
+                $trace['line']=$err['line'];
+                $trace['file']=$err['file'];
+                break;
+            }//if
+        }//foreach
+        $msg = "Router::Router not found - {$router}  @ line {$trace['line']} in File: {$trace['file']} ";
+        TRIGGER_ERROR($msg,E_USER_ERROR);
+
     }//useRouter
 
 }//Router

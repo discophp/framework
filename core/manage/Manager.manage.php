@@ -278,6 +278,66 @@ class Manager {
 
 
 
+    public static function addonAutoloads(){
+
+        $dir = \Disco::$path.'/'.$_SERVER['COMPOSER_PATH'];
+
+        $dirMap = Array('template','router');
+        $fileMap = Array('.template.html','.router.php');
+        $files = Array();
+        if(is_dir($dir)){
+            $dirs = scandir($dir);
+            unset($dirs[0]);unset($dirs[1]);
+            foreach($dirs as $d){
+                $testDir = $dir.'/'.$d.'/addon';
+                if(is_dir($testDir)){
+                    foreach($fileMap as $fileExt){
+                        $files[$fileExt] = self::getFilesRec($fileExt,$testDir,Array()); 
+                    }//foreach
+                }//if
+            }//foreach
+
+        }//if
+
+        $put = \Disco::$path.'/'.$_SERVER['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
+        file_put_contents($put,serialize($files));
+        
+    }//addonAutoloads
+
+    private static function getFilesRec($ext,$startDir,$initFiles){
+        if(($scan = scandir($startDir)) == false){
+            return $initFiles; 
+        }//if
+        unset($scan[0]);unset($scan[1]);
+
+        $files = Array();
+        $dirs = Array();
+        foreach($scan as $s){
+            $testDir = $startDir.'/'.$s;
+            if(is_dir($testDir)){
+                $dirs[]=$testDir;
+            }//if
+            else {
+                $tExt = substr($s,-strlen($ext));
+                if($tExt==$ext){
+                    $files[]= $testDir;
+                }//elif
+            }//if
+        }//foreach
+
+        foreach($dirs as $dir){
+            $initFiles = array_merge($initFiles,self::getFilesRec($ext,$dir,$files));
+        }//foreach
+
+        if(count($dirs)==0){
+            $initFiles = array_merge($initFiles,$files);
+        }//if
+
+        return $initFiles;
+
+    }//getFilesRev
+
+
     /**
      * This function generates and sets the AES256 and SHA512 keys for .config.php after the composer install.
      *
@@ -296,6 +356,10 @@ class Manager {
 
         echo 'Setting SHA512_SALT_TAIL with key size 12 ...';
         self::setSaltTail(self::genSalt(12));
+        echo ' done.'.PHP_EOL;
+
+        echo 'Generating autoload file for Addons ...';
+        self::addonAutoloads();
         echo ' done.'.PHP_EOL;
 
 

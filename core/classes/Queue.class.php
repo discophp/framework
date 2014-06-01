@@ -15,6 +15,7 @@ class Queue {
     /**
      *  Push a job onto the Queue for processing. 
      *
+     *
      *  @param \Closure|string      $job    Either a \Closure to execute or a Class method pair like 'DB@query'.
      *  @param int                  $delay  The delay to wait before begining execution of the $job.
      *  @param null|string|array    $vars   The variables to pass to the $job.

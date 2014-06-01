@@ -119,7 +119,7 @@ class DB extends \mysqli {
             $trace['errno'] = $this->errno;
             $trace['error'] = $this->error;
 
-            $e = debug_backtrace();
+            $e = debug_backtrace(TRUE, 4);
             foreach($e as $err){
                 if(isset($err['file']) && isset($err['function']) && $err['function']=='query'){
                     $trace['args']=$err['args'];
@@ -229,7 +229,7 @@ class DB extends \mysqli {
             $trace['errno'] = $this->errno;
             $trace['error'] = $this->error;
 
-            $e = debug_backtrace();
+            $e = debug_backtrace(TRUE,4);
             foreach($e as $err){
                 if(isset($err['file']) && isset($err['function']) && $err['function']=='sp'){
                     $trace['args']=$err['args'];
