@@ -95,7 +95,7 @@ class Router {
             $routers = Disco::addonAutoloads();
             $routers = $routers['.router.php'];
             foreach($routers as $r){
-                $test = substr($r,0,strlen($r)-strlen('.template.html'));
+                $test = substr($r,0,strlen($r)-strlen('.router.php'));
                 $tail = substr($test,strlen($test)-strlen($router),strlen($router));
                 if($router==$tail && is_file($r)){
                     self::$routeMatch=false;
