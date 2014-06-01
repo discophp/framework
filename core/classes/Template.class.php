@@ -366,6 +366,10 @@ Class Template {
             return $t;
         }//if
 
+        if(!is_array($data)){
+            return $t;
+        }//if
+
         foreach($data as $k=>$v){
 
             do {
