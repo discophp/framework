@@ -241,12 +241,12 @@ Class Disco {
      * @return object Return an instance of the requested $obj from the container.
     */
     public static final function with($obj){
-        if(isset($this->objects[$obj])){
-            return $this->objects[$obj];
+        if(isset(self::$objects[$obj])){
+            return self::$objects[$obj];
         }//if
 
-        $this->objects[$obj]=new $obj();
-        return $this->objects[$obj];
+        self::$objects[$obj]=new $obj();
+        return self::$objects[$obj];
 
     }//use
 
