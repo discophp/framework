@@ -7,32 +7,6 @@
  * request.
 */
 
-//function disco_error_handler($level, $message, $file, $line, $context) {
-//    if((!error_reporting() & $level)){
-//        return;
-//    }//if
-//
-//    switch($level){
-//    case E_USER_ERROR:
-//        error_log('PHP Fatal Error on line '.$line.' in file '.$file.'  ---  '.$message,0);
-//        exit(1);
-//        break;
-//
-//    }//switch
-//
-//    if($level==E_USER_ERROR){
-//        return true;
-//    }//if
-//    return false;
-//}
-//
-//set_error_handler('disco_error_handler');
-//
-//function disco_error($message, $level) {
-//    trigger_error($message.' in '.__FILE__.' on line '.__LINE__.'', $level);
-//}//disco_error
-
-
 
 Disco::assemble();
 
