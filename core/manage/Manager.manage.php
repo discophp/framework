@@ -131,20 +131,20 @@ class Manager {
 
 
     /**
-     * Set or Get the MAINTANANCE_MODE in .config.php .
+     * Set or Get the MAINTENANCE_MODE in .config.php .
      *
      *
-     * @param string|null $mode Should the app be in maintanance mode? 
+     * @param string|null $mode Should the app be in maintenance mode? 
      *
      * @return void
     */
-    public static function maintananceMode($mode=null){
+    public static function maintenanceMode($mode=null){
 
         if($mode!=null){
-            self::setConfig('MAINTANANCE_MODE',$mode);
+            self::setConfig('MAINTENANCE_MODE',$mode);
         }//if
         else {
-            return self::getConfig('MAINTANANCE_MODE');
+            return self::getConfig('MAINTENANCE_MODE');
         }//el
 
     }//appMode

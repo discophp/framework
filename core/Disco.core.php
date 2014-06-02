@@ -35,11 +35,6 @@ Class Disco {
 
 
     /**
-     * @var null|\Closure The \Closure function to execute if the application is in maintanance mode.
-    */
-    public static $maintenance=null;
-
-    /**
      * @var null|array The autoload paths of addons
     */
     public static $addonAutoloads=null;
@@ -85,7 +80,7 @@ Class Disco {
         /**
          * Register the default Facades with Disco.
         */
-        self::handleMaintanance();
+        self::handleMaintenance();
 
         /**
          * Give the Router a MockBox instance to pass back after a RouteMatch has been made.
@@ -153,26 +148,26 @@ Class Disco {
 
 
     /*
-     * When MAINTANANCE_MODE=true in .config.php the application is in maintance mode and the \Closure function 
-     * returned from app/maintanance.php should be executed.
+     * When MAINTENANCE_MODE=true in .config.php the application is in maintenance mode and the \Closure function 
+     * returned from app/maintenance.php should be executed.
      *
      *
      * @return void 
     */
-    public static final function handleMaintanance(){
-        if(strtolower($_SERVER['MAINTANANCE_MODE'])!='yes'){
+    public static final function handleMaintenance(){
+        if(strtolower($_SERVER['MAINTENANCE_MODE'])!='yes'){
             return;
         }//if
         global $argv;
         if(!empty($argv[2])){
             return;
         }//if
-        $file = Disco::$path.'/app/maintanance.php';
+        $file = Disco::$path.'/app/maintenance.php';
         if(is_file($file)){
             $action = require($file);
         }//if
         else {
-            $action = function(){ View::html('<h1>This site is currently undering going maintance.</h1><p>It will be back up shortly.</p>');};
+            $action = function(){ View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
         }//el
 
         call_user_func($action);
@@ -180,7 +175,7 @@ Class Disco {
         View::printPage();
         exit;
 
-    }//handleMaintanance
+    }//handleMaintenance
 
 
 
