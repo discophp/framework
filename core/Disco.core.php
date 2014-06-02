@@ -163,6 +163,10 @@ Class Disco {
         if(strtolower($_SERVER['MAINTANANCE_MODE'])!='yes'){
             return;
         }//if
+        global $argv;
+        if(!empty($argv[2])){
+            return;
+        }//if
         $file = Disco::$path.'/app/maintanance.php';
         if(is_file($file)){
             $action = require($file);
