@@ -284,7 +284,7 @@ class Manager {
 
         $dirMap = Array('template','router');
         $fileMap = Array('.template.html','.router.php');
-        $files = Array();
+        $files = Array('.template.html'=>Array(),'.router.php'=>Array());
         if(is_dir($dir)){
             $dirs = scandir($dir);
             unset($dirs[0]);unset($dirs[1]);
@@ -295,7 +295,7 @@ class Manager {
                     $testDir = $dir.'/'.$d.'/'.$pDir.'/addon';
                     if(is_dir($testDir)){
                         foreach($fileMap as $fileExt){
-                            $files[$fileExt] = self::getFilesRec($fileExt,$testDir,Array()); 
+                            $files[$fileExt] = array_merge($files[$fileExt],self::getFilesRec($fileExt,$testDir,Array())); 
                         }//foreach
                     }//if
                 }//foreach
