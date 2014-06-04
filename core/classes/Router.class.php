@@ -23,11 +23,6 @@ class Router {
     private $function;
 
     /**
-     * @var boolean Did we find a match?
-    */
-    private $haveMatch = false;
-
-    /**
      * @var array The routers where restrictions.
     */
     private $variableRestrictions = Array();
@@ -82,14 +77,8 @@ class Router {
         //no route match and this Router is a Filter and its Filter matches?
         if(!\Router::routeMatch() && $this->isFilter && $this->filterMatch($this->param)){
 
-            //if the route should be authenticated and an action should be taken
-            if($this->auth!=null){
-                //not authenticated?
-                if(!$this->authenticated()){
-                    header('Location:'.$this->auth['action']);
-                    exit;
-                }//if
-            }//if
+            //handle authenication
+            $this->authenticationHandle();
 
             //is this Router for HTTPS and the request isn't?
             if($this->secureRoute && empty($_SERVER['HTTPS'])){
@@ -108,37 +97,48 @@ class Router {
         else if(!\Router::routeMatch() && $this->match($this->param)){
             \Router::routeMatch(true);
 
-            //if the route should be authenticated and an action should be taken
-            if($this->auth!=null){
-                //not authenticated?
-                if(!$this->authenticated()){
-                    header('Location:'.$this->auth['action']);
-                    exit;
-                }//if
-            }//if
+            //handle authenication
+            $this->authenticationHandle();
 
             if(!$this->function instanceof \Closure){
 
                 //is a controller being requested?
                 if(stripos($this->function,'@')!==false){
                     $ctrl = explode('@',$this->function);
-                    $obj = new $ctrl[0];
-                    $vars = Array();
+                    $ctrl[0] = \Disco::with($ctrl[0]);
 
-                    if(count($this->variables)>0)
-                        foreach($this->variables as $k=>$v)
-                            $vars[]=$v;
-
-                    \Disco::handle($obj,$ctrl[1],$vars);
+                    \Disco::handle($ctrl[0],$ctrl[1],$this->variables);
                 }//if
             }//if
-            else if($this->variables)
+            else if($this->variables){
                 call_user_func_array($this->function,$this->variables);
-            else 
+            }//elif
+            else {
                 call_user_func($this->function);
+            }//el
         }//if
 
     }//destruct
+
+
+
+    /**
+     * If authenication was requested on the route and the user is not authenicated,
+     * redirect the user to the specified redirect.
+     *
+     *
+     * @return void
+    */
+    private function authenticationHandle(){
+        //if the route should be authenticated and an action should be taken
+        if($this->auth!=null){
+            //not authenticated?
+            if(!$this->authenticated()){
+                header('Location:'.$this->auth['action']);
+                exit;
+            }//if
+        }//if
+    }//authenticationHandle 
 
 
 
@@ -196,18 +196,7 @@ class Router {
      * @return self 
     */
     public function auth($session,$action=null){
-
-        $this->auth = Array('session'=>null,'action'=>null);
-
-        if(is_array($session)){
-            $this->auth['session'] = $session;
-        }//if
-        else {
-            $this->auth['session']=$session;
-        }//el
-
-        $this->auth['action']=$action;
-
+        $this->auth = Array('session'=>$session,'action'=>$action);
         return $this;
     }//auth
 
@@ -268,10 +257,12 @@ class Router {
      * @return self 
      */
     public function get($param,$function){
-        if(count($_POST)>0 || count(\Data::put()->all())>0 || count(\Data::delete()->all())>0)
+        if($_SERVER['REQUEST_METHOD']!='GET'){
             return $this->whiteOutRoute();
-        else if($this->secureRoute && empty($_SERVER['HTTPS']))
+        }//if
+        else if($this->secureRoute && empty($_SERVER['HTTPS'])){
             return $this->whiteOutRoute();
+        }//elif
 
         $this->function=$function;
         $this->param=$param;
@@ -452,10 +443,9 @@ class Router {
                 if(!preg_match("/{$condition}/",$urlPiece)){
                     return false;
                 }//if
-                else {
-                    //store the variable to pass into the Closure or Controller
-                    $this->variables[$paramKey]=$urlPiece;
-                }//el
+
+                //store the variable to pass into the Closure or Controller
+                $this->variables[$paramKey]=$urlPiece;
 
             }//el
 
