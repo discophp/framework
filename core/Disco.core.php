@@ -1,5 +1,21 @@
 <?php
 /**
+ * Copyright 2014 Bradley Hamilton, bradleyhamilton.com 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ *     http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ---------------------------------------------------------------------
+ *
  * This is the core code for the Disco PHP Framework.
  * It is distributed under the Apache Lisence v2.0.
  * This file contains all the necessary bootstrapping code to pick the 
@@ -247,6 +263,19 @@ Class Disco {
         self::$objects[$obj]=new $obj();
         return self::$objects[$obj];
 
+    }//use
+
+
+    /**
+     * Factory style creation of an object/class out of the container thats auto-loadable via composers autoload.php .
+     *
+     *
+     * @param string $obj The obj or class.
+     *
+     * @return object Return an instance of the requested $obj from the container.
+    */
+    public static final function factory($obj){
+        return new $obj();
     }//use
 
 
