@@ -29,13 +29,13 @@ filtering, variable extraction, handling HTTPS, and so much more.</p>
 <p>With Discos default <a href='http://discophp.com/docs/IoC-facades'>Facades and the Disco inversion of control container</a> development has never been quicker, or
 less painful..</p>
 
-<p>Resolve singleton obejcts from the container</p>
+<p>Resolve singleton obejcts from the container:</p>
 
 ```php
     Disco::with('YourSingletonClass')->method($arg);
 ```
 
-<p>Factory style obejct creation from the container</p>
+<p>Factory style obejct creation from the container:</p>
 
 ```php
     Disco::factory('YourFactoryClass')->method($arg);
@@ -58,7 +58,7 @@ less painful..</p>
 
 <h5>Disco uses Composer for Dependency Management and Dependency Injection, so relax, this will be easy</h5>
 
-<p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining you're applications library
+<p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining youre applications library
 dependencies and Class autoloading. If you used composer before then you will know how easy this makes life, if not
 you're in for a real treat.</p>
 
