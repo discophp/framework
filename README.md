@@ -26,8 +26,22 @@ filtering, variable extraction, handling HTTPS, and so much more.</p>
 
 <h4>Enjoy Facades and Inversion of Control</h4>
 
-<p>With Discos default Facades and the Disco inversion of control container development has never been quicker, or
+<p>With Discos default <a href='http://discophp.com/docs/IoC-facades'>Facades and the Disco inversion of control container</a> development has never been quicker, or
 less painful..</p>
+
+<p>Resolve singleton obejcts from the container</p>
+
+```php
+    Disco::with('YourSingletonClass')->method($arg);
+```
+
+<p>Factory style obejct creation from the container</p>
+
+```php
+    Disco::with('YourSingletonClass')->method($arg);
+```
+
+<p>Default Facades shipped with Disco</p>
 
 <ul>
     <li><a href='http://discophp.com/docs/Cache'>Cache</a></li>
