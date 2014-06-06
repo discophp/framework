@@ -58,9 +58,9 @@ less painful..</p>
 
 <h5>Disco uses Composer for Dependency Management and Dependency Injection, so relax, this will be easy</h5>
 
-<p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining your applications library
+<p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining you're applications library
 dependencies and Class autoloading. If you used composer before then you will know how easy this makes life, if not
-your in for a real treat.</p>
+you're in for a real treat.</p>
 
 <p>Learn about <a href='http://discophp.com/docs/install'>installing the Disco PHP Framework using composer</a></p>
 
