@@ -38,7 +38,7 @@ less painful..</p>
 <p>Factory style obejct creation from the container</p>
 
 ```php
-    Disco::with('YourSingletonClass')->method($arg);
+    Disco::factory('YourFactoryClass')->method($arg);
 ```
 
 <p>Default Facades shipped with Disco</p>
