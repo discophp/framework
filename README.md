@@ -1,4 +1,4 @@
-<h1>Disco PHP Framework - Core Code Repository</h1>
+<h1>Disco PHP Framework</h1>
 
 
 <p>This is the core code that powers the Disco PHP framework.</p>
@@ -41,4 +41,19 @@ less painful..</p>
     <li><a href='http://discophp.com/docs/Template'>Template</a></li>
     <li><a href='http://discophp.com/docs/View'>View</a></li>
 </ul>
+
+<h5>Disco uses Composer for Dependency Management and Dependency Injection, so relax, this will be easy</h5>
+
+<p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining your applications library
+dependencies and Class autoloading. If you used composer before then you will know how easy this makes life, if not
+your in for a real treat.</p>
+
+<p>Learn about <a href='http://discophp.com/docs/install'>installing the Disco PHP Framework using composer</a></p>
+
+<h6>Development level and Production level configuration files for distrubuted development and ease of
+maintanance</h6> 
+
+<p>You'll enjoy how easy it is to <a href='http://discophp.com/docs/config'>configure Disco</a> and the ability to
+differentiate configuration based on the applications environment.</p>
+
 
