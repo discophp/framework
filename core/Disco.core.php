@@ -311,6 +311,7 @@ Class Disco {
      * @return mixed the result of the method call.
      */
     public static final function handle($instance,$method,$args){
+        $args = array_values($args);
         switch (count($args)) {
             case 0:
                 return $instance->$method();
