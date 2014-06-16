@@ -62,7 +62,7 @@ class Event {
 
             foreach($keys as $k){
                 $action = $this->events[$event]['actions'][$k];
-                if($action instanceof \Closure){
+                if($action instanceof \Jeremeamia\SuperClosure\SerializableClosure){
                     if($data==null){
                         return call_user_func($action);
                     }//if
