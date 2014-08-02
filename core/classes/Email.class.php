@@ -155,7 +155,12 @@ class Email {
         $message = \Swift_Message::newInstance();
          
         $message->setSubject($subject);
-        $message->setFrom($this->settings[$key]['EMAIL']);
+        if(isset($this->settings[$key]['ALIAS']) && $this->settings[$key]['ALIAS']!=''){
+            $message->setFrom($this->settings[$key]['ALIAS']);
+        }//if
+        else {
+            $message->setFrom($this->settings[$key]['EMAIL']);
+        }//el
 
         if($_SERVER['APP_MODE']=='DEV'){
             $toEmail = $this->settings['DEV_MODE_SEND_TO'];
