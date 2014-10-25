@@ -125,18 +125,8 @@ Class Template {
             return file_get_contents($path);
         }//if
         else {
-            $trace = Array();
-            $e = debug_backtrace(TRUE, 12);
-            $methods = Array('with','build','live');
-            foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
-                    $trace['args']=$err['args'];
-                    $trace['line']=$err['line'];
-                    $trace['file']=$err['file'];
-                }//if
-            }//foreach
-            $msg = "Template::Error loading template - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
-            TRIGGER_ERROR($msg,E_USER_ERROR);
+            $app = \Disco::$app;
+            $app->error("Template::Error loading template $path",Array('with','build','live','from'),debug_backtrace(TRUE,12));
         }//el
 
     }//getTempalteFromDisk
@@ -279,6 +269,40 @@ Class Template {
         return $this->beingModified;
 
     }//live
+
+
+
+    /**
+     * Build a template directly from a Model.
+     *
+     *
+     * @param string $name  The name of the template.
+     * @param string $model The name of the Model.
+     * @param string $key   The key used to select data from the model with.
+     *
+     * @return string The built template.
+    */
+    public function build_from($name,$model,$key){
+        $d = \Model::m($model)->select('*')->where($key)->data();
+        $o = '';
+        while($r = $d->fetch_assoc()){
+            $o .= $this->build($name,$r);
+        }//while
+
+        return $o;
+    }//from
+
+
+
+    /**
+     * Build a template directly from a Model and push it onto the Views html stack.
+     *
+     *
+     * @return void
+    */
+    public function from($name,$model,$key){
+        \View::html($this->build_from($name,$model,$key));
+    }//from
 
 
 

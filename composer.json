@@ -5,14 +5,15 @@
     "authors": [
         {
             "name": "Bradley Hamilton",
-            "email": "bradleygoskimmin@gmail.com"
+            "email": "brad@bradleyhamilton.com"
         }
     ],
     "minimum-stability": "dev",
     "require": {
         "php":">=5.4.0",
         "swiftmailer/swiftmailer":"v5.0.3",
-        "jeremeamia/superclosure":"~1.0"
+        "jeremeamia/superclosure":"~1.0",
+        "pimple/pimple":"3.0"
     },
     "autoload": {
         "classmap":[

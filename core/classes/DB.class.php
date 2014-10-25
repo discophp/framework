@@ -14,9 +14,19 @@ namespace Disco\classes;
 class DB extends \mysqli {
 
     /**
+     * @var \mysqli Connected database link.
+    */
+    public $link;
+
+    /**
      * @var boolean Are we connected to the MySQL server?
     */
     public $connected=false;
+
+    /**
+     * @var boolean Are we using autocommit?
+    */
+    public $autoCommit = true;
 
     /**
      * @var \mysqli_result The last result of a query.
@@ -43,11 +53,12 @@ class DB extends \mysqli {
             $host=$_SERVER['DB_HOST'];$user=$_SERVER['DB_USER'];$pw=$_SERVER['DB_PASSWORD'];$db=$_SERVER['DB_DB'];
         }//if
 
-        parent::__construct($host, $user, $pw, $db);
+        $this->link = parent::__construct($host, $user, $pw, $db);
 
         if($this->connect_error){
+            $app = \Disco::$app;
             TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
-            exit;
+            \Disco::$app->serve(500,function(){exit;});
         }//if
         else
             $this->connected = true;
@@ -111,24 +122,14 @@ class DB extends \mysqli {
     */
     public function query($q,$args=null){
 
-        $q = $this->set($q,$args);
+        if($args){
+            $q = $this->set($q,$args);
+        }//if
 
         if(!$result = parent::query($q)){
-            
-            $trace = Array();
-            $trace['errno'] = $this->errno;
-            $trace['error'] = $this->error;
 
-            $e = debug_backtrace(TRUE, 4);
-            foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['function']=='query'){
-                    $trace['args']=$err['args'];
-                    $trace['line']=$err['line'];
-                    $trace['file']=$err['file'];
-                }//if
-            }//foreach
-            $msg = "DB::Error executing query - {$trace['args'][0]} - ErrNo: {$trace['errno']} - {$trace['error']} ,  @ line {$trace['line']} in File: {$trace['file']} ";
-            TRIGGER_ERROR($msg,E_USER_ERROR);
+            $app = \Disco::$app;
+            $app->error("DB::Error - {$this->error} - query - $q",Array('query'),debug_backtrace(TRUE,4));
 
             return false;
         }//if
@@ -163,16 +164,14 @@ class DB extends \mysqli {
      * @return string               The $q with $args bound into it.
     */
     public function set($q,$args){
-        if($args!=null){
-            if(is_array($args)){
-                foreach($args as $a){
-                    $q=implode($this->prepareType($a),explode('?',$q,2));
-                }//foreach
-            }//if
-            else {
-                $q=implode($this->prepareType($args),explode('?',$q,2));
-            }//el
+        if(is_array($args)){
+            foreach($args as $a){
+                $q=implode($this->prepareType($a),explode('?',$q,2));
+            }//foreach
         }//if
+        else {
+            $q=implode($this->prepareType($args),explode('?',$q,2));
+        }//el
 
         return $this->resetQuestionMarks($q);
 
@@ -189,7 +188,7 @@ class DB extends \mysqli {
      * @return string|int|float The $arg prepared.
     */
     private function prepareType($arg){
-        if($arg==null || $arg=='null')
+        if($arg===null || $arg==null || $arg=='null')
             return 'NULL';
         $arg = $this->clean($arg);
         if(!is_numeric($arg)){
@@ -222,23 +221,14 @@ class DB extends \mysqli {
     public function sp($q,$args=null){
         $rows = Array();
 
-        $q = $this->set($q,$args);
+        if($args){
+            $q = $this->set($q,$args);
+        }//if
 
         if(!$this->multi_query($q)){
-            $trace = Array();
-            $trace['errno'] = $this->errno;
-            $trace['error'] = $this->error;
 
-            $e = debug_backtrace(TRUE,4);
-            foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['function']=='sp'){
-                    $trace['args']=$err['args'];
-                    $trace['line']=$err['line'];
-                    $trace['file']=$err['file'];
-                }//if
-            }//foreach
-            $msg = "DB::Error executing stored procedure - {$trace['args'][0]} - ErrNo: {$trace['errno']} - {$trace['error']} ,  @ line {$trace['line']} in File: {$trace['file']} ";
-            TRIGGER_ERROR($msg,E_USER_ERROR);
+            $app = \Disco::$app;
+            $app->error("DB::Error - {$this->error} - stored procedure - $q",Array('sp'),debug_backtrace(TRUE,4));
 
             return null;
         }//if

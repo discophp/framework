@@ -134,6 +134,34 @@ class View {
     */
     public $seo=false;
 
+    /**
+     * @var string The body template to use when printing a view in SEO.
+    */
+    public $seoBodyTemplate = "
+<div id='body-wrapper'>
+    <div id='body'>
+    %1\$s
+    </div>
+    <div id='header'>%2\$s</div>
+    <div id='footer-spacing'></div>
+</div>
+<div id='footer'>%3\$s</div>
+";
+
+    /**
+     * @var string The body template to use when printing a view.
+    */
+    public $bodyTemplate = "
+<div id='body-wrapper'>
+    <div id='header'>%1\$s</div>
+    <div id='body'>
+    %2\$s
+    </div>
+    <div id='footer-spacing'></div>
+</div>
+<div id='footer'>%3\$s</div>
+";
+
 
 
     /**
@@ -153,6 +181,31 @@ class View {
         $this->description = "";
 
     }//construct
+
+
+    /**
+     * Override the default body template for the View.
+     *
+     *
+     * @var stringg $template The template to use.
+     * @return void
+    */
+    public function setBodyTemplate($template){
+        $this->bodyTemplate = $template;
+    }//setBodyTemplate
+
+
+
+    /**
+     * Override the default SEO body template for the View.
+     *
+     *
+     * @var stringg $template The SEO template to use.
+     * @return void
+    */
+    public function setSeoBodyTemplate($template){
+        $this->seoBodyTemplate = $template;
+    }//setBodyTemplate
 
 
 
@@ -279,27 +332,22 @@ class View {
    */
     private function metaHeader(){
 
-        $metaHeader = " 
-        <!doctype html>
-            <html lang='%1\$s'>
-            <head>
-                <meta charset='%2\$s' />
-                <meta content='%3\$s' name='robots'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-                
-                <title>%4\$s</title>
-                <meta name='description' content='%5\$s'>
-        
-                <link type='image/x-icon' href='%6\$s' rel='shortcut icon'>
-                            
-                %7\$s
-                %8\$s
-                %9\$s
-                %10\$s
-        
-                </head>
-            <body class='%11\$s'>
-            ";
+        $metaHeader =  
+"<!doctype html>
+    <html lang='%1\$s'>
+    <head>
+        <meta charset='%2\$s' />
+        <meta content='%3\$s' name='robots'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>%4\$s</title>
+        <meta name='description' content='%5\$s'>
+        <link type='image/x-icon' href='%6\$s' rel='shortcut icon'>
+        %7\$s
+        %8\$s
+        %9\$s
+        %10\$s
+        </head>
+    <body class='%11\$s'>";
 
         return sprintf($metaHeader,
             $this->lang,
@@ -339,32 +387,21 @@ class View {
         //print the metaheader
         echo $this->metaHeader();
 
-        $header = '<div id="header">'.(($this->header=='')?$this->header():$this->header).'</div>';
-        $footer = '<div id="footer">'.(($this->footer=='')?$this->footer():$this->footer).'</div>';
+        $header = ($this->header=='') ? $this->header() : $this->header;
+        $footer = ($this->footer=='') ? $this->footer() : $this->footer;
 
         if($this->seo){
-            echo '<div id="body-wrapper">';
-                echo '<div id="body">';
-                $this->HTMLDump();
-                echo '</div>';
-                echo $header;
-                echo '<div id="footer-spacing"></div>';
-            echo '</div>';
-            echo $footer;
+            echo sprintf($this->seoBodyTemplate,$this->HTMLDump(),$header,$footer);
         }//if
         else {
-            echo '<div id="body-wrapper">';
-                echo $header;
-                echo '<div id="body">';
-                $this->HTMLDump();
-                echo '</div>';
-                echo '<div id="footer-spacing"></div>';
-            echo '</div>';
-            echo $footer;
+            echo sprintf($this->bodyTemplate,$header,$this->HTMLDump(),$footer);
         }//el
 
-        //print the closing page info and markup 
-        $this->printFooter();
+        echo "
+            {$this->printScriptSrcs($this->scriptSrcs)}
+            {$this->printScripts()}
+            </body>
+         </html>";
 
     }//printPage
 
@@ -373,13 +410,12 @@ class View {
     /**
      * Set that a request is AJAX. 
      *
-     *
+     * @var boolean $bool 
      * @return void
     */
-    public function isAjax(){
-        $this->isAjax=true;
-    }//isAjaxa
-
+    public function isAjax($bool = true){
+        $this->isAjax=$bool;
+    }//isAjax
 
 
     /**
@@ -393,21 +429,6 @@ class View {
         echo $this->HTMLDump();
     }//printAjaxPage
 
-
-
-    /**
-     * Return the closing of the page and the scripts and script srcs.
-     *
-     *
-     * @return void
-    */
-    public function printFooter(){
-        echo "
-            {$this->printScriptSrcs($this->scriptSrcs)}
-            {$this->printScripts()}
-            </body>
-         </html>";
-    }//printFooter
 
 
 
@@ -674,9 +695,7 @@ class View {
      * @return void
     */
     private function HTMLDump(){
-        foreach($this->html as $p){
-            echo $p;
-        }//foreach
+        return implode('',$this->html);
     }//HTMLDump
 
 

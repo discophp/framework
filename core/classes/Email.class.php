@@ -125,28 +125,17 @@ class Email {
     */
     public function send($key,$toEmail,$subject,$body,$attach=null){
 
+        if(!isset($this->settings[$key])){
+            $app = \Disco::$app;
+            $app->error("Email::Error account $key does not exist",Array('send'),debug_backtrace(TRUE,6));
+        }//if
+
         if($this->delay!=null){
             $d = $this->delay;
             $this->delay = null;
             $body = htmlentities($body);
             \Queue::push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attach));
             return true;
-        }//if
-
-        if(!isset($this->settings[$key])){
-            $trace = Array();
-            $e = debug_backtrace();
-            foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['function']=='send'){
-                    $trace['args']=$err['args'];
-                    $trace['line']=$err['line'];
-                    $trace['file']=$err['file'];
-                }//if
-            }//foreach
-            $msg = "Email::Error account does not exist  - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
-
-            TRIGGER_ERROR($msg,E_USER_ERROR);
-
         }//if
 
         \Swift_Preferences::getInstance()->setCharset('iso-8859-2');

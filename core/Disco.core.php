@@ -24,13 +24,10 @@
 */
 
 
-Disco::assemble();
-
-
 /**
  * Our applications primary Container and Controller. 
 */
-Class Disco {
+Class Disco extends \Pimple\Container {
 
 
     /**
@@ -38,23 +35,20 @@ Class Disco {
     */
     public static $path;
 
+    /**
+     * @var string Is CLI request 
+     */
+    public static $cli = false;
 
     /**
-     * @var array The applications Facades.
+     * @var object Static reference to instance of Disco.
     */
-    public static $facades=Array();
-
-    /**
-     * @var array Where we keep instances of objects requested through with().
-    */
-    public static $objects=Array();
-
+    public static $app;
 
     /**
      * @var null|array The autoload paths of addons
     */
     public static $addonAutoloads=null;
-
 
     /**
      * @var array Default regex matching conditions.
@@ -68,66 +62,53 @@ Class Disco {
     );
 
 
+
     /**
      * Assemble the pieces of the application that make it all tick.
      * 
      *
      * @return void
     */
-    public static final function assemble(){
+    public function __construct($values = Array()){
+
+        /**
+         * Construct the Pimple container and pass any user predefined services.
+        */
+        parent::__construct($values);
+
+        /**
+         * Allow static access to to app instance.
+        */
+        self::$app = $this;
 
         /**
          * Prep the App.
         */
         self::prep();
-        
-        
-        /**
-         * Require the Composer Auto-Loader.
-        */
-        require(self::$path."/{$_SERVER['COMPOSER_PATH']}/autoload.php");
-        
-        
+
         /**
          * Register the default Facades with Disco.
         */
-        self::registerDefaults();
-        
-        /**
-         * Register the default Facades with Disco.
-        */
-        self::handleMaintenance();
+        $this->facades();
 
         /**
-         * Give the Router a MockBox instance to pass back after a RouteMatch has been made.
+         * Are we running in CLI mode?
         */
-        Router::$mockBox = new Disco\classes\MockBox;
-
-    }//assemble
-
-
-
-    /**
-     * Make sure a \Disco\classes\Router matched against the requested URI.
-     *
-     *
-     * @return void
-    */
-    public static final function tearDownApp(){
-
-        //did this requested URI not find a match? If so thats a 404.
-        if(!Router::$routeMatch){
-            header('HTTP/1.0 404 Not Found');
-            self::handle404();
+        if(php_sapi_name() == 'cli'){
+            self::$cli = true;
+            global $argv;
+            if(isset($argv[1]) && $argv[1]=='routes'){
+                //$this['Router']->base = '\Disco\manage\Router';
+                Router::$base = '\Disco\manage\Router';
+            }//if
         }//if
 
         /**
-         * Print out the Current View.
+         * Handle maintenance mode.
         */
-        View::printPage();
+        self::handleMaintenance();
 
-    }//tearDownApp
-
+    }//__construct
 
 
     /**
@@ -143,13 +124,26 @@ Class Disco {
      * @return void
     */
     public static final function prep(){
-        //disable apache from append session ids to requests
+
+        /**
+         * disable apache from append session ids to requests
+        */
         ini_set('session.use_trans_sid',0);
-        //only allow sessions to be used with cookies
+
+        /**
+         * only allow sessions to be used with cookies
+        */
         ini_set('session.use_only_cookies',1);
         
+        /**
+         * base directory of application
+        */
         self::$path = dirname($_SERVER['DOCUMENT_ROOT']);
         
+        /**
+         * load the appropriate application production configuration 
+         * and override with any dev config.
+        */
         if(is_file(self::$path.'/.config.php')){
             $_SERVER = array_merge($_SERVER,require(self::$path.'/.config.php'));
             if($_SERVER['APP_MODE']!='PROD' && is_file(self::$path.'/.dev.config.php')){
@@ -157,10 +151,65 @@ Class Disco {
             }//if
         }//if
         
-        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+        /**
+         * if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+        */
         $_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
 
     }//prep
+
+
+
+    /**
+     * Stack trace a Disco error and log it.
+     *
+     *
+     * @param string $msg The error message to log.
+     * @param Array $methods The method call names that could have generated the error.
+     * @param Array $e The debug_stacktrace call.
+     *
+     * @return void
+    */
+    public function error($msg,$methods,$e){
+
+        $trace = Array();
+        $e = array_reverse($e);
+        foreach($e as $err){
+            if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
+                $trace['line']=$err['line'];
+                $trace['file']=$err['file'];
+                break;
+            }//if
+        }//foreach
+        $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
+        error_log($msg,0);
+        $this->serve(500,function(){exit;});
+        exit;
+
+    }//error
+
+
+    /**
+     * Make sure a \Disco\classes\Router matched against the requested URI.
+     *
+     *
+     * @return void
+    */
+    public static final function tearDownApp(){
+
+        /**
+         * did this requested URI not find a match? If so thats a 404.
+        */
+        if(!Router::$routeMatch){
+            self::serve(404);
+        }//if
+        else {
+            self::serve(200);
+        }//el
+
+    }//tearDownApp
+
+
 
 
     /*
@@ -196,25 +245,40 @@ Class Disco {
 
 
     /*
-     * Handle a 404 page by either loading the \Closure function from the file /app/404.php and executing it or by 
+     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
+     * or loading the \Closure function from the file /app/$code.php and executing it or by 
      * a default message set by the function.
      *
      *
+     * @param int $code The http repsonse code sent to the client from the server.
+     * @param \Closure $action An optional \Closure function to execute.
+     *
      * @return void 
     */
-    public static final function handle404(){
-        $file = Disco::$path.'/app/404.php';
-        if(is_file($file)){
+    public static final function serve($code,$action=null){
+        http_response_code($code);
+        $file = Disco::$path."/app/{$code}.php";
+        if($action === null && is_file($file)){
             $action = require($file);
         }//if
-        else {
-            $action = function(){ View::html('<h1>404 This page was not found.</h1>');};
+        else if($action === null && $code != 200){
+            $action = function() use($code) { View::html("<h1>{$code}</h1>");};
         }//el
 
-        call_user_func($action);
+        if($action){
+            call_user_func($action);
+        }//if
+
+        /**
+         * Print out the Current View.
+        */
+
+        if(!self::$cli){
+            View::printPage();
+            exit;
+        }//if
 
     }//handle404
-
 
 
     /**
@@ -245,104 +309,6 @@ Class Disco {
 
 
 
-
-
-    /**
-     * Access a instance of a object/class out of the container thats auto-loadable via composers autoload.php .
-     *
-     *
-     * @param string $obj The obj or class.
-     *
-     * @return object Return an instance of the requested $obj from the container.
-    */
-    public static final function with($obj){
-        if(isset(self::$objects[$obj])){
-            return self::$objects[$obj];
-        }//if
-
-        self::$objects[$obj]=new $obj();
-        return self::$objects[$obj];
-
-    }//use
-
-
-    /**
-     * Factory style creation of an object/class out of the container thats auto-loadable via composers autoload.php .
-     *
-     *
-     * @param string $obj The obj or class.
-     *
-     * @return object Return an instance of the requested $obj from the container.
-    */
-    public static final function factory($obj){
-        return new $obj();
-    }//use
-
-
-
-    /**
-     * Store a facade for potential use at some point in the applications life cycle.
-     *
-     *
-     * @param string $name The Facade to make.
-     * @param \Closure $callback The Closure callback to execute when the Facades base Class is instantiated.
-     *
-     * @return void
-     */
-    public static final function make($name,$callback){
-        if(!isset(Disco::$facades[$name])){
-            Disco::$facades[$name]=$callback;
-        }//if
-        else {
-            Disco::$facades[$name]=$callback;
-        }//el
-    }//make
-
-
-
-    /**
-     * Handle/Resolve/Execute and return a method call on an instance with passed arguments.
-     *
-     *
-     * @param object $instance The object to call the method on.
-     * @param string $method The name of the method to call on the object.
-     * @param mixed $args The arguements to pass the method.
-     *
-     * @return mixed the result of the method call.
-     */
-    public static final function handle($instance,$method,$args){
-        $args = array_values($args);
-        switch (count($args)) {
-            case 0:
-                return $instance->$method();
-            case 1:
-                return $instance->$method($args[0]);
-            case 2:
-                return $instance->$method($args[0], $args[1]);
-            case 3:
-                return $instance->$method($args[0], $args[1], $args[2]);
-            case 4:
-                return $instance->$method($args[0], $args[1], $args[2], $args[3]);
-            default:
-                return call_user_func_array(array($instance, $method), $args);
-        }//switch
-    }//handle
-
-
-    /**
-    * Load a router.
-    *
-    *
-    * @param string $router The name of the Router File stored in app/router/[$router].router.php .
-    *
-    * @return void
-    */
-    public static final function useRouter($router){
-        Router::useRouter($router);
-    }//useRouter
-
-
-
     /**
      * Add a default matching condition for use with Router and Data. Store the $k and $v in 
      * $this->defaultMatchConditions .
@@ -358,100 +324,217 @@ Class Disco {
 
 
 
-
     /**
      * Register the Default Disco Facades with the Application Container.
      *
      * @return void
     */
-    public static final function registerDefaults(){
+    public function facades(){
 
-        /**
-        * Make our DB Facade 
-        */
-        Disco::make('DB',function(){
-            return new Disco\classes\DB();
-        });
-        
-        /**
-        * Make our View Facade 
-        */
-        Disco::make('View',function(){
-            return new Disco\classes\View();
-        });
-        
-        /**
-        * Make our Template Facade 
-        */
-        Disco::make('Template',function(){
-            return new Disco\classes\Template();
-        });
+        $facades = Array(
+            'Cache'     => 'Disco\classes\Cache',
+            'Crypt'     => 'Disco\classes\Crypt',
+            'Data'      => 'Disco\classes\Data',
+            'DB'        => 'Disco\classes\DB',
+            'Email'     => 'Disco\classes\Email',
+            'Event'     => 'Disco\classes\Event',
+            'Html'      => 'Disco\classes\Html',
+            'Form'      => 'Disco\classes\Form',
+            'Model'     => 'Disco\classes\ModelFactory',
+            'Queue'     => 'Disco\classes\Queue',
+            'Session'   => 'Disco\classes\Session',
+            'Template'  => 'Disco\classes\Template',
+            'Util'      => 'Disco\classes\Util',
+            'View'      => 'Disco\classes\View'
+        );
 
-        /**
-        * Make our Model Facade 
-        */
-        Disco::make('Model',function(){
-            return new Disco\classes\ModelFactory();
-        });
-        
-        /**
-        * Make our Util Facade 
-        */
-        Disco::make('Util',function(){
-            return new Disco\classes\Util();
-        });
-        
-        /**
-        * Make our Cache Facade 
-        */
-        Disco::make('Cache',function(){
-            return new Disco\classes\Cache();
-        });
-        
-        /**
-        * Make our Crypt Facade 
-        */
-        Disco::make('Crypt',function(){
-            return new Disco\classes\Crypt();
-        });
-        
-        /**
-        * Make our Email Facade 
-        */
-        Disco::make('Email',function(){
-            return new Disco\classes\Email();
-        });
-        
-        /**
-        * Make our Session Facade 
-        */
-        Disco::make('Session',function(){
-            return new Disco\classes\Session();
-        });
-        
-        /**
-        * Make our Event Facade 
-        */
-        Disco::make('Event',function(){
-            return new Disco\classes\Event();
-        });
-        
-        /**
-        * Make our Data Facade 
-        */
-        Disco::make('Data',function(){
-            return new Disco\classes\Data();
-        });
+        foreach($facades as $facade=>$v){
+            Disco::make($facade,$v);
+        }//foreach
 
-        /**
-        * Make our Queue Facade 
-        */
-        Disco::make('Queue',function(){
-            return new Disco\classes\Queue();
+        Disco::as_factory('Router',function(){
+            return new Router::$base;
         });
-
 
     }//registerDefaults
 
+
+
+    /**
+     * Get a service from the container.
+     *
+     *
+     * @param string $obj The service to get from the container.
+     *
+     * @return Object 
+    */
+    public static function with($obj){
+        if(!isset(self::$app[$obj])){
+            self::make($obj,$obj);
+        }//if
+        return self::$app[$obj];
+    }//with
+
+
+
+    /**
+     * Register a standard service with the container.
+     *
+     *
+     * @param string $obj The service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void 
+    */
+    public static function make($obj,$val){
+        if(!$val instanceof Closure){
+            $val = function($app) use($val){
+                return $app->resolve_dependencies($val);
+            };
+        }//if
+        self::$app[$obj] = $val;
+    }//set
+
+
+
+    /**
+     * Register a factory service with the container.
+     *
+     *
+     * @param string $obj The factory service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void
+    */
+    public static function as_factory($obj,$val){
+        if(!$val instanceof Closure){
+            $val = function($app) use($val){
+                return $app->resolve_dependencies($val);
+            };
+        }//if
+        self::$app[$obj] = self::$app->factory($val);
+    }//factory
+
+
+
+    /**
+     * Register a protected service ( a Class with __call() defined or a \Closure function).
+     *
+     * @param string $obj The protected service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+    */
+    public static function as_protected($obj,$val){
+         if(!$val instanceof Closure){
+            $val = function($app) use($val){
+                return $app->resolve_dependencies($val);
+            };
+        }//if
+        self::$app[$obj] = self::$app->protect($val);
+    }//protect
+
+
+
+    /**
+     * Call a method ($method) on a service defined by $key in the container
+     * with arguements $args.
+     *
+     *
+     * @param string $key The service to call the method on.
+     * @param string $method The method to call on the service.
+     * @param array $args The arguements to pass to $key->$method();
+     *
+     * @return mixed
+    */
+    public function handle($key,$method,$args){
+
+        $instance = Disco::with($key);
+
+        $args = array_values($args);
+        switch (count($args)) {
+            case 0:
+                return $instance->$method();
+            case 1:
+                return $instance->$method($args[0]);
+            case 2:
+                return $instance->$method($args[0], $args[1]);
+            case 3:
+                return $instance->$method($args[0], $args[1], $args[2]);
+            case 4:
+                return $instance->$method($args[0], $args[1], $args[2], $args[3]);
+            default:
+                return call_user_func_array(array($instance, $method), $args);
+        }//switch
+
+    }//handle
+
+
+
+    /**
+     * When constructing services (objects) in the container determine whether or not
+     * the constructor is requesting other services from the container as arguements.
+     * If it is then we need to resolve those services from the container and pass them in.
+     *
+     *
+     * @param string $v The service that is about to be instantiated.
+     *
+     * @return Object
+    */
+    private function resolve_dependencies($v){
+
+        $Ref = new ReflectionClass($v);
+        $con = $Ref->getConstructor();
+        if(!is_null($con)){
+            //echo '<pre>'.$con.'</pre>';
+            //echo '<pre>'.print_r($con->getParameters()).'</pre>';
+
+            $inject = Array();
+
+            $ss = (string)$con;
+            $ss = explode("\n",$ss);
+            foreach($ss as $s){
+                $s = trim($s);
+                if(strpos($s,'Parameter #')!==false){
+                    $s = trim(explode('[',$s)[1]);
+                    $s = explode(' ',$s)[1];
+                    if(substr($s,0,1) != '$'){
+                        $inject[] = Disco::with($s);
+                        //echo '<h1>'.$s.'</h1>';
+                    }//if
+                }//if
+            }//foreach
+
+            switch (count($inject)) {
+                case 0:
+                    return new $v;
+                    break;
+                case 1:
+                    return new $v($inject[0]);
+                    break;
+                case 2:
+                    return new $v($inject[0],$inject[1]);
+                    break;
+                case 3:
+                    return new $v($inject[0],$inject[1],$inject[2]);
+                    break;
+                case 4:
+                    return new $v($inject[0],$inject[1],$inject[2],$inject[3]);
+                    break;
+                case 5:
+                    return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4]);
+                    break;
+                case 6:
+                    return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4],$inject[5]);
+                    break;
+                default:
+                    return call_user_func_array(Array(new $v,'__construct'),$inject);
+                    break;
+            }//switch
+
+        }//if
+
+        return new $v;
+       
+    }//resolve
+
 }//Disco
-?>

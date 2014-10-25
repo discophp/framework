@@ -14,24 +14,34 @@ namespace Disco\classes;
 class Model {
 
     /**
-    * @var string The SQL Table associated with this model.
+     * @var string The SQL Table associated with this model.
     */
     public $table;
 
     /**
-    * @var string|array The SQL primary key or composite key associated with this model.
+     * @var string|array The SQL primary key or composite key associated with this model.
     */
     public $ids;
 
     /**
-    * @var string The working select statement.
+     * @var string|null An alias to apply to the model when making queries.
+    */
+    public $alias=null;
+
+    /**
+     * @var boolean Was the alias set by method call?
+    */
+    public $aliasWasSet = false;
+
+    /**
+     * @var string The working select statement.
     */
     private $select;
 
     /**
      * @var string The working update statement.
     */
-    private $update;
+    private $update=Array();
 
     /**
      * @var string The where condition or the working query.
@@ -77,9 +87,16 @@ class Model {
         $this->limit=Array();
         $this->order=Array();
         $this->lastResultSet=null;
-        $this->update='';
+        $this->update=Array();
+        //$this->alias = null;
     }//clearData
 
+
+    public final function alias($k){
+        $this->alias = $k;
+        $this->aliasWasSet = true;
+        return $this;
+    }//alias
 
 
     /**
@@ -96,7 +113,26 @@ class Model {
      */
     public final function select(){
         $this->clearData();
-        $this->select=func_get_args();
+        $data = func_get_args();
+        if(is_array($data[0])){
+            foreach($data[0] as $k=>$v){
+                $data[0][$k] = $this->fieldAlias($v);
+            }//foreach
+            $this->select = $data[0];
+        }//if
+        else if(!isset($data[1])){
+            $data[0] = explode(',',$data[0]);
+            foreach($data[0] as $k=>$v){
+               $data[0][$k] = $this->fieldAlias($v); 
+            }//foreach
+            $this->select = $data[0];
+        }//elif
+        else {
+            foreach($data as $k=>$v){
+                $data[$k] = $this->fieldAlias($v);
+            }//foreach
+            $this->select = $data;
+        }//el
         return $this;
     }//if
 
@@ -115,22 +151,28 @@ class Model {
     */
     public final function update(){
         $this->clearData();
-        $temp = Array();
         $data = func_get_args();
-        $iter=0;
 
-        foreach($data as $k=>$v){
-            if($k%2==1){
-                $temp[$iter]='=';
-                $iter++;
-            }//if
 
-            $temp[$iter]=$v;
-            $iter++;
+        if(is_array($data[0])){
+            $this->update = array_merge($this->update,$data[0]);
+        }//if
+        else if(!isset($data[1])){
+            $data[0] = explode(',',$data[0]);
+            foreach($data[0] as $k=>$v){
+               $data[0][$k] = $v; 
+            }//foreach
+            $this->update = array_merge($this->update,$data[0]);
+        }//elif
+        else {
+            foreach($data as $k=>$v){
+                if(!isset($data[$k+1])){
+                    break;
+                }//if
+                $this->update = array_merge($this->update,Array($k=>$v));
+            }//foreach
+        }//el
 
-        }//foreach
-
-        $this->update.= $this->prepareCondition($temp,',');
         return $this;
     }//update
 
@@ -160,6 +202,16 @@ class Model {
                 $tempValues[]=$v;
             }//foreach
         }//if
+        else if(is_array($data[1])){
+            $insert = $data[0];
+            $tempValues = $data[1];
+            $l=count($tempValues);
+            $i=0;
+            while($i<$l){
+                $values.='?,';
+                $i++;
+            }//while
+        }//elif
         else {
             foreach($data as $k=>$v){
                 if($k%2==1){
@@ -175,7 +227,8 @@ class Model {
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
         $this->lastQuery = \DB::set($query,$tempValues);
-        return \DB::query($this->lastQuery);
+        \DB::query($this->lastQuery);
+        return DB::lastId();
 
     }//insert
 
@@ -194,7 +247,20 @@ class Model {
     */
     public final function delete(){
         $this->clearData();
-        $this->where = $this->prepareCondition(func_get_args(),'AND');
+        $data = func_get_args();
+        if(is_array($data[0])){
+            $this->where = '';
+            foreach($data[0] as $k=>$v){
+                $this->where .= \DB::set("$k=?",$v).' AND ';
+            }//foreach
+            $this->where = rtrim($this->where,'AND ');
+        }//if
+        else if(!isset($data[2])){
+           $this->where = \DB::set($data[0],$data[1]); 
+        }//if
+        else {
+            $this->where = $this->prepareCondition(func_get_args(),'AND');
+        }//el
         $this->lastQuery = "DELETE FROM {$this->table} WHERE {$this->where}";
         return \DB::query($this->lastQuery);
     }//delete
@@ -219,9 +285,72 @@ class Model {
      * @return self
     */
     public final function where(){
-        $this->where.= $this->prepareCondition(func_get_args(),'AND');
+        $data = func_get_args();
+        if(is_array($data[0])){
+            $this->where = '';
+            foreach($data[0] as $k=>$v){
+                $this->where .= \DB::set($this->fieldAlias($k).'=?',$v).' AND ';
+            }//foreach
+            $this->where = rtrim($this->where,'AND ');
+        }//if
+        else if(!isset($data[2])){
+            $data[0] = explode(',',$data[0]);
+            foreach($data[0] as $k=>$v){
+                $data[0][$k] = $this->fieldAlias($v);
+            }//foreach
+            $data[0] = implode(',',$data[0]);
+            $this->where.= \DB::set($data[0],(isset($data[1])) ? $data[1] : null);
+        }//if
+        else {
+            $data = explode(',',$data);
+            foreach($data as $k=>$v){
+                $data[$k] = $this->fieldAlias($v);
+            }//foreach
+            $this->where.= $this->prepareCondition($data,'AND');
+        }//el
+
+        $this->where = str_replace('=NULL',' IS NULL',$this->where);
+
         return $this;
+
     }//where
+
+
+
+    /**
+     * Return an aliased field name.
+     *
+     * 
+     * @param string $k The field name to alias.
+     *
+     * @return string 
+    */
+    private function fieldAlias($k){
+        if(stripos($k,'.') === false){
+            if($this->alias){
+                return $this->alias.'.'.$k;
+            }//if
+            return $this->table.'.'.$k;
+        }//if
+        return $k;
+    }//alias
+
+
+
+    /**
+     * Return an aliased table name.
+     *
+     * 
+     * @param string $k The table name to alias.
+     *
+     * @return string 
+    */
+    private function tableAlias(){
+        if($this->alias){
+            return $this->alias;
+        }//if
+        return $this->table;
+    }//private function
 
 
 
@@ -260,18 +389,48 @@ class Model {
      *
      * @return self 
     */
-    public final function join($modelName,$joinOn='INNER JOIN'){
-        $joinTable = Model::m($modelName)->table;
-        $ids = array_intersect($this->ids,Model::m($modelName)->ids);
+    public final function join($modelName,$on=null,$joinType='INNER JOIN'){
+        $tableAlias = '';
+        if(stripos($modelName,' as ') !== false){
+            $modelName = explode(' AS ',$modelName);
+            $alias = $modelName[1];
+            $tableAlias = " AS $alias";
+            $modelName = $modelName[0];
+        }//if
+        else {
+            $alias = $modelName;
+        }//el
 
-        $joinOn.=" {$joinTable} ";
-        foreach($ids as $id){
-            $joinOn.= "ON {$this->table}.{$id}={$joinTable}.{$id} AND ";
-        }//id
+        $joinTable = \Model::m($modelName)->table;
+        $table = $this->tableAlias();
 
-        $joinOn=trim($joinOn,'AND ');
+        $joinType .= " {$joinTable}{$tableAlias} ";
 
-        $this->joinOn[]=$joinOn;
+        if($on !== null){
+            $joinType .= "ON {$on} ";
+        }//if
+        else {
+
+            $baseIds = (is_array($this->ids)) ? $this->ids : Array($this->ids);
+            $ids = \Model::m($modelName)->ids;
+            $ids = (is_array($ids)) ? $ids : Array($ids);
+
+            $ids = array_intersect($baseIds,$ids);
+
+            $multipleIds = false;
+            foreach($ids as $id){
+                $joinType.= "ON {$table}.{$id}={$alias}.{$id} AND ";
+                $multipleIds = true;
+            }//id
+
+            $jl = strlen($joinType);
+            if($multipleIds && substr($joinType,$jl-4,$jl)){
+                $joinType = substr($joinType,0,$jl-4);
+            }//if
+
+        }//el
+
+        $this->joinOn[]=$joinType;
         return $this;
     }//join
 
@@ -285,8 +444,8 @@ class Model {
      *
      * @return self 
     */
-    public final function ljoin($modelName){
-        $this->join($modelName,'LEFT JOIN');
+    public final function ljoin($modelName,$on=null){
+        $this->join($modelName,$on,'LEFT JOIN');
         return $this;
     }//ljoin
 
@@ -301,11 +460,10 @@ class Model {
      *
      * @return self 
     */
-    public final function rjoin($modelName){
-        $this->join($modelName,'RIGHT JOIN');
+    public final function rjoin($modelName,$on=null){
+        $this->join($modelName,$on,'RIGHT JOIN');
         return $this;
     }//ljoin
-
 
 
     /**
@@ -320,7 +478,24 @@ class Model {
      * @return self 
     */
     public final function order(){
-        $this->order = array_merge($this->order,func_get_args());
+        $data = func_get_args();
+
+        if(is_array($data[0])){
+            $order = Array();
+            foreach($data[0] as $k=>$v){
+                $order[] = $this->fieldAlias($k).' '.$v;
+            }//foreach
+        }//if
+        else {
+            $order = $data;
+        }//el
+
+        foreach($data as $k=>$v){
+            $data[$k] = $this->fieldAlias($v);
+        }//foreach
+
+
+        $this->order = array_merge($this->order,$order);
         return $this;
     }//order
 
@@ -354,7 +529,16 @@ class Model {
     */
     public final function finalize(){
 
-        $update = $this->update;
+        if(count($this->update)==0){
+            throw new \InvalidArgumentException;
+        }//if
+
+        $update = '';
+        foreach($this->update as $k=>$v){
+            $update .= \DB::set("$k=?,",$v);
+        }//foreach
+        $update = rtrim($update,',');
+
         $where = $this->where;
         if($where)
             $where='WHERE '.$where;
@@ -376,6 +560,9 @@ class Model {
             return $this->lastResultSet;
 
         $this->lastResultSet = $this->fetchData();
+        if($this->aliasWasSet){
+            $this->alias = null;
+        }//if
         return $this->lastResultSet;
     }//data
 
@@ -414,10 +601,8 @@ class Model {
 
         $order='';
         if(count($this->order)>0){
-            for($i=0;$i<count($this->order);$i+=2){
-                $order.= $this->order[$i].' '.$this->order[$i+1].',';
-            }//for
-            $order='ORDER BY '.rtrim($order,',');
+            $order = implode(',',$this->order);
+            $order='ORDER BY '.$order;
         }//if
 
 
@@ -428,11 +613,15 @@ class Model {
             $limit = "LIMIT {$this->limit[0]},{$this->limit[0]}";
 
 
-        $this->lastQuery = "SELECT {$select} FROM {$this->table} {$joinOn} {$where} {$order} {$limit}";
+        $alias = '';
+        if($this->alias){
+            $alias = " AS {$this->alias}";
+        }//if
+        $this->lastQuery = "SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}";
 
-        \DB::query($this->lastQuery); 
+        \Disco::$app['DB']->query($this->lastQuery); 
 
-        return \DB::last();
+        return \Disco::$app['DB']->last();
 
     }//fetchData
 
@@ -471,7 +660,7 @@ class Model {
                 if($i>0)
                     $where.=" {$conjunction} ";
 
-                $where.=$this->table.'.'.$data[$i].$data[$i+1].'?';
+                $where.=$this->tableAlias().'.'.$data[$i].$data[$i+1].'?';
                 $values[]=$data[$i+2];
 
             }//for
@@ -488,6 +677,40 @@ class Model {
         return false;
 
     }//prepareCondition
+
+
+
+    /**
+     * Get schema information about the table.
+     *
+     *
+     * @return Array
+    */
+    public final function about(){
+        return \DB::query('
+            SELECT *                                                                                                                                                                                                       
+            FROM information_schema.tables                                                                  
+            WHERE table_type="BASE TABLE" AND table_schema="swell" AND table_name="'.$this->table.'"
+        ')->fetch_assoc();
+    }//about
+
+
+
+    /**
+     * Get column information about the table.
+     *
+     *
+     * @return Array
+    */
+    public final function columns(){
+        $result = \DB::query('SHOW COLUMNS FROM '.$this->table);
+        $columns = Array();
+        while($row = $result->fetch_assoc()){
+            $columns[] = $row;
+        }//while
+        return $columns;
+    }//columns
+
 
 }//Model
 ?>

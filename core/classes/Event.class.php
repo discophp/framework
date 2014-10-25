@@ -16,6 +16,10 @@ class Event {
     */
     private $events=Array();
 
+    /**
+     * @var string Default method to call on objects.
+    */
+    public $defaultMethod = 'work';
 
     /**
      * Register an event name with an associated action.
@@ -74,32 +78,24 @@ class Event {
                     }//el
                 }//if
                 else {
-                    $method='work';
+                    $method=$this->defaultMethod;
                     if(stripos($action,'@')!==false){
                         $method = explode('@',$action);
                         $action = $method[0];
                         $method = $method[1];
                     }//if
                     $instance = new $action();
-                    return \Disco::handle($instance,$method,$data);
+                    if(!is_array($data)){
+                        $data = Array($data);
+                    }//if
+                    return call_user_func_array(Array($instance,$method),$data);
                 }//el
             }//foreach
 
         }//if
         else {
-            $trace = Array();
-            $e = debug_backtrace();
-            foreach($e as $err){
-                if(isset($err['file']) && isset($err['function']) && $err['function']=='fire'){
-                    $trace['args']=$err['args'];
-                    $trace['line']=$err['line'];
-                    $trace['file']=$err['file'];
-                }//if
-            }//foreach
-            $msg = "Event::Error event \"{$event}\" not found - {$trace['args'][0]} @ line {$trace['line']} in File: {$trace['file']} ";
-
-            TRIGGER_ERROR($msg,E_USER_ERROR);
-
+            $app = \Disco::$app;
+            $app->error("Event::Error event \"{$event}\" not found",Array('fire'),debug_backtrace(TRUE,6));
         }//el
 
     }//fire

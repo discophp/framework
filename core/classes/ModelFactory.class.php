@@ -12,13 +12,6 @@ namespace Disco\classes;
 class ModelFactory {
 
     /**
-     * @var array Model storage.
-    */
-    private $models=Array();
-
-
-
-    /**
      * Access a model.
      *
      *
@@ -27,12 +20,7 @@ class ModelFactory {
      * @return object Return $this->models[$name] the instance of the Model
     */
     public final function m($name){
-        if(isset($this->models[$name]))
-            return $this->models[$name];
-
-        $this->models[$name]=new $name();
-        return $this->models[$name];
-
+        return \Disco::with($name);
     }//use
 
 }//ModelFactory

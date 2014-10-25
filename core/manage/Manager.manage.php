@@ -16,6 +16,17 @@ class Manager {
 
 
     /**
+     * @var array $routes User defined routes.
+    */
+    public static $routes = Array();
+
+    /**
+     * @var string $routerInFile What file is the router being called in?.
+    */
+    public static $routerInFile;
+
+
+    /**
      * This function is very important to the functioning of the Queue class.
      * It handles executing jobs that are pushed onto the Queue.
      *
@@ -30,7 +41,11 @@ class Manager {
      *
      * @return void
     */
-    public static function resolve($delay,$obj,$method,$vars,$d){
+    public static function resolve($delay=null,$obj,$method,$vars,$d){
+
+        if($delay!=0){
+            sleep($delay);
+        }//if
 
         $d = unserialize(base64_decode($d));
         $obj = unserialize(base64_decode($obj));
@@ -55,27 +70,19 @@ class Manager {
             }//el
         }//el
 
-        \Disco::$facades = array_merge(\Disco::$facades,$d);
+        $app = new \Disco;
+
+        foreach($d as $k=>$v){
+            if($k=='Router') continue;
+            $app[$k] = $v;
+        }//foreach
+
 
         if($obj instanceof \Jeremeamia\SuperClosure\SerializableClosure){
-            if($delay!=0){
-                sleep($delay);
-            }//if
             return call_user_func($obj,$vars);
         }//if
 
-        if(\Disco::$facades[$obj] instanceof \Closure){
-            $obj = call_user_func(\Disco::$facades[$obj]);
-        }//if
-        else {
-            $obj = \Disco::$facades[$obj];
-        }//el
-
-        if($delay!=0){
-            sleep($delay);
-        }//if
-
-        \Disco::handle($obj,$method,$vars);
+        return $app->handle($obj,$method,$vars);
 
     }//resolve
 
@@ -278,6 +285,13 @@ class Manager {
 
 
 
+    /**
+     * Generate a listing of router and template files specified by any addons
+     * and store them in addon-autoloads.php in a serialized form.
+     *
+     *
+     * @return void
+    */
     public static function addonAutoloads(){
 
         $dir = \Disco::$path.'/'.$_SERVER['COMPOSER_PATH'];
@@ -308,6 +322,17 @@ class Manager {
         
     }//addonAutoloads
 
+
+    /**
+     * Get all the files of a specified extension in a directory and all its sub-directories.
+     *
+     *
+     * @param string $ext The type of file extensions to look for.
+     * @param string $startDir The directory to start the search in.
+     * @param Array $initFiles A group of files that has already been found from parent directories.
+     *
+     * @return Array The files from the directory.
+    */
     private static function getFilesRec($ext,$startDir,$initFiles){
         if(($scan = scandir($startDir)) == false){
             return $initFiles; 
@@ -368,6 +393,176 @@ class Manager {
 
 
     }//install
+
+
+
+    /**
+     * Build a model from a specified table in the configured database.
+     *
+     *
+     * @param string $table The name of the table the model should be built from.
+     *
+     * @return void
+    */
+    public static function buildModel($table){
+        $result = \DB::query("SHOW KEYS FROM {$_SERVER['DB_DB']}.{$table} WHERE Key_name='PRIMARY'");
+    
+        $keys = Array();
+        while($row = $result->fetch_assoc()){
+            $keys[] = $row['Column_name'];
+        }//while
+    
+        if(count($keys)==1){
+            $keys = "'".$keys[0]."'";
+        }//if
+        else {
+            $keys = implode("','",$keys);
+            $keys = "'".$keys."'";
+            $keys = "Array({$keys})";
+        }//el
+    
+        $date = date(DATE_RFC822);
+    
+        $model = 
+"<?php
+//This Model Class was generated with Disco on: {$date}
+Class {$table} extends Disco\classes\Model {
+
+    public \$table = '{$table}';
+    public \$ids = {$keys};
+
+}//{$table}   
+?>";
+    
+        $out = "app/model/{$table}.model.php";
+
+        if(file_exists($out)){
+            echo "Model $out already exists! Aborted".PHP_EOL;
+        }//if
+        else if(file_put_contents($out,$model)){
+            echo "Created $out".PHP_EOL;    
+        }//if
+        else {
+            echo "Failed! $out ".PHP_EOL."insufficient permissions for writing to app/model/  ( use sudo )".PHP_EOL;    
+        }//el
+
+    
+    
+    }//build_model
+
+
+
+    /**
+     * Mock a request to the application and swap the \Disco\classes\Router with a \Disco\manage\Router
+     * in order to profile all router requests. Also include all defined router files for processing.
+     *
+     *
+     * @param string|null $outputType The type of output the user desires (html,csv)
+     * 
+     * @return void
+    */
+    public static function routes($outputType=null){
+
+        self::$routerInFile = 'index.php';
+
+        require('public/index.php');
+
+        $routers = self::getFilesRec('.router.php','app/router',Array());
+        foreach($routers as $k=>$v){
+            self::$routerInFile = $v;
+            $v = basename($v);
+            $v = explode('.',$v)[0];
+            \Router::useRouter($v);
+        }//foreach
+
+        if($outputType == 'csv'){
+            self::csv_routes(self::$routes);
+        }//if
+        else if($outputType == 'html'){
+            self::html_routes(self::$routes);
+
+        }//el
+        else {
+            print_r(self::$routes);
+        }//el
+
+    }//routes
+
+
+    /**
+     * Format the provided routes as a csv file.
+     *
+     *
+     * @param Array $routes The found routes
+     *
+     * @return void
+    */
+    private static function csv_routes($routes){
+
+        $keys = array_keys($routes[0]);
+        $out = implode(',',$keys)."\n";
+        foreach($routes as $rowK=>$row){
+            if(is_array($row['variables'])){
+                $temp = '';
+                foreach($row['variables'] as $vk=>$vv){
+                    $temp .= $vk.' => '.$vv.' , ';
+                }//foreach
+                $row['variables'] = rtrim($temp,', ');
+            }//if
+            $out .= implode(',',$row)."\n";
+        }//foreach
+        if(file_put_contents('routes.csv',$out)){
+            echo 'Routes stored in routes.csv'.PHP_EOL;
+        }//if
+        else {
+            echo 'Could not write routes.csv (use sudo)'.PHP_EOL;
+        }//el
+
+    }//csv_routes
+
+
+
+    /**
+     * Format the provided routes as a html file.
+     *
+     *
+     * @param Array $routes The found routes
+     *
+     * @return void
+    */
+    private static function html_routes($routes){
+
+        $keys = array_keys($routes[0]);
+        $out = "<table style='width:80%%;margin:0 auto;'><thead style='background-color:#DDD;'><tr>%1\$s</tr></thead><tbody>%2\$s</tbody></table>";
+        $head = '';
+        $body = '';
+        foreach($keys as $k){
+            $head .= "<td>$k</td>";
+        }//foreach
+        foreach($routes as $rowK=>$row){
+            if(is_array($row['variables'])){
+                $temp = '';
+                foreach($row['variables'] as $vk=>$vv){
+                    $temp .= $vk.' => '.$vv.' , ';
+                }//foreach
+                $row['variables'] = rtrim($temp,', ');
+            }//if
+            $body .= '<tr>';
+            foreach($row as $k=>$v){
+                $v = ($v!='' && $v!=' ') ? $v : '&nbsp;';
+                $body .= "<td style='padding-top:4px;padding-bottom:4px;border-bottom:1px solid #DDD;'>{$v}</td>";        
+            }//foreach
+            $body .= '</tr>';
+        }//foreach
+        $out = sprintf($out,$head,$body);
+        if(file_put_contents('routes.html',$out)){
+            echo 'Routes stored in routes.html'.PHP_EOL;
+        }//if
+        else {
+            echo 'Could not write routes.html (use sudo)'.PHP_EOL;
+        }//el
+
+    }//html_routes
 
 }//Manager
 ?>

@@ -31,12 +31,13 @@ class Queue {
             $vars = base64_encode(serialize($vars));
         }//el
 
-        $facades = \Disco::$facades;
-
         $t = Array();
-        foreach($facades as $k=>$v){
+        $facades = \Disco::$app->keys();
+        foreach($facades as $k){
+            $v = \Disco::$app[$k];
             if($v instanceof \Closure){
-                $v = call_user_func($v);
+                //$v = call_user_func($v);
+                $v = new \Jeremeamia\SuperClosure\SerializableClosure($v);
             }//if
             $t[$k]=$v;
         }//foreach

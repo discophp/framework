@@ -15,7 +15,7 @@ class Router {
     /**
      * @var string URI path to match.
     */
-    private $param;
+    public $param;
 
     /**
      * @var \Closure|string Action to take if matched.
@@ -95,7 +95,6 @@ class Router {
         }//if
         //have no match already and this matches?
         else if(!\Router::routeMatch() && $this->match($this->param)){
-            \Router::routeMatch(true);
 
             //handle authenication
             $this->authenticationHandle();
@@ -105,17 +104,24 @@ class Router {
                 //is a controller being requested?
                 if(stripos($this->function,'@')!==false){
                     $ctrl = explode('@',$this->function);
-                    $ctrl[0] = \Disco::with($ctrl[0]);
-
-                    \Disco::handle($ctrl[0],$ctrl[1],$this->variables);
+                    $app = \Disco::$app;
+                    $res = $app->handle($ctrl[0],$ctrl[1],$this->variables);
                 }//if
             }//if
             else if($this->variables){
-                call_user_func_array($this->function,$this->variables);
+                $res = call_user_func_array($this->function,$this->variables);
             }//elif
             else {
-                call_user_func($this->function);
+                $res = call_user_func($this->function);
             }//el
+
+            if($res === false){
+                \Router::routeMatch(false);
+            }//if
+            else {
+                \Router::routeMatch(true);
+            }//el
+            return $res;
         }//if
 
     }//destruct

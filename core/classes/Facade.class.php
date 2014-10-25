@@ -25,12 +25,12 @@ abstract class Facade {
 
     /**
      * Classes that extend the Facade MUST IMPLEMENT this method!
-     * This method is in charge of returning the Key used in the IoC container to access its underlying Base Class.
+     * This method is in charge of returning the Key used in the IoC container to access the underlying instance .
      * It must be unique within your application and within the Framework.
      *
-     * @return string The Key of the underlying Base Class in the IoC container.
+     * @return string The Key of the instance in the IoC container.
      */
-    abstract protected static function returnFacadeId();
+    protected static function returnFacadeId(){}
 
 
 
@@ -46,18 +46,12 @@ abstract class Facade {
      * @param callable  $method The method that is attempting to be accessed on the Static Facade but failed to exist.
      * @param mixed     $args The arguements that were passed to the original $method.
      *
-     * @return mixed    Return the result of the method call on the underlying Base Class.
+     * @return mixed    Return the result of the method call on the resolved instance from the IoC container.
      */
     public static function __callStatic($method,$args){
 
-        $instance = \Disco::$facades[static::returnFacadeId()];
-
-        if($instance instanceof \Closure){
-            $instance=call_user_func($instance);
-            \Disco::$facades[static::returnFacadeId()]=$instance;
-        }//if
-
-        return \Disco::handle($instance,$method,$args);
+        $app = \Disco::$app;
+        return $app->handle(static::returnFacadeId(),$method,$args);
 
     }//callStatic
 
@@ -71,14 +65,7 @@ abstract class Facade {
      */
     public static function instance(){
 
-        $instance = \Disco::$facades[static::returnFacadeId()];
-
-        if($instance instanceof \Closure){
-            $instance=call_user_func($instance);
-            \Disco::$facades[static::returnFacadeId()]=$instance;
-        }//if
-
-        return $instance;
+        return \Disco::$app[static::returnFacadeId()];
 
     }//callStatic
 
