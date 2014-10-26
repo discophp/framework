@@ -155,7 +155,8 @@ class Model {
 
 
         if(is_array($data[0])){
-            $this->update = array_merge($this->update,$data[0]);
+            //$this->update = array_merge($this->update,$data[0]);
+            $this->update = $data[0];
         }//if
         else if(!isset($data[1])){
             $data[0] = explode(',',$data[0]);
@@ -228,7 +229,7 @@ class Model {
 
         $this->lastQuery = \DB::set($query,$tempValues);
         \DB::query($this->lastQuery);
-        return DB::lastId();
+        return \DB::lastId();
 
     }//insert
 

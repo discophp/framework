@@ -164,9 +164,17 @@ class DB extends \mysqli {
      * @return string               The $q with $args bound into it.
     */
     public function set($q,$args){
-        if(is_array($args)){
+        if(is_array($args) && isset($args['raw'])){
+            $q=implode($args['raw'],explode('?',$q,2));
+        }//if
+        else if(is_array($args)){
             foreach($args as $a){
-                $q=implode($this->prepareType($a),explode('?',$q,2));
+                if(is_array($a) && isset($a['raw'])){
+                    $q=implode($a['raw'],explode('?',$q,2));
+                }//if
+                else {
+                    $q=implode($this->prepareType($a),explode('?',$q,2));
+                }//el
             }//foreach
         }//if
         else {

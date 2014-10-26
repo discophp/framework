@@ -209,7 +209,7 @@ Class Form {
             $without = $args;
         }//el
 
-        $this->without = $args;
+        $this->without = $without;
 
         return $this;
 
@@ -254,7 +254,7 @@ Class Form {
             $with = $args;
         }//el
 
-        $this->with = $args;
+        $this->with = $with;
 
         return $this;
 
@@ -304,6 +304,14 @@ Class Form {
                 $fields = Array($fields);
             }//if
         }//if
+        else if(!$this->where){
+            $m = \Model::m($this->from);
+            $columns = $m->columns();
+            $fields = Array();
+            foreach($columns as $k=>$col){
+                $fields[$col['Field']] = ''; 
+            }//foreach
+        }//elif
         else {
             $m = \Model::m($this->from);
             $fields = $m->select('*')->where($this->where)->limit(1)->data()->fetch_assoc();
@@ -439,8 +447,9 @@ Class Form {
             $primaryKeys = $this->where;
         }//el
         else if(count($primaryKeys)==0){
+            $res = \Model::m($this->from)->insert($real);
             $this->reset();
-            return false;
+            return $res;
         }//if
 
         $res = \Model::m($this->from)->update($real)->where($primaryKeys)->finalize();
