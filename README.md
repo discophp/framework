@@ -54,7 +54,8 @@ filtering, variable extraction, handling HTTPS, and authenticated browsing.</p>
     });
 ```
 
-<p>Work with a service from the container, even if its not registered</p>
+
+<h4>Work with a service from the container, even if its not registered</h4>
 
 ```php
     Disco::with('class')->method($arg);
