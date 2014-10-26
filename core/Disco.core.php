@@ -485,8 +485,6 @@ Class Disco extends \Pimple\Container {
         $Ref = new ReflectionClass($v);
         $con = $Ref->getConstructor();
         if(!is_null($con)){
-            //echo '<pre>'.$con.'</pre>';
-            //echo '<pre>'.print_r($con->getParameters()).'</pre>';
 
             $inject = Array();
 
@@ -499,7 +497,6 @@ Class Disco extends \Pimple\Container {
                     $s = explode(' ',$s)[1];
                     if(substr($s,0,1) != '$'){
                         $inject[] = Disco::with($s);
-                        //echo '<h1>'.$s.'</h1>';
                     }//if
                 }//if
             }//foreach
