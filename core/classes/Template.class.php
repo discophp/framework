@@ -42,6 +42,18 @@ Class Template {
     private $copy = "{{&\$%1\$s}}";
 
 
+    /**
+     * @var Array Assoc keys of variables names and there data for nested templates.
+    */
+    private $dataStack = Array();
+
+
+    /**
+     * @var string Live template to build.
+    */
+    private $live;
+
+
 
     /**
      * Load a template from disk/Cache.
@@ -153,45 +165,17 @@ Class Template {
 
 
     /**
-     * Get the current template.
+     * Get a template, if its not in the cache, get it from the disk and cache it..
      *
      *
      * @return string
     */
-    private function getWorkingTemplate(){
-        if(!isset($this->templates[$this->workingTemplate])){
-            $this->loadTemplate($this->workingTemplate);        
+    private function getTemplate($name){
+         if(!isset($this->templates[$name])){
+            $this->loadTemplate($name);        
         }//if
-        return $this->templates[$this->workingTemplate];
-    }//getWorkingTempalte
-
-
-
-    /**
-     * Work on a specific template.
-     *
-     *
-     * @param string $name The name of the template to work on.
-     *
-     * @return self 
-     */
-    public function name($name){
-        $this->workingTemplate=$name;
-        $this->beingModified=$this->getWorkingTemplate();
-        return $this;
-    }//use
-
-
-
-    /**
-     * Get the markup of the active template.
-     *
-     *
-     * @return string
-    */
-    public function html(){
-       return $this->beingModified; 
-    }//return
+        return $this->templates[$name];
+    }//getTemplate
 
 
 
@@ -220,23 +204,60 @@ Class Template {
      * @return string
     */
     public function build($name,$data=Array()){
-        $this->workingTemplate=$name;
-        $this->beingModified = $this->getWorkingTemplate();
-        $this->beingModified = $this->appendTemplate($data);
 
-        if(count($data)!=0){
-
-            //call set to embed the variables
-            $this->set($data);
-
+        if(!$this->live){
+            $t = $this->getTemplate($name);
         }//if
+        else {
+            $t = $this->live;
+            $this->live = null;
+        }//el
 
-        //cal setElses to set the else clauses
-        $this->setElses();
+        $t = $this->set($t,$data);
 
+        $stack = $this->dataStack;
+        $this->dataStack = Array();
 
+        foreach($stack as $k=>$v){
 
-        return $this->beingModified;
+            do {
+
+                $info = $this->parseInfo($k,$t);
+                if(!$info)
+                    continue;
+
+                $nest = '';
+                if(is_array($v[0])){
+                    foreach($v as $nk=>$nv){
+                        $nest .= $this->build($info['templateName'],$nv);
+                    }//foreach
+                }
+                else {
+                    $nest .= $this->build($info['templateName'],$v);
+                }//el
+
+                $t = str_replace($info['textBlock'],$nest,$t);
+
+            } while($info);
+
+        }//foreach
+
+        $info = null;
+
+        do {
+
+            $info = $this->parseInfo('',$t);
+            if(!$info)
+                continue;
+
+            $nest = $this->build($info['templateName']);
+            $t = str_replace($info['textBlock'],$nest,$t);
+
+        } while($info);
+
+        $t = $this->setElses($t,$data);
+
+        return $t;
 
     }//build
 
@@ -252,22 +273,8 @@ Class Template {
      * @return string
     */
     public function live($markup,$data=Array()){
-        $this->beingModified = $markup;
-        $this->beingModified = $this->appendTemplate($data);
-
-        if(count($data)!=0){
-
-            //call set to embed the variables
-            $this->set($data);
-
-        }//if
-
-        //cal setElses to set the else clauses
-        $this->setElses();
-
-
-        return $this->beingModified;
-
+        $this->live = $markup;
+        return $this->build('',$data);
     }//live
 
 
@@ -307,137 +314,35 @@ Class Template {
 
 
     /**
-     * Set data into the template. This function is recursive in nature!
+     * Set data into the template.
      *
      *
      * @param array $data The data to set into the template.
      *
      * @return self 
     */
-    public function set($data){
-        $t = $this->beingModified;
-        $arrays = Array();
-
-        $this->beingModified=$this->appendTemplate('');
+    public function set($t,$data){
 
         foreach($data as $k=>$v){
 
             if(is_array($v)){ 
-                $arrays[]=$v;
+                $this->dataStack[$k] = $v;
                 continue;
             }//if
 
-
-            if(is_numeric($k)){
-                $s = sprintf($this->delin,$this->lastArrayName);
-                $td=$this->lastArrayName;
-                $copy = sprintf($this->copy,$this->lastArrayName);
-            }//if
-            else {
-                $s = sprintf($this->delin,$k);
-                $td = $k;
-                $copy = sprintf($this->copy,$k);
-            }//el
+            $s = sprintf($this->delin,$k);
+            $td = $k;
+            $copy = sprintf($this->copy,$k);
 
             $t = implode($v,explode($s,$t,2));
 
             $t = implode($v,explode($copy,$t));
 
-            $this->beingModified=$t;
-
-            unset($data[$k]);
-
         }//foreach
-
-        foreach($arrays as $k=>$v){
-
-            if(is_array($v)){ 
-                $this->beingModified=$this->appendTemplate($v);
-                $this->lastArrayName=$k;
-                $this->set($v);
-                unset($arrays[$k]);
-                continue;
-            }//if
-
-        }//foreach
-
-        return $this;
-
-    }//setData
-
-
-
-    /**
-     * Append nested templates.
-     *
-     *
-     * @param array $data The data to carry to the nested template.
-     *
-     * @return string
-    */
-    private function appendTemplate($data){
-        $t = $this->beingModified;
-        if(count($data)==0){
-
-            do {
-                $info = $this->parseInfo('',$t);
-                if($info==null){
-                    continue;
-                }//if
-                $t = $this->insertTemplate($info,'',$t);
-            } while($info);
-
-            return $t;
-        }//if
-
-        if(!is_array($data)){
-            return $t;
-        }//if
-
-        foreach($data as $k=>$v){
-
-            do {
-                $info = $this->parseInfo($k,$t);
-                if($info==null){
-                    continue;
-                }//if
-                $t = $this->insertTemplate($info,$v,$t);
-            } while($info);
-        }//foreach
-        return $t;
-    }//appendTemplate
-
-
-
-    /**
-     * Inject the template into the calling template.
-     *
-     *
-     * @param array $data The data returned from calling $this->parseInfo on a template.
-     * @param mixed $v The data that should be passed to the injected template. 
-     * @param string $t The template currently needing injecting.
-     *
-     * @return string
-    */
-    private function insertTemplate($data,$v,$t){
-        $this->loadTemplate($data['templateName']);
-
-        $copies = $this->templates[$data['templateName']];
-        if($data['justTemplate']){
-            $t = str_replace($data['textBlock'],$copies,$t);
-        }//if
-        else if(is_array($v)){
-            if(!$this->is_assoc($v))
-                $copies = str_repeat($copies,count($v));
-            $t = str_replace($data['textBlock'],$copies,$t);
-        }//if
-        else {
-            $t = str_replace($data['textBlock'],$copies,$t);
-        }//el
 
         return $t;
 
-    }//insert
+    }//set
 
 
 
@@ -489,48 +394,35 @@ Class Template {
      *
      *  @return void
     */
-    private function setElses(){
+    private function setElses($t,$data){
 
-        $testDelin = '({{\$[a-zA-Z0-9]+}}{{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
-        preg_match("/{$testDelin}/",$this->beingModified,$matches);
-        do {
-            if($matches){
-                foreach($matches as $m){
-                    $orgM=$m;
-
-                    $elsePos = stripos($orgM,'else '); 
-                    if($elsePos!==false)
-                        $elseContent = rtrim(substr($orgM,$elsePos+6),'\'"}');
-                    else
-                        $elseContent='';
-
-                    $this->beingModified = implode($elseContent,explode($orgM,$this->beingModified));
-
-                }//foreach
-            }//if
-
-            if($matches)
-                preg_match("/{$testDelin}/",$this->beingModified,$matches);
-
-        } while($matches);
-
+        $constLen = 6;
 
         do {
 
-            $testDelin = '({{else [a-zA-Z0-9\s\"\'\>\<\/]*}})';
-            preg_match("/{$testDelin}/",$this->beingModified,$matches);
-            if($matches){
-                foreach($matches as $m){
-                    $this->beingModified = implode('',explode($m,$this->beingModified));
-                }//foreach
+            $else = stripos($t,'{{else ');
+            if($else===false){
+                return $t;
             }//if
 
-            if($matches)
-                preg_match("/{$testDelin}/",$this->beingModified,$matches);
+            $beg = stripos($t,'{{');
+            $end = stripos($t,'}}',$else);
 
+            $endV = substr($t,$else+$constLen+1,$end - ($else+$constLen+1) );
 
-        } while($matches);
+            if(substr($endV,0,1) == '$'){
+                $endV = ltrim($endV,'$');
+                $endV = $data[$endV];
+            }//if
+            else {
+                $endV = substr($endV,1,strlen($endV)-2);
+            }//el
 
+            $t = substr_replace($t,$endV,$beg,$end+2 - $beg);
+
+        } while($else !== false);
+
+        return $t;
 
     }//setElses
 

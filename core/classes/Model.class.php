@@ -116,20 +116,20 @@ class Model {
         $data = func_get_args();
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
-                $data[0][$k] = $this->fieldAlias($v);
+                $data[0][$k] = $v;
             }//foreach
             $this->select = $data[0];
         }//if
         else if(!isset($data[1])){
             $data[0] = explode(',',$data[0]);
             foreach($data[0] as $k=>$v){
-               $data[0][$k] = $this->fieldAlias($v); 
+                $data[0][$k] = $v;
             }//foreach
             $this->select = $data[0];
         }//elif
         else {
             foreach($data as $k=>$v){
-                $data[$k] = $this->fieldAlias($v);
+                $data[$k] = $v;
             }//foreach
             $this->select = $data;
         }//el
@@ -290,14 +290,14 @@ class Model {
         if(is_array($data[0])){
             $this->where = '';
             foreach($data[0] as $k=>$v){
-                $this->where .= \DB::set($this->fieldAlias($k).'=?',$v).' AND ';
+                $this->where .= \DB::set($k.'=?',$v).' AND ';
             }//foreach
             $this->where = rtrim($this->where,'AND ');
         }//if
         else if(!isset($data[2])){
             $data[0] = explode(',',$data[0]);
             foreach($data[0] as $k=>$v){
-                $data[0][$k] = $this->fieldAlias($v);
+                $data[0][$k] = $v;
             }//foreach
             $data[0] = implode(',',$data[0]);
             $this->where.= \DB::set($data[0],(isset($data[1])) ? $data[1] : null);
@@ -305,7 +305,7 @@ class Model {
         else {
             $data = explode(',',$data);
             foreach($data as $k=>$v){
-                $data[$k] = $this->fieldAlias($v);
+                $data[$k] = $v;
             }//foreach
             $this->where.= $this->prepareCondition($data,'AND');
         }//el
@@ -484,7 +484,7 @@ class Model {
         if(is_array($data[0])){
             $order = Array();
             foreach($data[0] as $k=>$v){
-                $order[] = $this->fieldAlias($k).' '.$v;
+                $order[] = $k.' '.$v;
             }//foreach
         }//if
         else {
@@ -492,7 +492,7 @@ class Model {
         }//el
 
         foreach($data as $k=>$v){
-            $data[$k] = $this->fieldAlias($v);
+            $data[$k] = $v;
         }//foreach
 
 

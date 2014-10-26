@@ -175,7 +175,7 @@ Class Form {
      *
      * @return self
     */
-    public function props($props,$action){
+    public function props($props,$action=null){
         if(is_array($props)){
             $this->defaultProps = $props;
         }//if
