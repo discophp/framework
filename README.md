@@ -14,34 +14,67 @@ For the application project wrapper head over to:
 <p>The Disco PHP Framework is empowered by proven software design principles paired with modern tactics enabled by new
 native PHP Class manipulations available in PHP 5.4.0 and above.</p>
 
-<p>At its core the Disco PHP Framework is a MVC (Model View Controller) segregated framework with all of its roots
-branching outward from a concept called IoC (Inversion of Control). Working under these root principles Disco
-allows for superior flexibility within your code, making it insanely extensible and modifiable, while keeping
-coupling at an all time low.</p>
+<p>At its core is a power dependency injection (DI) and Inversion of Control (IoC) container 
+which is built on top of the <a href='https://github.com/fabpot/Pimple'>Pimple Container</a>.
+The framework is a MVC esque (Model View Controller) segregated framework.</p>
 
-<h3>RESTful Routing like it should be</h3>
+<h4>RESTful Routing like it should be</h4>
 
 <p>Let the Disco <a href='http://discophp.com/docs/Router'>Router</a> class dispell the pains of rewrite rules,
-filtering, variable extraction, handling HTTPS, and so much more.</p>
+filtering, variable extraction, handling HTTPS, and authenticated browsing.</p>
 
 <h4>Enjoy Facades and Inversion of Control</h4>
 
-<p>With Discos default <a href='http://discophp.com/docs/IoC-facades'>Facades and the Disco inversion of control container</a> development has never been quicker, or
-less painful..</p>
+<p>With Discos default <a href='http://discophp.com/docs/IoC-facades'>Facades and the Disco inversion of control container</a> development has looked cleaner or been more maintainable.</p>
 
-<p>Resolve singleton obejcts from the container:</p>
-
-```php
-    Disco::with('YourSingletonClass')->method($arg);
-```
-
-<p>Factory style obejct creation from the container:</p>
+<p>Register services in the container</p>
 
 ```php
-    Disco::factory('YourFactoryClass')->method($arg);
+    Disco::make('service',function(){
+        return new class;
+    });
+
+    //OR
+
+    Disco::make('service','namespace/class');
+
 ```
 
-<p>Default Facades shipped with Disco</p>
+<p>Registering Factory services</p>
+
+```php
+    Disco::as_factory('factory','factory');
+```
+
+<p>Registering protected services</p>
+
+```php
+    Disco::as_protected('rand',function(){
+        return rand();
+    });
+```
+
+<p>Work with a service from the container, even if its not registered</p>
+
+```php
+    Disco::with('class')->method($arg);
+```
+
+
+<h4>Dependency Injection</h4>
+
+<p>When services are instianted from the container if their constructors specify other classes as paramaters, Disco 
+will resolve those classes out of the container and pass their refrences to the constructor as arguements</p>
+
+```php
+    public function __construct(SomeClass $c1,SomeClass2 $c2){
+        $this->c1 = $c1;
+        $this->c2 = $c2;
+    }
+```
+
+
+<b>Default Facades shipped with Disco</b>
 
 <ul>
     <li><a href='http://discophp.com/docs/Cache'>Cache</a></li>
@@ -56,7 +89,7 @@ less painful..</p>
     <li><a href='http://discophp.com/docs/View'>View</a></li>
 </ul>
 
-<h5>Disco uses Composer for Dependency Management and Dependency Injection, so relax, this will be easy</h5>
+<h5>Disco uses Composer for Dependency Management and autoloading, so relax, this will be easy</h5>
 
 <p>Diso leverages <a href='http://getcomposer.org'>Composer</a> for maintaining youre applications library
 dependencies and Class autoloading. If you used composer before then you will know how easy this makes life, if not
