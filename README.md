@@ -14,7 +14,7 @@ For the application project wrapper head over to:
 <p>The Disco PHP Framework is empowered by proven software design principles paired with modern tactics enabled by new
 native PHP Class manipulations available in PHP 5.4.0 and above.</p>
 
-<p>At its core is a power dependency injection (DI) and Inversion of Control (IoC) container 
+<p>At its core is a powerful dependency injection (DI) and Inversion of Control (IoC) container 
 which is built on top of the <a href='https://github.com/fabpot/Pimple'>Pimple Container</a>.
 The framework is a MVC esque (Model View Controller) segregated framework.</p>
 

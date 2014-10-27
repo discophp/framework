@@ -172,7 +172,7 @@ class View {
     */
     public function __construct(){
 
-        //is a url set from .env.local.json || .env.json
+        //is a url set from .config.php || .config.dev.php
         if(isset($_SERVER['URL'])){
             $this->path=$_SERVER['URL'];
         }//if
@@ -698,6 +698,16 @@ class View {
         return implode('',$this->html);
     }//HTMLDump
 
+
+    /**
+     * Set the index type to index,follow , $this->activeIndex=0.
+     *
+     *
+     * @return void
+    */
+    public function index(){
+        $this->activeIndex=0;
+    }//index
 
 
     /**

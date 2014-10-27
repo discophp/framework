@@ -390,7 +390,7 @@ class Model {
      *
      * @return self 
     */
-    public final function join($modelName,$on=null,$joinType='INNER JOIN'){
+    public final function join($modelName,$on=null,$data=null,$joinType='INNER JOIN'){
         $tableAlias = '';
         if(stripos($modelName,' as ') !== false){
             $modelName = explode(' AS ',$modelName);
@@ -408,7 +408,17 @@ class Model {
         $joinType .= " {$joinTable}{$tableAlias} ";
 
         if($on !== null){
-            $joinType .= "ON {$on} ";
+            if(is_array($on)){
+                foreach($on as $k=>$v){
+                    $joinType .= "ON {$k}={$v} ";
+                }//foreach
+            }//if
+            else if($data){
+                $joinType .= 'ON '.\DB::set($on,$data).' ';
+            }//el
+            else {
+                $joinType .= "ON {$on} ";
+            }//el
         }//if
         else {
 
@@ -445,8 +455,8 @@ class Model {
      *
      * @return self 
     */
-    public final function ljoin($modelName,$on=null){
-        $this->join($modelName,$on,'LEFT JOIN');
+    public final function ljoin($modelName,$on=null,$data=null){
+        $this->join($modelName,$on,$data,'LEFT JOIN');
         return $this;
     }//ljoin
 
@@ -461,8 +471,8 @@ class Model {
      *
      * @return self 
     */
-    public final function rjoin($modelName,$on=null){
-        $this->join($modelName,$on,'RIGHT JOIN');
+    public final function rjoin($modelName,$on=null,$data=null){
+        $this->join($modelName,$on,$data,'RIGHT JOIN');
         return $this;
     }//ljoin
 
