@@ -83,6 +83,8 @@ will resolve those classes out of the container and pass their refrences to the 
     <li><a href='http://discophp.com/docs/Database'>DB</a></li>
     <li><a href='http://discophp.com/docs/Email'>Email</a></li>
     <li><a href='http://discophp.com/docs/Event'>Event</a></li>
+    <li><a href='http://discophp.com/docs/Form'>Form</a></li>
+    <li><a href='http://discophp.com/docs/Html'>Html</a></li>
     <li><a href='http://discophp.com/docs/Model'>Model</a></li>
     <li><a href='http://discophp.com/docs/Queue'>Queue</a></li>
     <li><a href='http://discophp.com/docs/Session'>Session</a></li>
