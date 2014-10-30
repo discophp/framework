@@ -272,9 +272,25 @@ Class Template {
      *
      * @return string
     */
-    public function live($markup,$data=Array()){
+    public function buildLive($markup,$data=Array()){
         $this->live = $markup;
         return $this->build('',$data);
+    }//live
+
+
+
+    /**
+     * Treat dynamic markup as a template to be processed and push it onto the Views html stack.
+     *
+     *
+     * @param string    $markup The string to treat as a template.
+     * @param array     $data   The data to pass to the $markup.
+     *
+     * @return string
+    */
+    public function live($markup,$data=Array()){
+        $this->live = $markup;
+        \View::html($this->build('',$data));
     }//live
 
 
@@ -289,7 +305,7 @@ Class Template {
      *
      * @return string The built template.
     */
-    public function build_from($name,$model,$key){
+    public function buildFrom($name,$model,$key){
         $d = \Model::m($model)->select('*')->where($key)->data();
         $o = '';
         while($r = $d->fetch_assoc()){
@@ -412,7 +428,7 @@ Class Template {
 
             if(substr($endV,0,1) == '$'){
                 $endV = ltrim($endV,'$');
-                $endV = $data[$endV];
+                $endV = (isset($data[$endV])) ? $data[$endV] : '';
             }//if
             else {
                 $endV = substr($endV,1,strlen($endV)-2);
