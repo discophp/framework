@@ -258,6 +258,34 @@ class Data {
 
 
     /**
+     * REMOVE a selected type of REST variable.
+     *
+     *
+     * @param null|string $k The key to remove.
+     *
+     * @return void 
+    */
+    public function remove($k){
+        switch($this->workingDataType){
+            case 'PUT':
+                unset($this->putData[$k]);
+                break;
+            case 'DELETE':
+                unset($this->deleteData[$k]);
+                break;
+            case 'POST':
+                unset($_POST[$k]);
+                break;
+            case 'GET':
+                unset($_GET[$k]);
+                break;
+        }//switch
+    }//set
+
+
+
+
+    /**
      * Return all of the selected type of REST data. 
      *
      *
