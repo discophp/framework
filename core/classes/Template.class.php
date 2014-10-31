@@ -54,6 +54,12 @@ Class Template {
     private $live;
 
 
+    public function __construct(View $View,Cache $Cache){
+        $this->View = $View;
+        $this->Cache = $Cache;
+    }//__construct
+
+
 
     /**
      * Load a template from disk/Cache.
@@ -68,16 +74,16 @@ Class Template {
         $path = $this->templatePath($name);
 
         if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
-            if(\Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
+            if($this->Cache->getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
 
-                $lastModifiedCache = \Cache::get($path.'-last-modified');
+                $lastModifiedCache = $this->Cache->get($path.'-last-modified');
                 if($lastModifiedCache){
                     $lastModified = filemtime($path);
                     if($lastModifiedCache!=$lastModified){
                         $this->cacheTemplate($path,$name);
                     }//if
                     else {
-                        $this->templates[$name]=\Cache::get($path);
+                        $this->templates[$name]=$this->Cache->get($path);
                     }//el
                 }//if
                 else {
@@ -157,8 +163,8 @@ Class Template {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        \Cache::set($path.'-last-modified',filemtime($path));
-        \Cache::set($path,$this->templates[$name]);
+        $this->Cache->set($path.'-last-modified',filemtime($path));
+        $this->Cache->set($path,$this->templates[$name]);
 
     }//cacheTemplate
 
@@ -189,7 +195,7 @@ Class Template {
      * @return void
     */
     public function with($name,$data=Array()){
-        \View::html($this->build($name,$data));
+        $this->View->html($this->build($name,$data));
     }//with
 
 
@@ -232,7 +238,7 @@ Class Template {
                         $nest .= $this->build($info['templateName'],$nv);
                     }//foreach
                 }
-                else {
+                else if($v) {
                     $nest .= $this->build($info['templateName'],$v);
                 }//el
 
@@ -290,7 +296,7 @@ Class Template {
     */
     public function live($markup,$data=Array()){
         $this->live = $markup;
-        \View::html($this->build('',$data));
+        $this->View->html($this->build('',$data));
     }//live
 
 
@@ -324,7 +330,7 @@ Class Template {
      * @return void
     */
     public function from($name,$model,$key){
-        \View::html($this->build_from($name,$model,$key));
+        $this->View->html($this->build_from($name,$model,$key));
     }//from
 
 

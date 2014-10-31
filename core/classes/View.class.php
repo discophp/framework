@@ -57,12 +57,12 @@ class View {
     /**
      * @var string Page title
     */
-    public $title;
+    public $title='';
 
     /**
      * @var string Page description
     */
-    public $description;
+    public $description='';
 
     /**
      * @var string Path to favicon
@@ -177,9 +177,6 @@ class View {
             $this->path=$_SERVER['URL'];
         }//if
 
-        $this->title = "";
-        $this->description = "";
-
     }//construct
 
 
@@ -216,7 +213,7 @@ class View {
      * @return void
     */
     public function json(){
-        View::isAjax();
+        $this->isAjax();
         header('Content-type: application/json');
     }//json
 

@@ -36,6 +36,11 @@ Class Html {
     public $stack = false;
 
 
+    public function __construct(View $View){
+        $this->View = $View;
+    }//__construct
+
+
     /**
      * The magic method __call() allows us to treat any method that is called as the intented
      * html element to be created.
@@ -60,7 +65,7 @@ Class Html {
             if(!isset($args[1]) && in_array($method,$this->noClose)){
                 $out = sprintf($this->noCloseBase,$method.' '.$props);
                 if($this->stack){
-                    \View::html($out);
+                    $this->View->html($out);
                     $this->stack = false;
                 }//if
                 else {
@@ -79,7 +84,7 @@ Class Html {
         $out = sprintf($this->base,$method,$html);
 
         if($this->stack){
-            \View::html($out);
+            $this->View->html($out);
             $this->stack = false;
         }//if
         else {
