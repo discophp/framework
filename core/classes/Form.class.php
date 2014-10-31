@@ -68,6 +68,18 @@ Class Form {
     */
     public $submitButton;
 
+    /**
+     *@var boolean Is the form using a CSRF token?
+    */
+    public $useCSRFToken = false;
+
+
+    public function __construct(Html $Html,Session $Session,Crypt $Crypt,Data $Data){
+        $this->Html = $Html;
+        $this->Session = $Session;
+        $this->Crypt = $Crypt;
+        $this->Data = $data;
+    }//__construct
 
 
     /**
@@ -89,7 +101,53 @@ Class Form {
         $this->props = Array();
         $this->defaultProps = Array();
         $this->submitButton = null;
+        $this->useCSRFToken = false;
     }//clean
+
+
+
+    /**
+     * Return a CSRF token.
+     *
+     *
+     * @return string
+    */
+    public function token(){
+        if($this->Session->has('disco-csrf-token')){
+            return $this->Session->get('disco-csrf-token');
+        }//if
+
+        $this->Session->set('disco-csrf-token',\Disco\manage\Manager::genRand(32));
+        return $this->Session->get('disco-csrf-token');
+    }//token
+
+
+
+    /**
+     * Specify that the form should include/check for a CSRF token.
+     *
+     *
+     * @return self 
+    */
+    public function withToken(){
+        $this->useCSRFToken = true;
+        return $this;
+    }//withToken
+
+
+
+    /**
+     * Does the passed CSRF token match the CSRF Session token? Check done using a 
+     * timing safe comparision.
+     *
+     *
+     * @param string $token The token to check.
+     *
+     * @return boolean
+    */
+    public function validToken($token){
+        return $this->Crypt->timingSafeCompare($this->token(),$token);
+    }//validToken
 
 
 
@@ -323,6 +381,10 @@ Class Form {
 
         $form = '';
 
+        if($this->useCSRFToken){
+            $form .= $this->Html->input(Array('type'=>'hidden','name'=>'disco-csrf-token','value'=>$this->token()));
+        }//if
+
         foreach($fields as $k=>$v){
 
             if(!empty($this->with) && !in_array($k,$this->with)){
@@ -366,11 +428,11 @@ Class Form {
 
                 if(in_array($k,$primaryKeys)){
                     $opts['type'] = 'hidden';
-                    $form .= \Html::input($opts);
+                    $form .= $this->Html->input($opts);
                     continue;
                 }//if
 
-                $i = \Html::input($opts);
+                $i = $this->Html->input($opts);
 
             }//el
 
@@ -378,7 +440,7 @@ Class Form {
                 $form .= sprintf($this->wrap,$k,$i);
             }//if
             else {
-                $form .= \Html::label($k.$i);
+                $form .= $this->Html->label($k.$i);
             }//el
 
         }//foreach
@@ -387,17 +449,17 @@ Class Form {
             $form .= $this->submitButton;
         }//if
         else {
-            $form .= \Html::input(Array('type'=>'submit','value'=>'send'));
+            $form .= $this->Html->input(Array('type'=>'submit','value'=>'send'));
         }//el
 
         if(is_array($this->formProps)){
             $p = $this->formProps;
             $this->reset();
-            return \Html::form($p,$form);
+            return $this->Html->form($p,$form);
         }//if
 
         $this->reset();
-        return \Html::form($form);
+        return $this->Html->form($form);
     }//build
 
 
@@ -415,16 +477,23 @@ Class Form {
     public function post($postKey=null){
 
         if($postKey){
-            $data = \Data::post($postKey);
+            $data = $this->Data->post($postKey);
         }//if
         else {
-            $data = \Data::post()->all();
+            $data = $this->Data->post()->all();
         }//el
 
         $real = Array();
         $primaryKeys = Array();
 
         $columns = \Model::m($this->from)->columns();
+
+
+        if($this->useCSRFToken){
+            if(!isset($data['disco-csrf-token']) || !$this->validToken($data['disco-csrf-token'])){
+                return false;
+            }//if
+        }//if
 
         foreach($columns as $k=>$column){
             if(isset($data[$column['Field']])){
@@ -486,7 +555,7 @@ Class Form {
                 if($row['option_value'] == $selectedValue){
                     $opts['selected'] = 'selected';
                 }//if
-                $options .= \Html::option($opts,$row['option_text']); 
+                $options .= $this->Html->option($opts,$row['option_text']); 
             }//while
             
         }//if
@@ -497,7 +566,7 @@ Class Form {
                 if($value  == $selectedValue){
                     $opts['selected'] = 'selected';
                 }//if
-                $options .= \Html::option($opts,$text); 
+                $options .= $this->Html->option($opts,$text); 
             }//foreach
 
         }//el
@@ -505,7 +574,7 @@ Class Form {
             throw new \InvalidArguementException;
         }//el
 
-        return \Html::select(Array('name'=>$name),$options);
+        return $this->Html->select(Array('name'=>$name),$options);
 
         
     }//selectMenu
@@ -539,8 +608,8 @@ Class Form {
                     $opts['checked'] = 'checked';
                 }//if
 
-                $button = \Html::input($opts);
-                $buttons .= \Html::label($row['button_text'].$button);
+                $button = $this->Html->input($opts);
+                $buttons .= $this->Html->label($row['button_text'].$button);
 
             }//while
 
@@ -553,8 +622,8 @@ Class Form {
                     $opts['checked'] = 'checked';
                 }//if
 
-                $button = \Html::input($opts);
-                $buttons .= \Html::label($k.$button);
+                $button = $this->Html->input($opts);
+                $buttons .= $this->Html->label($k.$button);
 
             }//foreach
 
