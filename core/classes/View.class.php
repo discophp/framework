@@ -213,7 +213,7 @@ class View {
      * @return void
     */
     public function json(){
-        $this->isAjax();
+        \View::isAjax();
         header('Content-type: application/json');
     }//json
 

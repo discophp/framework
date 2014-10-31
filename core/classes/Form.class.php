@@ -74,13 +74,6 @@ Class Form {
     public $useCSRFToken = false;
 
 
-    public function __construct(Html $Html,Session $Session,Crypt $Crypt,Data $Data){
-        $this->Html = $Html;
-        $this->Session = $Session;
-        $this->Crypt = $Crypt;
-        $this->Data = $data;
-    }//__construct
-
 
     /**
      * Reset all local object properties to there default values;
@@ -113,12 +106,12 @@ Class Form {
      * @return string
     */
     public function token(){
-        if($this->Session->has('disco-csrf-token')){
-            return $this->Session->get('disco-csrf-token');
+        if(\Session::has('disco-csrf-token')){
+            return \Session::get('disco-csrf-token');
         }//if
 
-        $this->Session->set('disco-csrf-token',\Disco\manage\Manager::genRand(32));
-        return $this->Session->get('disco-csrf-token');
+        \Session::set('disco-csrf-token',\Disco\manage\Manager::genRand(32));
+        return \Session::get('disco-csrf-token');
     }//token
 
 
@@ -146,7 +139,7 @@ Class Form {
      * @return boolean
     */
     public function validToken($token){
-        return $this->Crypt->timingSafeCompare($this->token(),$token);
+        return \Crypt::timingSafeCompare($this->token(),$token);
     }//validToken
 
 
@@ -382,7 +375,7 @@ Class Form {
         $form = '';
 
         if($this->useCSRFToken){
-            $form .= $this->Html->input(Array('type'=>'hidden','name'=>'disco-csrf-token','value'=>$this->token()));
+            $form .= \Html::input(Array('type'=>'hidden','name'=>'disco-csrf-token','value'=>$this->token()));
         }//if
 
         foreach($fields as $k=>$v){
@@ -428,11 +421,11 @@ Class Form {
 
                 if(in_array($k,$primaryKeys)){
                     $opts['type'] = 'hidden';
-                    $form .= $this->Html->input($opts);
+                    $form .= \Html::input($opts);
                     continue;
                 }//if
 
-                $i = $this->Html->input($opts);
+                $i = \Html::input($opts);
 
             }//el
 
@@ -440,7 +433,7 @@ Class Form {
                 $form .= sprintf($this->wrap,$k,$i);
             }//if
             else {
-                $form .= $this->Html->label($k.$i);
+                $form .= \Html::label($k.$i);
             }//el
 
         }//foreach
@@ -449,17 +442,17 @@ Class Form {
             $form .= $this->submitButton;
         }//if
         else {
-            $form .= $this->Html->input(Array('type'=>'submit','value'=>'send'));
+            $form .= \Html::input(Array('type'=>'submit','value'=>'send'));
         }//el
 
         if(is_array($this->formProps)){
             $p = $this->formProps;
             $this->reset();
-            return $this->Html->form($p,$form);
+            return \Html::form($p,$form);
         }//if
 
         $this->reset();
-        return $this->Html->form($form);
+        return \Html::form($form);
     }//build
 
 
@@ -477,10 +470,10 @@ Class Form {
     public function post($postKey=null){
 
         if($postKey){
-            $data = $this->Data->post($postKey);
+            $data = \Data::post($postKey);
         }//if
         else {
-            $data = $this->Data->post()->all();
+            $data = \Data::post()->all();
         }//el
 
         $real = Array();
@@ -555,7 +548,7 @@ Class Form {
                 if($row['option_value'] == $selectedValue){
                     $opts['selected'] = 'selected';
                 }//if
-                $options .= $this->Html->option($opts,$row['option_text']); 
+                $options .= \Html::option($opts,$row['option_text']); 
             }//while
             
         }//if
@@ -566,7 +559,7 @@ Class Form {
                 if($value  == $selectedValue){
                     $opts['selected'] = 'selected';
                 }//if
-                $options .= $this->Html->option($opts,$text); 
+                $options .= \Html::option($opts,$text); 
             }//foreach
 
         }//el
@@ -574,7 +567,7 @@ Class Form {
             throw new \InvalidArguementException;
         }//el
 
-        return $this->Html->select(Array('name'=>$name),$options);
+        return \Html::select(Array('name'=>$name),$options);
 
         
     }//selectMenu
@@ -608,8 +601,8 @@ Class Form {
                     $opts['checked'] = 'checked';
                 }//if
 
-                $button = $this->Html->input($opts);
-                $buttons .= $this->Html->label($row['button_text'].$button);
+                $button = \Html::input($opts);
+                $buttons .= \Html::label($row['button_text'].$button);
 
             }//while
 
@@ -622,8 +615,8 @@ Class Form {
                     $opts['checked'] = 'checked';
                 }//if
 
-                $button = $this->Html->input($opts);
-                $buttons .= $this->Html->label($k.$button);
+                $button = \Html::input($opts);
+                $buttons .= \Html::label($k.$button);
 
             }//foreach
 

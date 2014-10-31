@@ -54,12 +54,6 @@ Class Template {
     private $live;
 
 
-    public function __construct(View $View,Cache $Cache){
-        $this->View = $View;
-        $this->Cache = $Cache;
-    }//__construct
-
-
 
     /**
      * Load a template from disk/Cache.
@@ -74,16 +68,16 @@ Class Template {
         $path = $this->templatePath($name);
 
         if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
-            if($this->Cache->getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
+            if(\Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
 
-                $lastModifiedCache = $this->Cache->get($path.'-last-modified');
+                $lastModifiedCache = \Cache::get($path.'-last-modified');
                 if($lastModifiedCache){
                     $lastModified = filemtime($path);
                     if($lastModifiedCache!=$lastModified){
                         $this->cacheTemplate($path,$name);
                     }//if
                     else {
-                        $this->templates[$name]=$this->Cache->get($path);
+                        $this->templates[$name]=\Cache::get($path);
                     }//el
                 }//if
                 else {
@@ -163,8 +157,8 @@ Class Template {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        $this->Cache->set($path.'-last-modified',filemtime($path));
-        $this->Cache->set($path,$this->templates[$name]);
+        \Cache::set($path.'-last-modified',filemtime($path));
+        \Cache::set($path,$this->templates[$name]);
 
     }//cacheTemplate
 
@@ -195,7 +189,7 @@ Class Template {
      * @return void
     */
     public function with($name,$data=Array()){
-        $this->View->html($this->build($name,$data));
+        \View::html($this->build($name,$data));
     }//with
 
 
@@ -296,7 +290,7 @@ Class Template {
     */
     public function live($markup,$data=Array()){
         $this->live = $markup;
-        $this->View->html($this->build('',$data));
+        \View::html($this->build('',$data));
     }//live
 
 
@@ -330,7 +324,7 @@ Class Template {
      * @return void
     */
     public function from($name,$model,$key){
-        $this->View->html($this->build_from($name,$model,$key));
+        \View::html($this->build_from($name,$model,$key));
     }//from
 
 
