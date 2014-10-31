@@ -303,6 +303,8 @@ class Manager {
             $dirs = scandir($dir);
             unset($dirs[0]);unset($dirs[1]);
             foreach($dirs as $d){
+                if(!is_dir($dir.'/'.$d))
+                    continue;
                 $packageDirs = scandir($dir.'/'.$d);
                 unset($packageDirs[0]);unset($packageDirs[1]);
                 foreach($packageDirs as $pDir){
