@@ -98,7 +98,6 @@ Class Disco extends \Pimple\Container {
             self::$cli = true;
             global $argv;
             if(isset($argv[1]) && $argv[1]=='routes'){
-                //$this['Router']->base = '\Disco\manage\Router';
                 Router::$base = '\Disco\manage\Router';
             }//if
         }//if
@@ -319,7 +318,7 @@ Class Disco extends \Pimple\Container {
      * @return void 
     */
     public static final function addCondition($k,$v){
-        Disco::$defaultMatchCondition[$k]=$v;
+        self::$defaultMatchCondition[$k]=$v;
     }//addCondition
 
 
