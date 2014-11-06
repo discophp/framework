@@ -60,9 +60,13 @@ class Router extends Disco\classes\Facade {
     * @return void
     */
     public static function useRouter($router){
+
+        if(self::$routeMatch){
+            return;
+        }//if
+
         $routerPath = \Disco::$path."/app/router/$router.router.php";
         if(file_exists($routerPath)){
-            self::$routeMatch=false;
             require($routerPath);
             return;
         }//if
