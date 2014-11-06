@@ -196,7 +196,7 @@ class DB extends \mysqli {
      * @return string|int|float The $arg prepared.
     */
     private function prepareType($arg){
-        if($arg===null || $arg==null || $arg=='null')
+        if(($arg===null || $arg=='null') && $arg !== 0)
             return 'NULL';
         $arg = $this->clean($arg);
         if(!is_numeric($arg)){
