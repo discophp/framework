@@ -227,13 +227,16 @@ Class Template {
                     continue;
 
                 $nest = '';
-                if(is_array($v[0])){
+                if(isset($v[0]) && is_array($v[0])){
                     foreach($v as $nk=>$nv){
                         $nest .= $this->build($info['templateName'],$nv);
                     }//foreach
                 }
                 else if($v) {
                     $nest .= $this->build($info['templateName'],$v);
+                }//el
+                else if($info['justTemplate']){
+                    $nest .= $this->build($info['templateName']);
                 }//el
 
                 $t = str_replace($info['textBlock'],$nest,$t);
@@ -249,6 +252,7 @@ Class Template {
             $info = $this->parseInfo('',$t);
             if(!$info)
                 continue;
+
 
             $nest = $this->build($info['templateName']);
             $t = str_replace($info['textBlock'],$nest,$t);
