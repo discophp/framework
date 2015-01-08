@@ -73,6 +73,11 @@ class Model {
     */
     private $lastResultSet;
 
+    private $app;
+
+    public function __construct(){
+        $this->app = \App::instance();
+    }//__construct
 
 
     /**
@@ -102,12 +107,7 @@ class Model {
     /**
      * Prepare a SELECT condition. 
      * Accepts its arguements through func_get_args(). 
-     * This function takes as many string arguements as you pass to it.
      *
-     *
-     * @param string $attr0 An attribute to select from the table in the working query.
-     * @param string $attr1 ...
-     * @param string $attr2 ...
      *
      * @return self 
      */
@@ -141,11 +141,7 @@ class Model {
     /**
      * Prepare an UPDATE statement.
      * Uses func_get_args() to accept parameters. 
-     * Accepts any even number of strings.
      *
-     *
-     * @param string $attr0 The attribute to update in the working query.
-     * @param string $attr1 ....
      *
      * @return self 
     */
@@ -182,11 +178,7 @@ class Model {
     /**
      * Execute an INSERT statement.
      * Accepts its arguements through func_get_args(). 
-     * Can be an associative array or strings.
      *
-     *
-     * @param string|array $param0 A attribute or an Assoc Array.
-     * @param string $param1 A attribute.
      *
      * @return boolean Was the insert successful? 
     */
@@ -213,23 +205,14 @@ class Model {
                 $i++;
             }//while
         }//elif
-        else {
-            foreach($data as $k=>$v){
-                if($k%2==1){
-                    $values.='?,';
-                    $tempValues[]=$v;
-                }//if
-                else 
-                    $insert.=$v.',';
-            }//foreach
-        }//el
+
         $insert = rtrim($insert,',');
         $values = rtrim($values,',');
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
-        $this->lastQuery = \DB::set($query,$tempValues);
-        \DB::query($this->lastQuery);
-        return \DB::lastId();
+        $this->lastQuery = $this->app['DB']->set($query,$tempValues);
+        $this->app['DB']->query($this->lastQuery);
+        return $this->app['DB']->lastId();
 
     }//insert
 
@@ -238,32 +221,15 @@ class Model {
     /**
      * Execute a DELETE statement. 
      * Accepts its arguements thruogh func_get_args(). 
-     * Takes strings.
      *
-     *
-     * @param string $param0 An attribute.
-     * @param string $param1 An attribute.
      *
      * @return boolean Whether or not the delete was successful.
     */
     public final function delete(){
         $this->clearData();
-        $data = func_get_args();
-        if(is_array($data[0])){
-            $this->where = '';
-            foreach($data[0] as $k=>$v){
-                $this->where .= \DB::set("$k=?",$v).' AND ';
-            }//foreach
-            $this->where = rtrim($this->where,'AND ');
-        }//if
-        else if(!isset($data[2])){
-           $this->where = \DB::set($data[0],$data[1]); 
-        }//if
-        else {
-            $this->where = $this->prepareCondition(func_get_args(),'AND');
-        }//el
+        $this->where = $this->prepareCondition(func_get_args(),'AND');
         $this->lastQuery = "DELETE FROM {$this->table} WHERE {$this->where}";
-        return \DB::query($this->lastQuery);
+        return $this->app['DB']->query($this->lastQuery);
     }//delete
 
 
@@ -271,49 +237,12 @@ class Model {
     /**
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
-     * Takes strings and numbers in pairs of 3 like 
-     *     ->where('field','>',20)
-     *     ->where('field1','=','somevalue')
-     *
-     *
-     * @param string|float|int $param0 The attribute.
-     * @param string|float|int $param1 The condition.
-     * @param string|float|int $param2 The value.
-     * @param string|float|int $param3 ....
-     * @param string|float|int $param4 .... 
-     * @param string|float|int $param5 ....
      *
      * @return self
     */
     public final function where(){
-        $data = func_get_args();
-        if(is_array($data[0])){
-            $this->where = '';
-            foreach($data[0] as $k=>$v){
-                $this->where .= \DB::set($k.'=?',$v).' AND ';
-            }//foreach
-            $this->where = rtrim($this->where,'AND ');
-        }//if
-        else if(!isset($data[2])){
-            $data[0] = explode(',',$data[0]);
-            foreach($data[0] as $k=>$v){
-                $data[0][$k] = $v;
-            }//foreach
-            $data[0] = implode(',',$data[0]);
-            $this->where.= \DB::set($data[0],(isset($data[1])) ? $data[1] : null);
-        }//if
-        else {
-            $data = explode(',',$data);
-            foreach($data as $k=>$v){
-                $data[$k] = $v;
-            }//foreach
-            $this->where.= $this->prepareCondition($data,'AND');
-        }//el
-
-        $this->where = str_replace('=NULL',' IS NULL',$this->where);
-
+        $this->where = $this->prepareCondition(func_get_args(),'AND');
         return $this;
-
     }//where
 
 
@@ -358,22 +287,12 @@ class Model {
     /**
     * Prepare an OR statement for the WHERE condition of the working query.
     * Accepts its arguements through func_get_args().
-    * Takes strings and numbers in pairs of 3 like 
-    *     ->otherwise('field','>',20)
-    *     ->otherwise('field1','=','somevalue')
     *
-    *
-    * @param string|float|int $param0 The attribute.
-    * @param string|float|int $param1 The condition.
-    * @param string|float|int $param2 The value.
-    * @param string|float|int $param3 ....
-    * @param string|float|int $param4 .... 
-    * @param string|float|int $param5 ....
     *
     * @return self 
     */
     public final function otherwise(){
-        $this->where.= $this->prepareCondition(func_get_args(),'OR');
+        $this->where.= ' OR '.$this->prepareCondition(func_get_args(),'OR');
         return $this;
     }//or 
 
@@ -402,7 +321,7 @@ class Model {
             $alias = $modelName;
         }//el
 
-        $joinTable = \Model::m($modelName)->table;
+        $joinTable = $this->app->with($modelName)->table;
         $table = $this->tableAlias();
 
         $joinType .= " {$joinTable}{$tableAlias} ";
@@ -414,7 +333,7 @@ class Model {
                 }//foreach
             }//if
             else if($data){
-                $joinType .= 'ON '.\DB::set($on,$data).' ';
+                $joinType .= 'ON '.$this->app['DB']->set($on,$data).' ';
             }//el
             else {
                 $joinType .= "ON {$on} ";
@@ -423,7 +342,7 @@ class Model {
         else {
 
             $baseIds = (is_array($this->ids)) ? $this->ids : Array($this->ids);
-            $ids = \Model::m($modelName)->ids;
+            $ids = $this->app->with($modelName)->ids;
             $ids = (is_array($ids)) ? $ids : Array($ids);
 
             $ids = array_intersect($baseIds,$ids);
@@ -546,7 +465,7 @@ class Model {
 
         $update = '';
         foreach($this->update as $k=>$v){
-            $update .= \DB::set("$k=?,",$v);
+            $update .= $this->app['DB']->set("$k=?,",$v);
         }//foreach
         $update = rtrim($update,',');
 
@@ -555,7 +474,7 @@ class Model {
             $where='WHERE '.$where;
 
         $this->lastQuery ="UPDATE {$this->table} SET {$update} {$where}"; 
-        return \DB::query($this->lastQuery);
+        return $this->app['DB']->query($this->lastQuery);
 
     }//do
 
@@ -630,9 +549,9 @@ class Model {
         }//if
         $this->lastQuery = "SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}";
 
-        \Disco::$app['DB']->query($this->lastQuery); 
+        $this->app['DB']->query($this->lastQuery); 
 
-        return \Disco::$app['DB']->last();
+        return $this->app['DB']->last();
 
     }//fetchData
 
@@ -662,30 +581,25 @@ class Model {
      * @return mixed $where Either return the condition or false if there was no condition to prepare.
     */
     private final function prepareCondition($data,$conjunction){
-        if(count($data)>0){
-            $where='';
-            $values=Array();
 
-            for($i=0;$i<count($data);$i+=3){
+        $return = '';
 
-                if($i>0)
-                    $where.=" {$conjunction} ";
+        if(is_array($data[0])){
+            foreach($data[0] as $k=>$v){
+                $return .= $this->app['DB']->set($k.'=?',$v).' '.$conjunction;
+            }//foreach
+            $return = rtrim($return,$conjunction.' ');
+        }//if
+        else if(!isset($data[2])){
+            $data[0] = explode(',',$data[0]);
+            foreach($data[0] as $k=>$v){
+                $data[0][$k] = $v;
+            }//foreach
+            $data[0] = implode(',',$data[0]);
+            $return .= $this->app['DB']->set($data[0],(isset($data[1])) ? $data[1] : null);
+        }//if
 
-                $where.=$this->tableAlias().'.'.$data[$i].$data[$i+1].'?';
-                $values[]=$data[$i+2];
-
-            }//for
-
-            $where = \DB::set(rtrim($where,','),$values);
-
-            if($this->where!='')
-                $where = " {$conjunction} {$where} ";
-
-            return $where;
-
-        }//count
-
-        return false;
+        return str_replace('=NULL',' IS NULL',$return);
 
     }//prepareCondition
 
@@ -698,7 +612,7 @@ class Model {
      * @return Array
     */
     public final function about(){
-        return \DB::query('
+        return $this->app['DB']->query('
             SELECT *                                                                                                                                                                                                       
             FROM information_schema.tables                                                                  
             WHERE table_type="BASE TABLE" AND table_schema="swell" AND table_name="'.$this->table.'"
@@ -714,7 +628,7 @@ class Model {
      * @return Array
     */
     public final function columns(){
-        $result = \DB::query('SHOW COLUMNS FROM '.$this->table);
+        $result = $this->app['DB']->query('SHOW COLUMNS FROM '.$this->table);
         $columns = Array();
         while($row = $result->fetch_assoc()){
             $columns[] = $row;

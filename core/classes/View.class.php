@@ -22,37 +22,37 @@ class View {
     /**
      * @var array Hold html bits
     */
-    private $html = Array();
+    public $html = Array();
 
     /**
      * @var array Hold script(js) bits
     */
-    private $scripts = Array();
+    public $scripts = Array();
 
     /**
      * @var array Hold script(js) URLs 
     */
-    private $scriptSrcs = Array();
+    public $scriptSrcs = Array();
 
     /**
      * @var array Hold head script(js) URLs 
     */
-    private $headScriptSrcs = Array();
+    public $headScriptSrcs = Array();
 
     /**
      * @var array Hold style(css) bits
     */
-    private $styles = Array();
+    public $styles = Array();
 
     /**
      * @var array Hold style(css) URLs 
     */
-    private $styleSrcs = Array();
+    public $styleSrcs = Array();
 
     /**
      * @var array Hold classes to apply to the body element
     */
-    private $bodyStyles = Array();
+    public $bodyStyles = Array();
 
     /**
      * @var string Page title
@@ -102,7 +102,7 @@ class View {
     /**
      * @var boolean Is the request AJAX?
     */
-    private $isAjax=false;
+    public $isAjax=false;
 
     /**
      * @var array How should it be scraped
@@ -172,9 +172,11 @@ class View {
     */
     public function __construct(){
 
+        $this->app = \App::instance();
+
         //is a url set from .config.php || .config.dev.php
-        if(isset($_SERVER['URL'])){
-            $this->path=$_SERVER['URL'];
+        if(isset($this->app->config['URL'])){
+            $this->path=$this->app->config['URL'];
         }//if
 
     }//construct
@@ -213,7 +215,7 @@ class View {
      * @return void
     */
     public function json(){
-        \View::isAjax();
+        $this->isAjax();
         header('Content-type: application/json');
     }//json
 
@@ -332,19 +334,19 @@ class View {
         $metaHeader =  
 "<!doctype html>
     <html lang='%1\$s'>
-    <head>
-        <meta charset='%2\$s' />
-        <meta content='%3\$s' name='robots'>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-        <title>%4\$s</title>
-        <meta name='description' content='%5\$s'>
-        <link type='image/x-icon' href='%6\$s' rel='shortcut icon'>
-        %7\$s
-        %8\$s
-        %9\$s
-        %10\$s
+        <head>
+            <meta charset='%2\$s' />
+            <meta content='%3\$s' name='robots'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+            <title>%4\$s</title>
+            <meta name='description' content=\"%5\$s\">
+            <link type='image/x-icon' href='%6\$s' rel='shortcut icon'>
+            %7\$s
+            %8\$s
+            %9\$s
+            %10\$s
         </head>
-    <body class='%11\$s'>";
+        <body class='%11\$s'>";
 
         return sprintf($metaHeader,
             $this->lang,
@@ -395,10 +397,10 @@ class View {
         }//el
 
         echo "
-            {$this->printScriptSrcs($this->scriptSrcs)}
-            {$this->printScripts()}
-            </body>
-         </html>";
+        {$this->printScriptSrcs($this->scriptSrcs)}
+        {$this->printScripts()}
+    </body>
+</html>";
 
     }//printPage
 
@@ -487,7 +489,7 @@ class View {
     */
     public function url($p,$h=null){
         if(!empty($_SERVER['HTTPS']) && $h==null && substr($p,0,1)=='/'){
-            $p = 'https://'.$_SERVER['URL'].$p;                                                                             
+            $p = 'https://'.$this->app->config['URL'].$p;                                                                             
         }//if                                                                                                               
         else if($h!=null && substr($h,0,3)!='http'){                                                                        
             $p = 'http://'.$h.$p;                                                                                           
@@ -611,7 +613,7 @@ class View {
      * @return string Returns a <script></script> with the printed $this->scripts .
     */
     private function printScripts(){
-        return '<script type="text/javascript">'.implode('',$this->scripts).'</script>';
+        return "<script type='text/javascript'>".implode('',$this->scripts).'</script>';
     }//printScripts
 
 
@@ -679,7 +681,7 @@ class View {
      *
      * @return string Returns a string of the CSS classes like "body row column"
     */
-    private function bodyStyles(){
+    public function bodyStyles(){
         return implode(' ',$this->bodyStyles);
     }//addBodyStyles
 
@@ -691,7 +693,7 @@ class View {
      *
      * @return void
     */
-    private function HTMLDump(){
+    public function HTMLDump(){
         return implode('',$this->html);
     }//HTMLDump
 
@@ -740,6 +742,39 @@ class View {
     public function noIndexFollow(){
         $this->activeIndex=3;
     }//noIndexFollow
+
+
+
+
+    /*
+     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
+     * or loading the \Closure function from the file /app/$code.php and executing it or by 
+     * a default message set by the function.
+     *
+     *
+     * @param int $code The http repsonse code sent to the client from the server.
+     *
+     * @return void 
+    */
+    public final function serve($code=200){
+
+        if($code!=200){
+            http_response_code($code);
+            $file = $this->app->path."/app/{$code}.php";
+            if(is_file($file)){
+                $action = require($file);
+                call_user_func($action,$this->app);
+                exit;
+            }//if
+        }//if
+
+        //Print out the Current View.
+        if(!$this->app->cli){
+            View::printPage();
+        }//if
+
+    }//handle404
+
 
 
 

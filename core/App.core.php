@@ -27,18 +27,18 @@
 /**
  * Our applications primary Container and Controller. 
 */
-Class Disco extends \Pimple\Container {
+Class App extends \Pimple\Container {
 
 
     /**
      * @var string Absolute Path of project.
     */
-    public static $path;
+    public $path;
 
     /**
      * @var string Is CLI request 
      */
-    public static $cli = false;
+    public $cli = false;
 
     /**
      * @var object Static reference to instance of Disco.
@@ -48,18 +48,20 @@ Class Disco extends \Pimple\Container {
     /**
      * @var null|array The autoload paths of addons
     */
-    public static $addonAutoloads=null;
+    public $addonAutoloads=null;
 
     /**
      * @var array Default regex matching conditions.
     */
-    public static $defaultMatchCondition = Array(
+    public $defaultMatchCondition = Array(
         'alpha'=>'^[a-zA-Z\s\-]+$',
         'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
         'integer'=>'^[\-0-9]+$',
         'numeric'=>'^[\-0-9\.]+$',
         'all'=>'[.]*'
     );
+
+    public $config = Array();
 
 
 
@@ -77,37 +79,42 @@ Class Disco extends \Pimple\Container {
         parent::__construct($values);
 
         /**
-         * Allow static access to to app instance.
-        */
-        self::$app = $this;
-
-        /**
          * Prep the App.
         */
-        self::prep();
+        $this->prep();
+        $this['App'] = $this; 
+        self::$app = $this['App'];
 
         /**
          * Register the default Facades with Disco.
         */
-        $this->facades();
+        $this->services();
+
 
         /**
          * Are we running in CLI mode?
         */
         if(php_sapi_name() == 'cli'){
-            self::$cli = true;
+            $this->cli = true;
             global $argv;
             if(isset($argv[1]) && $argv[1]=='routes'){
-                Router::$base = '\Disco\manage\Router';
+                \Disco\classes\Router::$base = '\Disco\manage\Router';
             }//if
         }//if
 
         /**
          * Handle maintenance mode.
         */
-        self::handleMaintenance();
+        $this->handleMaintenance();
+
+        \Disco\classes\Router::$app = $this['App'];
 
     }//__construct
+
+
+    public static function instance(){
+        return self::$app;
+    }//instance
 
 
     /**
@@ -122,38 +129,28 @@ Class Disco extends \Pimple\Container {
      * 
      * @return void
     */
-    public static final function prep(){
+    public final function prep(){
 
-        /**
-         * disable apache from append session ids to requests
-        */
+        //disable apache from append session ids to requests
         ini_set('session.use_trans_sid',0);
-
-        /**
-         * only allow sessions to be used with cookies
-        */
+        //only allow sessions to be used with cookies
         ini_set('session.use_only_cookies',1);
+
+        //base directory of application
+        //$this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+        $this->path = dirname(dirname(dirname(dirname(__DIR__))));
         
-        /**
-         * base directory of application
-        */
-        self::$path = dirname($_SERVER['DOCUMENT_ROOT']);
-        
-        /**
-         * load the appropriate application production configuration 
-         * and override with any dev config.
-        */
-        if(is_file(self::$path.'/.config.php')){
-            $_SERVER = array_merge($_SERVER,require(self::$path.'/.config.php'));
-            if($_SERVER['APP_MODE']!='PROD' && is_file(self::$path.'/.dev.config.php')){
-                $_SERVER = array_merge($_SERVER,require(self::$path.'/.dev.config.php'));
+        //load the appropriate application production configuration 
+        //and override with any dev config.
+        if(is_file($this->path.'/.config.php')){
+            $this->config = require($this->path.'/.config.php');
+            if($this->config['APP_MODE']!='PROD' && is_file($this->path.'/.dev.config.php')){
+                $this->config = array_merge($this->config,require($this->path.'/.dev.config.php'));
             }//if
         }//if
         
-        /**
-         * if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
-        */
-        $_SERVER['COMPOSER_PATH']=(isset($_SERVER['COMPOSER_PATH']))?$_SERVER['COMPOSER_PATH']:'vendor';
+        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
+        $this->config['COMPOSER_PATH']=(isset($this->config['COMPOSER_PATH']))?:'vendor';
 
     }//prep
 
@@ -182,8 +179,8 @@ Class Disco extends \Pimple\Container {
         }//foreach
         $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
         error_log($msg,0);
-        $this->serve(500,function(){exit;});
-        exit;
+        //$this['View']->serve(500);
+        //exit;
 
     }//error
 
@@ -194,16 +191,18 @@ Class Disco extends \Pimple\Container {
      *
      * @return void
     */
-    public static final function tearDownApp(){
+    public final function tearDownApp(){
+
+        \Disco\classes\Router::processRoutes();
 
         /**
          * did this requested URI not find a match? If so thats a 404.
         */
-        if(!Router::$routeMatch){
-            self::serve(404);
+        if(!\Disco\classes\Router::$routeMatch){
+            $this['View']->serve(404);
         }//if
         else {
-            self::serve(200);
+            $this['View']->serve();
         }//el
 
     }//tearDownApp
@@ -218,15 +217,15 @@ Class Disco extends \Pimple\Container {
      *
      * @return void 
     */
-    public static final function handleMaintenance(){
-        if(strtolower($_SERVER['MAINTENANCE_MODE'])!='yes'){
+    public final function handleMaintenance(){
+        if(strtolower($this->config['MAINTENANCE_MODE'])!='yes'){
             return;
         }//if
         global $argv;
         if(!empty($argv[2])){
             return;
         }//if
-        $file = Disco::$path.'/app/maintenance.php';
+        $file = $this->path.'/app/maintenance.php';
         if(is_file($file)){
             $action = require($file);
         }//if
@@ -236,48 +235,12 @@ Class Disco extends \Pimple\Container {
 
         call_user_func($action);
 
-        View::printPage();
+        $this['View']->printPage();
         exit;
 
     }//handleMaintenance
 
 
-
-    /*
-     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
-     * or loading the \Closure function from the file /app/$code.php and executing it or by 
-     * a default message set by the function.
-     *
-     *
-     * @param int $code The http repsonse code sent to the client from the server.
-     * @param \Closure $action An optional \Closure function to execute.
-     *
-     * @return void 
-    */
-    public static final function serve($code,$action=null){
-        http_response_code($code);
-        $file = Disco::$path."/app/{$code}.php";
-        if($action === null && is_file($file)){
-            $action = require($file);
-        }//if
-        else if($action === null && $code != 200){
-            $action = function() use($code) { View::html("<h1>{$code}</h1>");};
-        }//el
-
-        if($action){
-            call_user_func($action);
-        }//if
-
-        /**
-         * Print out the Current View.
-        */
-
-        if(!self::$cli){
-            View::printPage();
-            exit;
-        }//if
-
-    }//handle404
 
 
     /**
@@ -287,22 +250,22 @@ Class Disco extends \Pimple\Container {
      *
      * @return array
     */
-    public static function addonAutoloads(){
+    public function addonAutoloads(){
 
-        if(self::$addonAutoloads==null){
-            $p = self::$path.'/'.$_SERVER['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
+        if($this->addonAutoloads==null){
+            $p = $this->path.'/'.$this->config['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
             if(is_file($p)){
-                self::$addonAutoloads = unserialize(file_get_contents($p));
-                if(!is_array(self::$addonAutoloads)){
-                    self::$addonAutoloads = Array();
+                $this->addonAutoloads = unserialize(file_get_contents($p));
+                if(!is_array($this->addonAutoloads)){
+                    $this->addonAutoloads = Array();
                 }//if
             }//if
             else {
-                self::$addonAutoloads = Array();
+                $this->addonAutoloads = Array();
             }//el
         }//el
 
-        return self::$addonAutoloads;
+        return $this->addonAutoloads;
 
     }//addonAutoloads
 
@@ -317,8 +280,8 @@ Class Disco extends \Pimple\Container {
      * @param string $v The conditions regex value.
      * @return void 
     */
-    public static final function addCondition($k,$v){
-        self::$defaultMatchCondition[$k]=$v;
+    public final function addCondition($k,$v){
+        $this->defaultMatchCondition[$k]=$v;
     }//addCondition
 
 
@@ -328,7 +291,7 @@ Class Disco extends \Pimple\Container {
      *
      * @return void
     */
-    public function facades(){
+    public function services(){
 
         $facades = Array(
             'Cache'     => 'Disco\classes\Cache',
@@ -348,11 +311,11 @@ Class Disco extends \Pimple\Container {
         );
 
         foreach($facades as $facade=>$v){
-            Disco::make($facade,$v);
+            $this->make($facade,$v);
         }//foreach
 
-        Disco::as_factory('Router',function(){
-            return new Router::$base;
+        $this->as_factory('Router',function(){
+            return new \Disco\classes\Router::$base;
         });
 
     }//registerDefaults
@@ -367,11 +330,11 @@ Class Disco extends \Pimple\Container {
      *
      * @return Object 
     */
-    public static function with($obj){
-        if(!isset(self::$app[$obj])){
-            self::make($obj,$obj);
+    public function with($obj){
+        if(!isset($this[$obj])){
+            $this->make($obj,$obj);
         }//if
-        return self::$app[$obj];
+        return $this[$obj];
     }//with
 
 
@@ -385,13 +348,13 @@ Class Disco extends \Pimple\Container {
      *
      * @return void 
     */
-    public static function make($obj,$val){
+    public function make($obj,$val){
         if(!$val instanceof Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
         }//if
-        self::$app[$obj] = $val;
+        $this[$obj] = $val;
     }//set
 
 
@@ -405,13 +368,13 @@ Class Disco extends \Pimple\Container {
      *
      * @return void
     */
-    public static function as_factory($obj,$val){
+    public function as_factory($obj,$val){
         if(!$val instanceof Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
         }//if
-        self::$app[$obj] = self::$app->factory($val);
+        $this[$obj] = $this->factory($val);
     }//factory
 
 
@@ -423,13 +386,13 @@ Class Disco extends \Pimple\Container {
      * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
      *
     */
-    public static function as_protected($obj,$val){
+    public function as_protected($obj,$val){
          if(!$val instanceof Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
         }//if
-        self::$app[$obj] = self::$app->protect($val);
+        $this[$obj] = $this->protect($val);
     }//protect
 
 
@@ -447,9 +410,9 @@ Class Disco extends \Pimple\Container {
     */
     public function handle($key,$method,$args){
 
-        $instance = Disco::with($key);
+        $instance = $this->with($key);
 
-        $args = array_values($args);
+        $args = (!is_array($args)) ? Array() : array_values($args);
         switch (count($args)) {
             case 0:
                 return $instance->$method();
@@ -483,54 +446,53 @@ Class Disco extends \Pimple\Container {
 
         $Ref = new ReflectionClass($v);
         $con = $Ref->getConstructor();
-        if(!is_null($con)){
 
-            $inject = Array();
-
-            $ss = (string)$con;
-            $ss = explode("\n",$ss);
-            foreach($ss as $s){
-                $s = trim($s);
-                if(strpos($s,'Parameter #')!==false){
-                    $s = trim(explode('[',$s)[1]);
-                    $s = explode(' ',$s)[1];
-                    if(substr($s,0,1) != '$'){
-                        $inject[] = Disco::with($s);
-                    }//if
-                }//if
-            }//foreach
-
-            switch (count($inject)) {
-                case 0:
-                    return new $v;
-                    break;
-                case 1:
-                    return new $v($inject[0]);
-                    break;
-                case 2:
-                    return new $v($inject[0],$inject[1]);
-                    break;
-                case 3:
-                    return new $v($inject[0],$inject[1],$inject[2]);
-                    break;
-                case 4:
-                    return new $v($inject[0],$inject[1],$inject[2],$inject[3]);
-                    break;
-                case 5:
-                    return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4]);
-                    break;
-                case 6:
-                    return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4],$inject[5]);
-                    break;
-                default:
-                    return call_user_func_array(Array(new $v,'__construct'),$inject);
-                    break;
-            }//switch
-
+        if(is_null($con)){
+            return new $v;
         }//if
 
-        return new $v;
-       
+        $inject = Array();
+
+        $ss = (string)$con;
+        $ss = explode("\n",$ss);
+        foreach($ss as $s){
+            $s = trim($s);
+            if(strpos($s,'Parameter #')!==false){
+                $s = trim(explode('[',$s)[1]);
+                $s = explode(' ',$s)[1];
+                if(substr($s,0,1) != '$'){
+                    $inject[] = $this->with($s);
+                }//if
+            }//if
+        }//foreach
+
+        switch (count($inject)) {
+            case 0:
+                return new $v;
+                break;
+            case 1:
+                return new $v($inject[0]);
+                break;
+            case 2:
+                return new $v($inject[0],$inject[1]);
+                break;
+            case 3:
+                return new $v($inject[0],$inject[1],$inject[2]);
+                break;
+            case 4:
+                return new $v($inject[0],$inject[1],$inject[2],$inject[3]);
+                break;
+            case 5:
+                return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4]);
+                break;
+            case 6:
+                return new $v($inject[0],$inject[1],$inject[2],$inject[3],$inject[4],$inject[5]);
+                break;
+            default:
+                return call_user_func_array(Array(new $v,'__construct'),$inject);
+                break;
+        }//switch
+
     }//resolve
 
 }//Disco

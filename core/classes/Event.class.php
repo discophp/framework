@@ -61,20 +61,19 @@ class Event {
 
             $keys = array_keys($this->events[$event]['actions']);
 
-            if(count($keys)>1)
-                rsort($keys);
+            sort($keys);
 
             foreach($keys as $k){
                 $action = $this->events[$event]['actions'][$k];
                 if($action instanceof \Jeremeamia\SuperClosure\SerializableClosure){
                     if($data==null){
-                        return call_user_func($action);
+                        call_user_func($action);
                     }//if
                     else { 
                         if(!is_array($data)){
                             $data = Array($data);
                         }//if
-                        return call_user_func_array($action,$data);
+                        call_user_func_array($action,$data);
                     }//el
                 }//if
                 else {
@@ -88,13 +87,13 @@ class Event {
                     if(!is_array($data)){
                         $data = Array($data);
                     }//if
-                    return call_user_func_array(Array($instance,$method),$data);
+                    call_user_func_array(Array($instance,$method),$data);
                 }//el
             }//foreach
 
         }//if
         else {
-            $app = \Disco::$app;
+            $app = \App::$app;
             $app->error("Event::Error event \"{$event}\" not found",Array('fire'),debug_backtrace(TRUE,6));
         }//el
 

@@ -29,26 +29,26 @@ class Router extends Disco\classes\Facade {
      *
      * @return boolean
      */
-    public static function routeMatch($m=null){
+    //public static function routeMatch($m=null){
 
-        if($m !== null){
+    //    if($m !== null){
 
-            if($m == true){
-                \Disco::make('Router','\Disco\classes\MockBox');
-            }//if
-            else if(self::$routeMatch==true && $m==false){
-                \Disco::as_factory('Router',function(){
-                    return new self::$base;
-                });
-            }//el
+    //        if($m == true){
+    //            \Disco::make('Router','\Disco\classes\MockBox');
+    //        }//if
+    //        else if(self::$routeMatch==true && $m==false){
+    //            \Disco::as_factory('Router',function(){
+    //                return new self::$base;
+    //            });
+    //        }//el
 
-            self::$routeMatch=$m;
+    //        self::$routeMatch=$m;
 
-        }//if
+    //    }//if
 
-        return self::$routeMatch;
+    //    return self::$routeMatch;
 
-    }//routerMatch
+    //}//routerMatch
 
 
 

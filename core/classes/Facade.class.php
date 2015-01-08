@@ -50,7 +50,7 @@ abstract class Facade {
      */
     public static function __callStatic($method,$args){
 
-        $app = \Disco::$app;
+        $app = \App::$app;
         return $app->handle(static::returnFacadeId(),$method,$args);
 
     }//callStatic
@@ -65,7 +65,8 @@ abstract class Facade {
      */
     public static function instance(){
 
-        return \Disco::$app[static::returnFacadeId()];
+        $app = \App::$app;
+        return $app[static::returnFacadeId()];
 
     }//callStatic
 

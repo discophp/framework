@@ -39,6 +39,16 @@ class Session {
     }//has
 
 
+    public function in($k){
+        if(is_array($k) && count(array_intersect($_SESSION,$k))>0) return true;
+        if(in_array($k,$_SESSION)) return true;
+        return false;
+    }//in
+
+    public function total(){
+        return count($_SESSION);
+    }//total
+
 
     /**
      * Set a SESSION variable.

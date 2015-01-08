@@ -31,6 +31,8 @@ class Email {
     public $plainTextOnly=false;
     
 
+    private $app;
+
 
     /**
      * Load our Email setting from .mail.config.php . 
@@ -38,9 +40,10 @@ class Email {
      *
      * @return void
      */
-    public function __construct(){
-        if(is_file(\Disco::$path.'/.mail.config.php')){
-            $this->settings=require(\Disco::$path.'/.mail.config.php');
+    public function __construct(\App $app){
+        $this->app = $app;
+        if(is_file($this->app->path.'/.mail.config.php')){
+            $this->settings=require($this->app->path.'/.mail.config.php');
         }//if
     }//construct
 
@@ -126,15 +129,14 @@ class Email {
     public function send($key,$toEmail,$subject,$body,$attach=null){
 
         if(!isset($this->settings[$key])){
-            $app = \Disco::$app;
-            $app->error("Email::Error account $key does not exist",Array('send'),debug_backtrace(TRUE,6));
+            $this->app->error("Email::Error account $key does not exist",Array('send'),debug_backtrace(TRUE,6));
         }//if
 
         if($this->delay!=null){
             $d = $this->delay;
             $this->delay = null;
             $body = htmlentities($body);
-            \Queue::push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attach));
+            $this->app['Queue']->push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attach));
             return true;
         }//if
 
@@ -151,7 +153,7 @@ class Email {
             $message->setFrom($this->settings[$key]['EMAIL']);
         }//el
 
-        if($_SERVER['APP_MODE']=='DEV'){
+        if($this->app->config['APP_MODE']=='DEV'){
             $toEmail = $this->settings['DEV_MODE_SEND_TO'];
         }//if
 

@@ -16,7 +16,7 @@ Class Html {
     /**
      * @var string The base string we build markup from.
     */
-    public $base = "<%1\$s>%2\$s</%1\$s>";
+    public $base = "<%1\$s>%2\$s</%3\$s>";
 
     /**
      * @var string The base string we build markup from for elements that are singletons or non closing.
@@ -36,6 +36,12 @@ Class Html {
     public $stack = false;
 
 
+    private $app;
+
+    public function __construct(){
+        $this->app = \App::instance();
+    }//__construct
+
 
     /**
      * The magic method __call() allows us to treat any method that is called as the intented
@@ -51,6 +57,7 @@ Class Html {
      * @return string
     */
     public function __call($method,$args){
+        $ele = $method;
         $props = '';
         if(is_array($args[0])){
             foreach($args[0] as $k=>$v){
@@ -61,7 +68,7 @@ Class Html {
             if(!isset($args[1]) && in_array($method,$this->noClose)){
                 $out = sprintf($this->noCloseBase,$method.' '.$props);
                 if($this->stack){
-                    \View::html($out);
+                    $this->app['View']->html($out);
                     $this->stack = false;
                 }//if
                 else {
@@ -77,10 +84,10 @@ Class Html {
             $html = $args[0];
         }//el
 
-        $out = sprintf($this->base,$method,$html);
+        $out = sprintf($this->base,$method,$html,$ele);
 
         if($this->stack){
-            \View::html($out);
+            $this->app['View']->html($out);
             $this->stack = false;
         }//if
         else {

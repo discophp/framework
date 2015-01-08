@@ -11,6 +11,12 @@ namespace Disco\classes;
 */
 class ModelFactory {
 
+    private $app;
+
+    public function __construct(\App $app){
+        $this->app = $app;
+    }//__construct
+
     /**
      * Access a model.
      *
@@ -20,7 +26,7 @@ class ModelFactory {
      * @return object Return $this->models[$name] the instance of the Model
     */
     public final function m($name){
-        return \Disco::with($name);
+        return $app->with($name);
     }//use
 
 }//ModelFactory

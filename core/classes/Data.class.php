@@ -28,11 +28,14 @@ class Data {
     private $workingDataType;
 
     /**
-     * @var boolean Should returned value be sql escaped 
-     */
-    private $escapeValue=false;
+     * @var string Where are we parsing input data from
+    */
+    private $stream;
 
-
+    /**
+     * @var \App Reference to Application Instance
+    */
+    private $app;
 
     /**
      * Construct PUT and DELETE data if the REQUEST_METHOD is PUT | DELETE. 
@@ -40,12 +43,16 @@ class Data {
      *
      * @return void
     */
-    public function __construct(){
+    public function __construct($stream='php://input'){
+        $this->app = \App::instance();
+        $this->stream = $stream;
         switch($_SERVER['REQUEST_METHOD']) {
             case 'PUT':
                 $this->setData('PUT');
+                break;
             case 'DELETE':
                 $this->setData('DELETE');
+                break;
         }//switch 
     }//construct
 
@@ -60,37 +67,19 @@ class Data {
      * @return void
     */
     private function setData($type){
-        $string='';
-        $putStream = fopen('php://input','r');
-        while($data = fread($putStream,1024))
-            $string.=$data;
-        fclose($putStream);
 
-        if($string!=''){
-            $vars=explode('&',$string);
-            foreach($vars as $kvString){
-                $values = explode('=',$kvString,2);
-                if($type=='PUT')
-                    $this->putData[$values[0]]=$values[1];
-                else
-                    $this->deleteData[$values[0]]=$values[1];
-            }//foreach
+        $string = file_get_contents($this->stream);
+
+        if($string){
+            parse_str($string,$vars);
+            if($type=='PUT')
+                $this->putData = $vars;
+            else
+                $this->deleteData = $vars;
         }//if
 
     }//setPutData
 
-
-
-    /**
-     * Request that the value to be returned be SQL escaped.
-     *
-     *
-     * @return self 
-    */
-    public function escape(){
-        $this->escapeValue=true;
-        return $this;
-    }//escape
 
 
     /**
@@ -107,15 +96,10 @@ class Data {
 
         if(isset($dataType[$k])){
             $matchCondition = $v;
-            if(isset(\Disco::$defaultMatchCondition[$v]))
-                $matchCondition = \Disco::$defaultMatchCondition[$v];
+            if(isset($this->app->defaultMatchCondition[$v]))
+                $matchCondition = $this->app->defaultMatchCondition[$v];
             if(!preg_match("/{$matchCondition}/",$dataType[$k]))
                 return false;
-
-            if($this->escapeValue){
-                $this->escapeValue=false;
-                return \DB::clean($dataType[$k]);
-            }//if
 
             return $dataType[$k];
         }//if
@@ -140,10 +124,6 @@ class Data {
             return $this;
         }//if
         else if(isset($_GET[$g])){
-            if($this->escapeValue){
-                $this->escapeValue=false;
-                return \DB::clean($_GET[$g]);
-            }//if
             return $_GET[$g];
         }//if
         else 
@@ -166,10 +146,6 @@ class Data {
             return $this;
         }//if
         else if(isset($_POST[$p])){
-            if($this->escapeValue){
-                $this->escapeValue=false;
-                return \DB::clean($_POST[$p]);
-            }//if
             return $_POST[$p];
         }//if
         else 
@@ -192,10 +168,6 @@ class Data {
             return $this;
         }//if
         else if(isset($this->deleteData[$d])){
-            if($this->escapeValue){
-                $this->escapeValue=false;
-                return \DB::clean($this->deleteData[$d]);
-            }//if
             return $this->deleteData[$d];
         }//if
         else 
@@ -218,10 +190,6 @@ class Data {
             return $this;
         }//if
         else if(isset($this->putData[$p])){
-            if($this->escapeValue){
-                $this->escapeValue=false;
-                return \DB::clean($this->putData[$p]);
-            }//if
             return $this->putData[$p];
         }//if
         else 
@@ -246,12 +214,16 @@ class Data {
         switch($this->workingDataType){
             case 'PUT':
                 $this->putData[$k]=$v;
+                break;
             case 'DELETE':
                 $this->deleteData[$k]=$v;
+                break;
             case 'POST':
                 $_POST[$k]=$v;
+                break;
             case 'GET':
                 $_GET[$k]=$v;
+                break;
         }//switch
     }//set
 

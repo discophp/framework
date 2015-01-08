@@ -33,6 +33,7 @@ class DB extends \mysqli {
      */
     public $last;
 
+    private $app;
 
 
     /**
@@ -49,16 +50,20 @@ class DB extends \mysqli {
      */
     public function __construct($host=null,$user=null,$pw=null,$db=null) {
 
+        $this->app = \App::$app;
+
         if($host==null){
-            $host=$_SERVER['DB_HOST'];$user=$_SERVER['DB_USER'];$pw=$_SERVER['DB_PASSWORD'];$db=$_SERVER['DB_DB'];
+            $host=$this->app->config['DB_HOST'];
+            $user=$this->app->config['DB_USER'];
+            $pw=$this->app->config['DB_PASSWORD'];
+            $db=$this->app->config['DB_DB'];
         }//if
 
         $this->link = parent::__construct($host, $user, $pw, $db);
 
         if($this->connect_error){
-            $app = \Disco::$app;
             TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
-            \Disco::$app->serve(500,function(){exit;});
+            $this->app['View']->serve(500);
         }//if
         else
             $this->connected = true;
@@ -127,16 +132,13 @@ class DB extends \mysqli {
         }//if
 
         if(!$result = parent::query($q)){
-
-            $app = \Disco::$app;
-            $app->error("DB::Error - {$this->error} - query - $q",Array('query'),debug_backtrace(TRUE,4));
-
+            $this->app->error("DB::Error - {$this->error} - query - $q",Array('query'),debug_backtrace(TRUE,4));
             return false;
         }//if
-        else{
-            $this->last = $result;
-            return $this->last;
-        }//el
+
+        $this->last = $result;
+        return $this->last;
+
     }//query
 
 
@@ -234,10 +236,7 @@ class DB extends \mysqli {
         }//if
 
         if(!$this->multi_query($q)){
-
-            $app = \Disco::$app;
-            $app->error("DB::Error - {$this->error} - stored procedure - $q",Array('sp'),debug_backtrace(TRUE,4));
-
+            $this->app->error("DB::Error - {$this->error} - stored procedure - $q",Array('sp'),debug_backtrace(TRUE,4));
             return null;
         }//if
         do {

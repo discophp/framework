@@ -12,6 +12,7 @@ namespace Disco\classes;
 */
 class Queue {
 
+
     /**
      *  Push a job onto the Queue for processing. 
      *
@@ -31,18 +32,20 @@ class Queue {
             $vars = base64_encode(serialize($vars));
         }//el
 
-        $t = Array();
-        $facades = \Disco::$app->keys();
-        foreach($facades as $k){
-            $v = \Disco::$app[$k];
-            if($v instanceof \Closure){
-                //$v = call_user_func($v);
-                $v = new \Jeremeamia\SuperClosure\SerializableClosure($v);
-            }//if
-            $t[$k]=$v;
-        }//foreach
+        //$t = Array();
+        //$app = \App::$app;
+        //$facades = $app->keys();
+        //foreach($facades as $k){
+        //    //if($k=='App') continue;
+        //    $v = $app[$k];
+        //    if($v instanceof \Closure){
+        //        $v = new \Jeremeamia\SuperClosure\SerializableClosure($v);
+        //    }//if
+        //    $t[$k]=$v;
+        //}//foreach
 
-        $d = base64_encode(serialize($t));
+        //$d = base64_encode(serialize($t));
+        $d = '';
 
         if($job instanceof \Closure){
             $obj = new \Jeremeamia\SuperClosure\SerializableClosure($job);
@@ -60,7 +63,7 @@ class Queue {
 
         $obj = base64_encode(serialize($obj));
 
-        $s = 'php ../disco resolve '.$delay.' '.$obj.' '.$method.' '.$vars.' '.$d.' > /dev/null 2>/dev/null &';
+        $s = 'php '.\App::$app->path.'/disco resolve '.$delay.' '.$obj.' '.$method.' '.$vars.' '.$d.' > /dev/null 2>/dev/null &';
 
         exec($s);
 

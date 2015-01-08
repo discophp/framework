@@ -12,6 +12,20 @@ namespace Disco\classes;
 */
 class Router {
 
+    const ROUTES = '/app/routes';
+
+    public static $app;
+
+    /**
+     * @var boolean Has a Disco\classesself matched a request?
+    */
+    public static $routeMatch=false;
+
+    /**
+     * @var string The class to resolve from the container when Router is called. 
+    */
+    public static $base = '\Disco\classes\Router';
+
     /**
      * @var string URI path to match.
     */
@@ -20,12 +34,12 @@ class Router {
     /**
      * @var \Closure|string Action to take if matched.
     */
-    private $function;
+    public $function;
 
     /**
      * @var array The routers where restrictions.
     */
-    private $variableRestrictions = Array();
+    public $variableRestrictions = Array();
 
     /**
      * @var boolean Is route HTTPS?
@@ -45,7 +59,7 @@ class Router {
     /**
      * @var null|string|array Store authentication requirements on route.
     */
-    private $auth=null;
+    public $auth=null;
 
 
 
@@ -66,116 +80,28 @@ class Router {
     */
     public function __destruct(){
 
-        //if the route should be authenticated and no action should be taken
-        if($this->auth!=null && $this->auth['action']==null){
-            //not authenticated?
-            if(!$this->authenticated()){
-                return;
-            }//if
+
+        if($this->secureRoute && empty($_SERVER['HTTPS'])){
+            return;
         }//if
 
         //no route match and this Router is a Filter and its Filter matches?
-        if(!\Router::routeMatch() && $this->isFilter && $this->filterMatch($this->param)){
-
-            //handle authenication
-            $this->authenticationHandle();
-
-            //is this Router for HTTPS and the request isn't?
-            if($this->secureRoute && empty($_SERVER['HTTPS'])){
-                return;
-            }//if
+        if(!self::routeMatch() && $this->isFilter && $this->filterMatch($this->param,$this->auth)){
 
             if($this->useRouter instanceof \Closure){
                 call_user_func($this->useRouter);
             }//if
             else {
-                \Router::useRouter($this->useRouter);
+                self::useRouter($this->useRouter);
             }//el
 
         }//if
         //have no match already and this matches?
-        else if(!\Router::routeMatch() && $this->match($this->param)){
-
-            //handle authenication
-            $this->authenticationHandle();
-
-            if(!$this->function instanceof \Closure){
-
-                //is a controller being requested?
-                if(stripos($this->function,'@')!==false){
-                    $ctrl = explode('@',$this->function);
-                    $app = \Disco::$app;
-                    $res = $app->handle($ctrl[0],$ctrl[1],$this->variables);
-                }//if
-            }//if
-            else if($this->variables){
-                $res = call_user_func_array($this->function,$this->variables);
-            }//elif
-            else {
-                $res = call_user_func($this->function);
-            }//el
-
-            if($res === false){
-                \Router::routeMatch(false);
-            }//if
-            else {
-                \Router::routeMatch(true);
-            }//el
-            return $res;
+        else if(!self::routeMatch() && ($this->variables = $this->match($this->param,$this->variableRestrictions,$this->auth))){
+            return $this->executeRoute($this->function,$this->variables);
         }//if
 
     }//destruct
-
-
-
-    /**
-     * If authenication was requested on the route and the user is not authenicated,
-     * redirect the user to the specified redirect.
-     *
-     *
-     * @return void
-    */
-    private function authenticationHandle(){
-        //if the route should be authenticated and an action should be taken
-        if($this->auth!=null){
-            //not authenticated?
-            if(!$this->authenticated()){
-                header('Location:'.$this->auth['action']);
-                exit;
-            }//if
-        }//if
-    }//authenticationHandle 
-
-
-
-    /**
-     * Return whether or not the request is authenticated by a session.
-     *
-     *
-     * @return boolean
-    */
-    private function authenticated(){
-
-        if(is_array($this->auth['session'])){
-            $has=false;
-            foreach($this->auth['session'] as $s){
-                if(\Session::has($s)){
-                    $has=true;
-                }//if
-            }//foreach
-            if(!$has){
-                return false;
-            }//if
-        }//if
-        else {
-            if(!\Session::has($this->auth['session'])){
-                return false;
-            }//if
-        }//el
-
-        return true;
-
-    }//authenticated
 
 
 
@@ -266,9 +192,6 @@ class Router {
         if($_SERVER['REQUEST_METHOD']!='GET'){
             return $this->whiteOutRoute();
         }//if
-        else if($this->secureRoute && empty($_SERVER['HTTPS'])){
-            return $this->whiteOutRoute();
-        }//elif
 
         $this->function=$function;
         $this->param=$param;
@@ -287,9 +210,6 @@ class Router {
      * @return self 
      */
     public function any($param,$function){
-        if($this->secureRoute && empty($_SERVER['HTTPS']))
-            return $this->whiteOutRoute();
-
         $this->param=$param;
         $this->function=$function;
         return $this;
@@ -307,11 +227,9 @@ class Router {
      * @return self 
      */
     public function post($param,$function){
-        if(count($_POST)==0){
+        if($_SERVER['REQUEST_METHOD']!='POST'){
             return $this->whiteOutRoute();
         }//if
-        else if($this->secureRoute && empty($_SERVER['HTTPS']))
-            return $this->whiteOutRoute();
 
         $this->param=$param;
         $this->function=$function;
@@ -333,8 +251,6 @@ class Router {
         if($_SERVER['REQUEST_METHOD']!='PUT'){
             return $this->whiteOutRoute();
         }//if
-        else if($this->secureRoute && empty($_SERVER['HTTPS']))
-            return $this->whiteOutRoute();
 
         $this->param=$param;
         $this->function=$function;
@@ -356,8 +272,6 @@ class Router {
         if($_SERVER['REQUEST_METHOD']!='DELETE'){
             return $this->whiteOutRoute();
         }//if
-        else if($this->secureRoute && empty($_SERVER['HTTPS']))
-            return $this->whiteOutRoute();
 
         $this->param=$param;
         $this->function=$function;
@@ -394,16 +308,18 @@ class Router {
      *
      * @return boolean Was this $param a match to the REQUEST_URI?
      */
-    private function match($param){
+    public static function match($param,$restrict,$auth){
+
         $url = $_SERVER['REQUEST_URI'];
 
         //direct match?
         if($param==$url){
-            $this->variables=null;
+            if(!self::authenticated($auth)) return false;
             return true;
         }//if
+
         //if theres no variables an no direct match, then no match
-        else if(count($this->variableRestrictions)<=0){
+        if(count($restrict)<=0){
             return false;
         }//elif
 
@@ -415,6 +331,9 @@ class Router {
             return false;
         }//if
 
+        if(!self::authenticated($auth)) return false;
+
+        $return = Array();
         foreach($urlPieces as $k=>$urlPiece){
             $paramPiece = $paramPieces[$k];
 
@@ -432,18 +351,20 @@ class Router {
                 //get the variable
                 $paramKey = trim($paramPiece,'{}'); 
 
+
                 //the variable isn't part of the restrictions on this route?
-                if(!isset($this->variableRestrictions[$paramKey])){
+                if(!isset($restrict[$paramKey])){
                     return false;
                 }//if
 
                 //condition to match variable with url piece
-                $condition = $this->variableRestrictions[$paramKey];
+                $condition = $restrict[$paramKey];
 
                 //is the condition using one of the default reserved words?
-                if(isset(\Disco::$defaultMatchCondition[$condition])){
-                    $condition=\Disco::$defaultMatchCondition[$condition];
+                if(isset(self::$app->defaultMatchCondition[$condition])){
+                    $condition=self::$app->defaultMatchCondition[$condition];
                 }//if
+
 
                 //does the variable not match its corresponding url piece?
                 if(!preg_match("/{$condition}/",$urlPiece)){
@@ -451,13 +372,14 @@ class Router {
                 }//if
 
                 //store the variable to pass into the Closure or Controller
-                $this->variables[$paramKey]=$urlPiece;
+                //$this->variables[$paramKey]=$urlPiece;
+                $return[$paramKey]=$urlPiece;
 
             }//el
 
         }//foreach
 
-        return true;
+        return $return;
 
     }//match
 
@@ -471,7 +393,11 @@ class Router {
      *
      * @return boolean
      */
-    private function filterMatch($param){
+    private function filterMatch($param,$auth){
+
+
+        if(!self::authenticated($auth)) return false;
+
         $url = $_SERVER['REQUEST_URI'];
 
         //where to being filtering
@@ -490,6 +416,221 @@ class Router {
         return true;
 
     }//filterMatch
+
+
+
+    /**
+     * Execute the action specified by a route, either Closure or Controller Method passing in arguements
+     * from the URI appropriatly.
+     *
+     *
+     * @param \Closure|string $function The action to be taken.
+     * @param Array $variables The variables to be passed to the action.
+     *
+     *
+     * @return bool 
+    */
+    public static function executeRoute($function,$variables=Array()){
+
+        if(!$function instanceof \Closure){
+
+            //is a controller being requested?
+            if(stripos($function,'@')!==false){
+                $ctrl = explode('@',$function);
+                $res = self::$app->handle($ctrl[0],$ctrl[1],$variables);
+            }//if
+        }//if
+        else if(is_array($variables)){
+            $res = call_user_func_array($function,$variables);
+        }//el
+        else {
+            $res = call_user_func($function);
+        }//el
+
+        if($res === false){
+            self::routeMatch(false);
+        }//if
+        else {
+            self::routeMatch(true);
+        }//el
+
+        return $res;
+
+    }//executeRoute
+
+
+
+    /**
+     * Return whether or not the request is authenticated by a session.
+     *
+     *
+     * @return boolean
+    */
+    public static function authenticated($auth){
+
+        if($auth && !self::$app['Session']->in($auth['session'])){
+            if($auth['action']) {
+                header('Location: '.$auth['action']);
+                exit;
+            }//if
+            return false;
+        }//if
+
+        return true;
+
+    }//authenticated
+
+
+
+
+
+    /**
+     * Once a router has found a match we dont perform more match attempts. 
+     * This function is both a setter and a getter.
+     *
+     *
+     * @param  boolean $m
+     *
+     * @return boolean
+     */
+    public static function routeMatch($m=null){
+
+        if($m !== null){
+
+            if($m == true){
+                self::$app->make('Router','\Disco\classes\MockBox');
+            }//if
+            else if(self::$routeMatch==true && $m==false){
+                self::$app->as_factory('Router',function(){
+                    return new self::$base;
+                });
+            }//el
+
+            self::$routeMatch=$m;
+
+        }//if
+
+        return self::$routeMatch;
+
+    }//routerMatch
+
+
+
+    /**
+    * Load a Router File for processing.
+    *
+    *
+    * @param string $router
+    * @return void
+    */
+    public static function useRouter($router){
+
+        if(self::$routeMatch){
+            return;
+        }//if
+
+        $routerPath = self::$app->path."/app/router/$router.router.php";
+        if(file_exists($routerPath)){
+            require($routerPath);
+            return;
+        }//if
+        else {
+            $routers = self::$app->addonAutoloads();
+            $routers = $routers['.router.php'];
+            foreach($routers as $r){
+                $test = substr($r,0,strlen($r)-strlen('.router.php'));
+                $tail = substr($test,strlen($test)-strlen($router),strlen($router));
+                if($router==$tail && is_file($r)){
+                    self::$routeMatch=false;
+                    require($r);
+                    return;
+                }//if
+            }//foreach
+        }//el
+
+        self::$app->error("Router $router.router.php not found",Array('unknown','useRouter'),debug_backtrace(TRUE,4));
+
+    }//useRouter
+
+
+
+
+    /**
+     * Process the the file app/routes for routes and execute the matching route.
+     *
+     *
+     * @return void
+    */
+    public static final function processRoutes(){
+
+        $r = file_get_contents(self::$app->path.self::ROUTES);
+        $routes = explode("\n",$r);
+
+        //echo '<pre>';
+
+        $final = Array();
+
+        foreach($routes as $r){
+
+            if(!$r) continue;
+
+            $r = preg_replace('/\s+/',' ',$r);
+
+            $s = substr($r,0,2)=='s:'; 
+
+            if($s && empty($_SERVER['HTTPS']))          continue;
+            else if(!$s && !empty($_SERVER['HTTPS']))   continue;
+
+            if($s) $r = substr($r,2,strlen($r));
+
+            $section = explode(' ',$r);
+
+            if($section[0]!='ANY' && $_SERVER['REQUEST_METHOD']!=$section[0]) continue;
+
+            $meta = Array();
+            $meta['type'] = $section[0];
+            $meta['path'] = $section[1];
+            $meta['controller'] = $section[2];
+            $meta['auth'] = null;
+            $meta['where'] = null;
+
+            $i = 3;
+            while(isset($section[$i])){
+                if(stripos($section[$i],'where(')!==false){
+                    $where = substr($section[$i],6,strlen($section[$i])-7);
+                    $where = explode(',',$where);
+                    array_walk($where,function($value) use(&$meta){
+                        list($k,$v) = explode('=>',$value);
+                        $meta['where'][$k] = $v;
+                    });
+                }//if
+                else if(stripos($section[$i],'auth(')!==false){
+                    $auth = substr($section[$i],5,strlen($section[$i])-6);
+                    $auth = explode(',',$auth);
+                    $meta['auth'] = Array();
+                    $meta['auth']['session'] = explode('|',$auth[0]);
+                    if(isset($auth[1])) $meta['auth']['action'] = $auth[1];
+
+                }//if
+                $i++;
+            }//while
+
+            $final[] = $meta;
+
+        }//foreach
+
+        //print_r($final);
+
+        foreach($final as $r){
+            if(!self::routeMatch() && $match = \Disco\classes\Router::match($r['path'],$r['where'],$r['auth'])){
+                self::executeRoute($r['controller'],$match);
+            }//if 
+        }//foreach
+
+        //echo '</pre>';
+
+    }//processRoutes
+
 
 }//Router
 ?>

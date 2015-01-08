@@ -54,6 +54,12 @@ Class Template {
     private $live;
 
 
+    private $app;
+
+    public function __construct(){
+        $this->app = \App::instance();
+    }//__construct
+
 
     /**
      * Load a template from disk/Cache.
@@ -67,17 +73,16 @@ Class Template {
 
         $path = $this->templatePath($name);
 
-        if(isset($_SERVER['MEMCACHE_HOST']) && isset($_SERVER['MEMCACHE_PORT'])){
-            if(\Cache::getServerStatus($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT'])!=0){
-
-                $lastModifiedCache = \Cache::get($path.'-last-modified');
+        if(class_exists('Memcache',false) && isset($this->app->config['MEMCACHE_HOST']) && isset($this->app->config['MEMCACHE_PORT'])){
+            if($this->app['Cache']->getServerStatus($this->app->config['MEMCACHE_HOST'],$this->app->config['MEMCACHE_PORT'])!=0){
+                $lastModifiedCache = $this->app['Cache']->get($path.'-last-modified');
                 if($lastModifiedCache){
                     $lastModified = filemtime($path);
                     if($lastModifiedCache!=$lastModified){
                         $this->cacheTemplate($path,$name);
                     }//if
                     else {
-                        $this->templates[$name]=\Cache::get($path);
+                        $this->templates[$name]=$this->app['Cache']->get($path);
                     }//el
                 }//if
                 else {
@@ -98,14 +103,14 @@ Class Template {
 
     private function templatePath($name){
 
-        $userPath = \Disco::$path."/app/template/{$name}.template.html";
+        $userPath = $this->app->path."/app/template/{$name}.template.html";
 
         if(is_file($userPath)){
             return $userPath;
         }//if
         else {
 
-            $templates = \Disco::addonAutoloads();
+            $templates = $this->app->addonAutoloads();
             $templates = $templates['.template.html'];
             foreach($templates as $t){
                 $test = substr($t,0,strlen($t)-strlen('.template.html'));
@@ -137,8 +142,7 @@ Class Template {
             return file_get_contents($path);
         }//if
         else {
-            $app = \Disco::$app;
-            $app->error("Template::Error loading template $path",Array('with','build','live','from'),debug_backtrace(TRUE,12));
+            $this->app->error("Template::Error loading template $path",Array('with','build','live','from'),debug_backtrace(TRUE,12));
         }//el
 
     }//getTempalteFromDisk
@@ -157,8 +161,8 @@ Class Template {
     private function cacheTemplate($path,$name){
 
         $this->templates[$name]=$this->getTemplateFromDisk($path);
-        \Cache::set($path.'-last-modified',filemtime($path));
-        \Cache::set($path,$this->templates[$name]);
+        $this->app['Cache']->set($path.'-last-modified',filemtime($path));
+        $this->app['Cache']->set($path,$this->templates[$name]);
 
     }//cacheTemplate
 
@@ -189,7 +193,7 @@ Class Template {
      * @return void
     */
     public function with($name,$data=Array()){
-        \View::html($this->build($name,$data));
+        $this->app['View']->html($this->build($name,$data));
     }//with
 
 
@@ -294,7 +298,7 @@ Class Template {
     */
     public function live($markup,$data=Array()){
         $this->live = $markup;
-        \View::html($this->build('',$data));
+        $this->app['View']->html($this->build('',$data));
     }//live
 
 
@@ -310,7 +314,7 @@ Class Template {
      * @return string The built template.
     */
     public function buildFrom($name,$model,$key){
-        $d = \Model::m($model)->select('*')->where($key)->data();
+        $d = $this->app->with($model)->select('*')->where($key)->data();
         $o = '';
         while($r = $d->fetch_assoc()){
             $o .= $this->build($name,$r);
@@ -328,7 +332,7 @@ Class Template {
      * @return void
     */
     public function from($name,$model,$key){
-        \View::html($this->build_from($name,$model,$key));
+        $this->app['View']->html($this->build_from($name,$model,$key));
     }//from
 
 

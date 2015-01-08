@@ -19,8 +19,13 @@ class Cache extends \Memcache {
      *
      * @return void
     */
-    public function __construct(){
-        $this->connect($_SERVER['MEMCACHE_HOST'],$_SERVER['MEMCACHE_PORT']);
+    public function __construct($host=null,$port=null){
+        if(!$host){
+            $app = \App::instance();
+            $host = $app->config['MEMCACHE_HOST'];
+            $port = $app->config['MEMCACHE_PORT'];
+        }//if
+        $this->connect($host,$port);
     }//construct
 
 
@@ -36,6 +41,21 @@ class Cache extends \Memcache {
     public function get($k){
         $k=md5($k);
         return parent::get($k);
+    }//get
+
+
+
+    /**
+     * Delete a cached variable.
+     *
+     *
+     * @param string $k Key used to delete data. md5() will be applied to it before used.
+     *
+     * @return mixed
+    */
+    public function delete($k){
+        $k=md5($k);
+        return parent::delete($k);
     }//get
 
 
