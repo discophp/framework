@@ -1,6 +1,6 @@
 [![Build
 Status](https://travis-ci.org/discophp/framework.svg?branch=master)](https://travis-ci.org/discophp/framework)
-test Stable
+[![test Stable
 Version](https://poser.pugx.org/discophp/framework/v/stable.svg)](https://packagist.org/packages/discophp/framework)
 [![Total
 Downloads](https://poser.pugx.org/discophp/framework/downloads.svg)](https://packagist.org/packages/discophp/framework)
