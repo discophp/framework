@@ -758,12 +758,10 @@ class View {
 
         if($code!=200){
             http_response_code($code);
-            //$file = $this->app->path."/app/{$code}.php";
             $file = \App::instance()->path."/app/{$code}.php";
             if(is_file($file)){
                 $action = require($file);
-                call_user_func($action,$this->app);
-                exit;
+                call_user_func($action,\App::instance());
             }//if
         }//if
 

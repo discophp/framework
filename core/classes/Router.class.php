@@ -395,9 +395,6 @@ class Router {
      */
     private function filterMatch($param,$auth){
 
-
-        if(!self::authenticated($auth)) return false;
-
         $url = $_SERVER['REQUEST_URI'];
 
         //where to being filtering
@@ -412,6 +409,8 @@ class Router {
         if(substr($param,0,$i) != substr($url,0,$i)){
             return false;
         }//if
+
+        if(!self::authenticated($auth)) return false;
 
         return true;
 
@@ -565,37 +564,94 @@ class Router {
 
         $r = file_get_contents(self::$app->path.self::ROUTES);
         $routes = explode("\n",$r);
+        $total = count($routes);
+        $current = 0;
 
         //echo '<pre>';
 
         $final = Array();
 
-        foreach($routes as $r){
+        //process each line
+        while($current < $total){
 
-            if(!$r) continue;
+            //get current line
+            $r = $routes[$current];
+            $current++;
 
+            //is the line blank or commented out?
+            if(!$r || substr($r,0,1)=='#') continue;
+
+            //clean up spaces
             $r = preg_replace('/\s+/',' ',$r);
 
-            $s = substr($r,0,2)=='s:'; 
+            //is this line specifying a FILTER?
+            if(substr($r,0,8)=='[FILTER '){
+                $section = explode(' ',$r);
 
+                $i=1; $filteringSecure = false;
+                $filterMeta = Array('auth'=>Array(),'path'=>'');
+
+                //check each possible filter section
+                while(isset($section[$i])){
+                    //URI filter
+                    if(substr($section[$i],0,1) == '/'){
+                        $filterMeta['path'] = $section[$i];
+                    }//if
+                    //AUTH filter
+                    else if(stripos($section[$i],'auth(')!==false){
+                        $auth = substr($section[$i],5,strlen($section[$i])-7);
+                        $auth = explode(',',$auth);
+                        $filterMeta['auth']['session'] = explode('|',$auth[0]);
+                        if(isset($auth[1])) $filterMeta['auth']['action'] = $auth[1];
+                    }//if
+                    //HTTPS filter
+                    else if($section[$i]==':s'){
+                        $filteringSecure = true;
+                    }//elif
+                    $i++;
+                }//while
+
+                $filterFail = false;
+                //Does the filter not apply to the current request?
+                if($filteringSecure && empty($_SERVER['HTTPS'])) $filterFail = true;
+                else if(!self::filterMatch($filterMeta['path'],$filterMeta['auth'])) $filterFail = true;
+
+                //skip all routes in the filter on fail
+                if($filterFail){
+                    do {
+                        $current++;
+                    } while($routes[$current] != '[/FILTER]');
+                }//if
+
+                //continue to next line
+                continue;
+
+            }//if
+
+            $r = trim($r);
+
+            //is the route HTTPS
+            $s = substr($r,0,2)=='s:'; 
             if($s && empty($_SERVER['HTTPS']))          continue;
             else if(!$s && !empty($_SERVER['HTTPS']))   continue;
 
+            //if its HTTPS and passed trim the :s
             if($s) $r = substr($r,2,strlen($r));
 
             $section = explode(' ',$r);
 
+            //request method doesn't match?
             if($section[0]!='ANY' && $_SERVER['REQUEST_METHOD']!=$section[0]) continue;
 
-            $meta = Array();
+            $meta = Array('auth'=>null,'where'=>null);
             $meta['type'] = $section[0];
             $meta['path'] = $section[1];
             $meta['controller'] = $section[2];
-            $meta['auth'] = null;
-            $meta['where'] = null;
 
             $i = 3;
+            //process the router line
             while(isset($section[$i])){
+                //WHERE condition
                 if(stripos($section[$i],'where(')!==false){
                     $where = substr($section[$i],6,strlen($section[$i])-7);
                     $where = explode(',',$where);
@@ -604,6 +660,7 @@ class Router {
                         $meta['where'][$k] = $v;
                     });
                 }//if
+                //AUTH condition
                 else if(stripos($section[$i],'auth(')!==false){
                     $auth = substr($section[$i],5,strlen($section[$i])-6);
                     $auth = explode(',',$auth);
