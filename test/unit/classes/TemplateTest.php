@@ -30,7 +30,7 @@ Class TemplateTest extends PHPUnit_Framework_TestCase {
             'struct-container'=>Array('data'=>Array('data'=>Array(Array('item'=>'test1'),Array('item'=>'test2'))),'result'=>'<li>test1</li><li>test2</li>')
         );
         $assetDir = \App::instance()->config['PATH']."test/asset/template/discophp-unit-test-%1\$s.template.html";
-        $dir = \App::instance()->config['PATH']."app/template/discophp-unit-test-%1\$s.template.html";
+        $dir = "app/template/discophp-unit-test-%1\$s.template.html";
 
         foreach($test as $f=>$d){
 

@@ -1,3 +1,6 @@
+[![Build
+Status](https://travis-ci.org/discophp/framework.svg?branch=master)](https://travis-ci.org/discophp/framework)
+
 <h1>Disco PHP Framework</h1>
 
 
