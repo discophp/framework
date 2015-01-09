@@ -5,16 +5,16 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
 
-        $db = new DBTest;
-        $this->DB = $db->DB;
-        $this->DB->setUp();
+        $this->dbRef = new DBTest;
+        $this->dbRef->setUp();
+        $this->DB = $this->dbRef->DB;
 
         $this->Person = new PersonModelTest(\App::$app);
 
     }//setUp
 
     public function tearDown(){
-        $this->DB->tearDown;
+        $this->dbRef->tearDown;
     }//tearDown
 
     public function testSelect(){
