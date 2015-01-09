@@ -70,20 +70,13 @@ class Manager {
             }//el
         }//el
 
-        $app = new \App;
-
-        //foreach($d as $k=>$v){
-        //    if($k=='Router' || $k=='App') continue;
-        //    $app[$k] = $v;
-        //}//foreach
-
-
         if($obj instanceof \Jeremeamia\SuperClosure\SerializableClosure){
             if($vars)
                 return call_user_func_array($obj,$vars);
             return call_user_func($obj,$vars);
         }//if
 
+        $app = \App::instance();
         return $app->handle($obj,$method,$vars);
 
     }//resolve
@@ -296,7 +289,9 @@ class Manager {
     */
     public static function addonAutoloads(){
 
-        $dir = \App::$app->path.'/'.\App::$app->config['COMPOSER_PATH'];
+        $app = \App::instance();
+
+        $dir = $app->path.'/'.$app->config['COMPOSER_PATH'];
 
         $dirMap = Array('template','router');
         $fileMap = Array('.template.html','.router.php');
@@ -321,7 +316,7 @@ class Manager {
 
         }//if
 
-        $put = \App::$app->path.'/'.\App::$app->config['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
+        $put = $app->path.'/'.$app->config['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
         file_put_contents($put,serialize($files));
         
     }//addonAutoloads
@@ -409,7 +404,7 @@ class Manager {
      * @return void
     */
     public static function buildModel($table){
-        $db = \App::$app->config['DB_DB'];
+        $db = \App::instance()->config['DB_DB'];
         $result = \DB::query("SHOW KEYS FROM {$db}.{$table} WHERE Key_name='PRIMARY'");
     
         $keys = Array();

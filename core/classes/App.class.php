@@ -309,7 +309,6 @@ Class App extends \Pimple\Container {
             'Queue'     => 'Disco\classes\Queue',
             'Session'   => 'Disco\classes\Session',
             'Template'  => 'Disco\classes\Template',
-            'Util'      => 'Disco\classes\Util',
             'View'      => 'Disco\classes\View'
         );
 
