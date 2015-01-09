@@ -17,7 +17,6 @@ $app->config['AES_KEY256'] = \Disco\manage\Manager::genAES256Key();
 $app->config['SHA512_SALT_LEAD'] = 'weoi2309d';
 $app->config['SHA512_SALT_TAIL'] = 'skwero2309';
 
-$app->config['MOCK_DATA_STREAM'] = 'test/asset/mock-php-input-stream.txt';
-$app->config['PATH'] = dirname(dirname(__FILE__));
+$app->config['PATH'] = dirname(dirname(__FILE__)).'/';
 
 $app['Session']->has('test');
