@@ -14,7 +14,7 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
     }//setUp
 
     public function tearDown(){
-        $this->dbRef->tearDown;
+        $this->dbRef->tearDown();
     }//tearDown
 
     public function testSelect(){
