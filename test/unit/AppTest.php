@@ -14,13 +14,11 @@ Class AppTest extends PHPUnit_Framework_TestCase {
         $form = $this->app['Form'];
         $this->assertTrue($form instanceof \Disco\classes\Form);
 
-        require_once('vendor/discophp/framework/test/asset/class/PersonModelTest.php');
 
         $pm = $this->app->with('PersonModelTest');
         $this->assertTrue($pm instanceof \PersonModelTest);
 
 
-        require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.php');
 
         $this->app->make('DiscoClassTest','PersonEmailModelTest');
         $pem = $this->app->with('DiscoClassTest');
@@ -37,8 +35,6 @@ Class AppTest extends PHPUnit_Framework_TestCase {
             return true;
         });
         $this->assertTrue($this->app['testProtect']());
-
-        require_once('vendor/discophp/framework/test/asset/class/DiscoPhpTestFactory.php');
 
         $this->app->as_factory('testFactory','DiscoPhpTestFactory');
 

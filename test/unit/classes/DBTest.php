@@ -7,17 +7,50 @@ Class DBTest extends PHPUnit_Framework_TestCase {
         $this->DB = new \Disco\classes\DB;
 
         //CREATE THE TEST SCHEMA
-        $this->DB->multi_query(file_get_contents('vendor/discophp/framework/test/asset/mock-database-schema.sql'));
+        $this->DB->multi_query('
+CREATE  TABLE `discophp_test_person` (
+      `person_id` INT NOT NULL AUTO_INCREMENT ,
+      `name` VARCHAR(120) NOT NULL ,
+      `age` INT NULL ,
+      PRIMARY KEY (`person_id`) 
+);
+
+CREATE  TABLE `discophp_test_person_email` (
+      `email_id` INT NOT NULL AUTO_INCREMENT ,
+      `person_id` INT NOT NULL ,
+      `email` VARCHAR(180) NOT NULL ,
+      PRIMARY KEY (`email_id`, `person_id`) 
+);
+');
 
         while ($this->DB->next_result()) {;} // flush multi_queries
 
         //INSERT SOME TEST DATA
-        $this->DB->multi_query(file_get_contents('vendor/discophp/framework/test/asset/mock-database-data.sql'));
+        $this->DB->multi_query("
+INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person One',30);
+INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Two',20);
+INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Three',22);
+INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Four',23);
+INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Five',24);
+INSERT INTO discophp_test_person (person_id,name) VALUES (NULL,'Person Six');
+
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,1,'test1@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,1,'test11@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,2,'test2@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,3,'test3@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,3,'test31@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,3,'test32@email.com');
+INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,'test5@email.com');
+");
 
         while ($this->DB->next_result()) {;} // flush multi_queries
 
         //CREATE A STORED PROCEDURE 
-        $this->DB->query(file_get_contents('vendor/discophp/framework/test/asset/mock-database-stored-procedure.sql'));
+        $this->DB->query('
+CREATE PROCEDURE `discophp_test_sp` ()
+BEGIN
+    SELECT name FROM discophp_test_person WHERE person_id=1;
+END');
 
     }//setUp
 

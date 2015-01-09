@@ -1,4 +1,9 @@
 <?php
+require_once('test/asset/class/PersonModelTest.php');
+require_once('test/asset/class/PersonEmailModelTest.php');
+require_once('test/asset/class/DiscoPhpTestFactory.php');
+require_once('test/asset/class/DiscoPhpUnitTestController.php');
+
 require('vendor/autoload.php');
 $app = new App;
 $app->config['DB_USER'] = 'root';

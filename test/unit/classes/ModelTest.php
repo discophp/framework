@@ -5,32 +5,16 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
 
-        $this->DB = new \Disco\classes\DB;
-
-        //CREATE THE TEST SCHEMA
-        $this->DB->multi_query(file_get_contents('vendor/discophp/framework/test/asset/mock-database-schema.sql'));
-
-        while ($this->DB->next_result()) {;} // flush multi_queries
-
-        //INSERT SOME TEST DATA
-        $this->DB->multi_query(file_get_contents('vendor/discophp/framework/test/asset/mock-database-data.sql'));
-
-        while ($this->DB->next_result()) {;} // flush multi_queries
-
-        require_once('vendor/discophp/framework/test/asset/class/PersonModelTest.php');
-        require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.php');
+        $db = new DBTest;
+        $this->DB = $db->DB;
+        $this->DB->setUp();
 
         $this->Person = new PersonModelTest(\App::$app);
-
-        $this->up = true;
 
     }//setUp
 
     public function tearDown(){
-
-        $this->DB->query('DROP TABLE discophp_test_person');
-        $this->DB->query('DROP TABLE discophp_test_person_email');
-
+        $this->DB->tearDown;
     }//tearDown
 
     public function testSelect(){

@@ -99,8 +99,6 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $_SERVER['REQUEST_URI'] = '/test';
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        require('vendor/discophp/framework/test/asset/class/DiscoPhpUnitTestController.php');
-
         ob_start();
         Router::get('/test','DiscoPhpUnitTestController@index');
         $output = ob_get_contents();

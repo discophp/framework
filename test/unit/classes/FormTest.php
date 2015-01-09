@@ -50,8 +50,6 @@ Class FormTest extends PHPUnit_Framework_TestCase {
         $dbTest = new DBTest;
         $dbTest->setUp();
 
-        require_once('vendor/discophp/framework/test/asset/class/PersonModelTest.php');
-
         $form = $this->Form->from('PersonModelTest')
             ->where(Array('person_id'=>1))
             ->make();
