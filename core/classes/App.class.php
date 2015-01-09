@@ -153,7 +153,9 @@ Class App extends \Pimple\Container {
         }//if
         
         //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
-        $this->config['COMPOSER_PATH']=(isset($this->config['COMPOSER_PATH']))?:'vendor';
+        if(!isset($this->config['COMPOSER_PATH'])){
+            $this->config['COMPOSER_PATH'] = 'vendor';
+        }//if
 
     }//prep
 
