@@ -172,8 +172,6 @@ class View {
     */
     public function __construct(){
 
-        $this->app = \App::instance();
-
         //is a url set from .config.php || .config.dev.php
         if(isset($this->app->config['URL'])){
             $this->path=$this->app->config['URL'];
@@ -760,7 +758,8 @@ class View {
 
         if($code!=200){
             http_response_code($code);
-            $file = $this->app->path."/app/{$code}.php";
+            //$file = $this->app->path."/app/{$code}.php";
+            $file = \App::instance()->path."/app/{$code}.php";
             if(is_file($file)){
                 $action = require($file);
                 call_user_func($action,$this->app);
@@ -769,7 +768,7 @@ class View {
         }//if
 
         //Print out the Current View.
-        if(!$this->app->cli){
+        if(!\App::instance()->cli){
             View::printPage();
         }//if
 

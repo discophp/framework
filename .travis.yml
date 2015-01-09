@@ -16,5 +16,4 @@ before_script:
     - mkdir app
     - mkdir app/template/
 
-#script: phpunit --no-globals-backup --bootstrap test/travis_autoload.php --colors test/unit/ 
 script: phpunit

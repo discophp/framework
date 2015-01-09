@@ -1,4 +1,5 @@
 <?php
+namespace Disco\classes;
 /**
  * Copyright 2014 Bradley Hamilton, bradleyhamilton.com 
  *
@@ -71,7 +72,7 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public function __construct($values = Array()){
+    public function setUp($values = Array()){
 
         /**
          * Construct the Pimple container and pass any user predefined services.
@@ -113,6 +114,8 @@ Class App extends \Pimple\Container {
 
 
     public static function instance(){
+        if(!self::$app)
+            self::$app = new \Disco\classes\App;
         return self::$app;
     }//instance
 
@@ -138,7 +141,7 @@ Class App extends \Pimple\Container {
 
         //base directory of application
         //$this->path = dirname($_SERVER['DOCUMENT_ROOT']);
-        $this->path = dirname(dirname(dirname(dirname(__DIR__))));
+        $this->path = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
         
         //load the appropriate application production configuration 
         //and override with any dev config.
@@ -191,7 +194,7 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public final function tearDownApp(){
+    public final function tearDown(){
 
         \Disco\classes\Router::processRoutes();
 
@@ -349,7 +352,7 @@ Class App extends \Pimple\Container {
      * @return void 
     */
     public function make($obj,$val){
-        if(!$val instanceof Closure){
+        if(!$val instanceof \Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
@@ -369,7 +372,7 @@ Class App extends \Pimple\Container {
      * @return void
     */
     public function as_factory($obj,$val){
-        if(!$val instanceof Closure){
+        if(!$val instanceof \Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
@@ -387,7 +390,7 @@ Class App extends \Pimple\Container {
      *
     */
     public function as_protected($obj,$val){
-         if(!$val instanceof Closure){
+         if(!$val instanceof \Closure){
             $val = function($app) use($val){
                 return $app->resolve_dependencies($val);
             };
@@ -444,7 +447,7 @@ Class App extends \Pimple\Container {
     */
     private function resolve_dependencies($v){
 
-        $Ref = new ReflectionClass($v);
+        $Ref = new \ReflectionClass($v);
         $con = $Ref->getConstructor();
 
         if(is_null($con)){

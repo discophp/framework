@@ -9,7 +9,7 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
         $this->dbRef->setUp();
         $this->DB = $this->dbRef->DB;
 
-        $this->Person = new PersonModelTest(\App::$app);
+        $this->Person = new PersonModelTest(\App::instance());
 
     }//setUp
 

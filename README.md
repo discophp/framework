@@ -1,5 +1,12 @@
 [![Build
 Status](https://travis-ci.org/discophp/framework.svg?branch=master)](https://travis-ci.org/discophp/framework)
+test Stable
+Version](https://poser.pugx.org/discophp/framework/v/stable.svg)](https://packagist.org/packages/discophp/framework)
+[![Total
+Downloads](https://poser.pugx.org/discophp/framework/downloads.svg)](https://packagist.org/packages/discophp/framework)
+[![Latest Unstable
+Version](https://poser.pugx.org/discophp/framework/v/unstable.svg)](https://packagist.org/packages/discophp/framework)
+[![License](https://poser.pugx.org/discophp/framework/license.svg)](https://packagist.org/packages/discophp/framework)
 
 <h1>Disco PHP Framework</h1>
 
@@ -33,26 +40,26 @@ filtering, variable extraction, handling HTTPS, and authenticated browsing.</p>
 <p>Register services in the container</p>
 
 ```php
-    Disco::make('service',function(){
+    App::make('service',function(){
         return new class;
     });
 
     //OR
 
-    Disco::make('service','namespace/class');
+    App::make('service','namespace/class');
 
 ```
 
 <p>Registering Factory services</p>
 
 ```php
-    Disco::as_factory('factory','factory');
+    App::as_factory('factory','factory');
 ```
 
 <p>Registering protected services</p>
 
 ```php
-    Disco::as_protected('rand',function(){
+    App::as_protected('rand',function(){
         return rand();
     });
 ```
@@ -61,7 +68,7 @@ filtering, variable extraction, handling HTTPS, and authenticated browsing.</p>
 <h4>Work with a service from the container, even if its not registered</h4>
 
 ```php
-    Disco::with('class')->method($arg);
+    App::with('class')->method($arg);
 ```
 
 

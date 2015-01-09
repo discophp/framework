@@ -50,7 +50,7 @@ class DB extends \mysqli {
      */
     public function __construct($host=null,$user=null,$pw=null,$db=null) {
 
-        $this->app = \App::$app;
+        $this->app = \App::instance();
 
         if($host==null){
             $host=$this->app->config['DB_HOST'];

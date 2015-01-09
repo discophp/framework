@@ -23,7 +23,7 @@ class Crypt {
     */
     public function encrypt($input){
     
-        $key256 = pack('H*',\App::$app->config["AES_KEY256"]);
+        $key256 = pack('H*',\App::instance()->config["AES_KEY256"]);
 
         $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
         $iv = mcrypt_create_iv($iv_size,MCRYPT_DEV_URANDOM);
@@ -47,7 +47,7 @@ class Crypt {
     */
     public function decrypt($crypt){
 
-        $key256 = pack('H*',\App::$app->config["AES_KEY256"]);
+        $key256 = pack('H*',\App::instance()->config["AES_KEY256"]);
 
         $cipherText = base64_decode($crypt);
 
@@ -72,7 +72,7 @@ class Crypt {
      * @return string The hashed value of $s.
      */
     public function hash($s){
-        return hash('sha512',\App::$app->config['SHA512_SALT_LEAD'].$s.\App::$app->config['SHA512_SALT_TAIL']);
+        return hash('sha512',\App::instance()->config['SHA512_SALT_LEAD'].$s.\App::instance()->config['SHA512_SALT_TAIL']);
     }//pwHash
 
 

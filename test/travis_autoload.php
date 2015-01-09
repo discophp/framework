@@ -5,7 +5,10 @@ require_once('test/asset/class/PersonEmailModelTest.php');
 require_once('test/asset/class/DiscoPhpTestFactory.php');
 require_once('test/asset/class/DiscoPhpUnitTestController.php');
 
-$app = new App;
+$app = \Disco\classes\App::instance();
+
+$app->setUp();
+
 $app->config['DB_USER'] = 'root';
 $app->config['DB_PASSWORD'] = '';
 $app->config['DB_HOST'] = 'localhost';

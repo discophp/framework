@@ -5,8 +5,7 @@ require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.ph
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpTestFactory.php');
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpUnitTestController.php');
 
-$app = new App;
-
-$app->config['PATH'] = dirname(dirname(__FILE__)).'/';
+\Disco\classes\App::instance()->setUp();
+\App::instance()->config['PATH'] = dirname(dirname(__FILE__)).'/';
 
 Session::has('test');

@@ -3,7 +3,8 @@
 Class AppTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
-        $this->app = \App::$app;
+        //$this->app = \App::$app;
+        $this->app = \App::instance();
     }//setUp
 
     public function testContainer(){
