@@ -7,7 +7,7 @@ Class DBTest extends PHPUnit_Framework_TestCase {
         $this->DB = new \Disco\classes\DB;
 
         //CREATE THE TEST SCHEMA
-        $this->DB->multi_query('
+        $this->DB->multi_query("
 CREATE  TABLE `discophp_test_person` (
       `person_id` INT NOT NULL AUTO_INCREMENT ,
       `name` VARCHAR(120) NOT NULL ,
@@ -21,12 +21,6 @@ CREATE  TABLE `discophp_test_person_email` (
       `email` VARCHAR(180) NOT NULL ,
       PRIMARY KEY (`email_id`, `person_id`) 
 );
-');
-
-        while ($this->DB->next_result()) {;} // flush multi_queries
-
-        //INSERT SOME TEST DATA
-        $this->DB->multi_query("
 INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person One',30);
 INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Two',20);
 INSERT INTO discophp_test_person (person_id,name,age) VALUES (NULL,'Person Three',22);
@@ -43,7 +37,7 @@ INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,3,
 INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,'test5@email.com');
 ");
 
-        while ($this->DB->next_result()) {;} // flush multi_queries
+        while ($this->DB->more_results() && $this->DB->next_result()) {;} // flush multi_queries
 
         //CREATE A STORED PROCEDURE 
         $this->DB->query('

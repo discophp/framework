@@ -11,4 +11,8 @@ $app->config['DB_PASSWORD'] = '';
 $app->config['DB_HOST'] = 'localhost';
 $app->config['DB_DB'] = 'test_db';
 
-Session::has('test');
+$app->config['MEMCACHE_HOST'] = 'localhost';
+$app->config['MEMCACHE_PORT'] = '11211';
+$app->config['AES_KEY256'] = \Disco\manage\Manager::genAES256Key();
+$app->config['SHA512_SALT_LEAD'] = 'weoi2309d';
+$app->config['SHA512_SALT_TAIL'] = 'skwero2309';
