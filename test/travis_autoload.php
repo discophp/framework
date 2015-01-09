@@ -19,4 +19,6 @@ $app->config['SHA512_SALT_TAIL'] = 'skwero2309';
 
 $app->config['PATH'] = dirname(dirname(__FILE__)).'/';
 
+$app->path = rtrim($app->config['PATH'],'/');
+
 $app['Session']->has('test');
