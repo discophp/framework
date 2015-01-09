@@ -9,7 +9,8 @@ install: composer install
 before_script: 
     -   mysql -e 'CREATE DATABASE test_db;' -uroot
     - sudo apt-get update -qq
-    - sudo apt-get install memcached php5-memcache
+    - sudo apt-get install memcached php5-memcache php5-memcached
+    - sudo service restart memcached
     - mkdir app
     - mkdir app/template/
 
