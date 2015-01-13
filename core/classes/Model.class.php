@@ -586,7 +586,7 @@ class Model {
 
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
-                $return .= $this->app['DB']->set($k.'=?',$v).' '.$conjunction;
+                $return .= $this->app['DB']->set($k.'=?',$v).' '.$conjunction.' ';
             }//foreach
             $return = rtrim($return,$conjunction.' ');
         }//if

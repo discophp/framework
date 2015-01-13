@@ -13,8 +13,8 @@ class ModelFactory {
 
     private $app;
 
-    public function __construct(\App $app){
-        $this->app = $app;
+    public function __construct(){
+        $this->app = \App::instance();
     }//__construct
 
     /**
@@ -26,7 +26,7 @@ class ModelFactory {
      * @return object Return $this->models[$name] the instance of the Model
     */
     public final function m($name){
-        return $app->with($name);
+        return $this->app->with($name);
     }//use
 
 }//ModelFactory

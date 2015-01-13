@@ -41,7 +41,7 @@ class Session {
 
     public function in($k){
         if(is_array($k) && count(array_intersect(array_keys($_SESSION),$k))>0) return true;
-        if(in_array($k,$_SESSION)) return true;
+        if(in_array($k,array_keys($_SESSION))) return true;
         return false;
     }//in
 
