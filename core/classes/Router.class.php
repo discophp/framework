@@ -589,7 +589,7 @@ class Router {
                 $section = explode(' ',$r);
 
                 $i=1; $filteringSecure = false;
-                $filterMeta = Array('auth'=>Array(),'path'=>'');
+                $filterMeta = Array('auth'=>Array('action'=>null),'path'=>'');
 
                 //check each possible filter section
                 while(isset($section[$i])){
@@ -603,7 +603,7 @@ class Router {
                         $auth = explode(',',$auth);
                         $filterMeta['auth']['session'] = explode('|',$auth[0]);
                         if(isset($auth[1])) $filterMeta['auth']['action'] = $auth[1];
-                    }//if
+                    }//elif
                     //HTTPS filter
                     else if($section[$i]==':s'){
                         $filteringSecure = true;
