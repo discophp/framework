@@ -162,6 +162,33 @@ Class App extends \Pimple\Container {
 
 
     /**
+     * Get/Set a config value.
+     *
+     * @param string $name Configuration setting to touch.
+     * @param mixed $value The value to set.
+     *
+     * @return mixed
+    */
+    public static function config($name,$value=null){
+        if(!$value){
+            return self::instance()->config[$name];
+        }//if
+        self::instance()->config[$name] = $value;
+    }//config
+
+
+
+    /**
+     * Return the root working system path of the discophp project.
+     *
+     * @return string 
+    */
+    public static function path(){
+        return self::instance()->path;
+    }//path
+
+
+    /**
      * Stack trace a Disco error and log it.
      *
      *
@@ -310,13 +337,28 @@ Class App extends \Pimple\Container {
             'Model'     => 'Disco\classes\ModelFactory',
             'Queue'     => 'Disco\classes\Queue',
             'Session'   => 'Disco\classes\Session',
-            'Template'  => 'Disco\classes\Template',
+//            'Template'  => 'Disco\classes\Template',
             'View'      => 'Disco\classes\View'
         );
 
         foreach($facades as $facade=>$v){
             $this->make($facade,$v);
         }//foreach
+
+        $this->make('Template',function(){
+
+            $path = $this->path.'/app/template';
+            $loader = new \Twig_Loader_Filesystem($path);
+            $twig = new \Disco\classes\Template($loader, array(
+                'cache' => $path.'/.cached',
+                'auto_reload' => ( ($this->config['APP_MODE']!='PROD') ? true : false )
+            ));
+
+            $twig->addFunction(new \Twig_SimpleFunction('url',array('\Disco\classes\View','url')));
+
+            return $twig;
+
+        });
 
         $this->as_factory('Router',function(){
             return new \Disco\classes\Router::$base;

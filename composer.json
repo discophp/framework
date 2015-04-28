@@ -13,7 +13,8 @@
         "php":">=5.4.0",
         "swiftmailer/swiftmailer":"v5.0.3",
         "jeremeamia/superclosure":"~1.0",
-        "pimple/pimple":"3.0"
+        "pimple/pimple":"3.0",
+        "twig/twig":"~1.0"
     },
     "autoload": {
         "classmap":[
