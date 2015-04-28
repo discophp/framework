@@ -390,6 +390,10 @@ class Manager {
         self::addonAutoloads();
         echo ' done.'.PHP_EOL;
 
+        echo 'Allow writing to app/template/.cached ...';
+        chmod(\App::path().'/app/template/.cached/',777);
+        echo ' done.'.PHP_EOL;
+
 
     }//install
 
