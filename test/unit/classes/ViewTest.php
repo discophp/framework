@@ -24,7 +24,7 @@ Class ViewTest extends PHPUnit_Framework_TestCase {
         $this->assertContains('Content',$c);
         $this->assertContains("<link rel='stylesheet' href='/css/css.css' type='text/css'/>",$c);
         $this->assertContains("<script type='text/javascript' src='/js/js.js'></script>",$c);
-        $this->assertContains("<script type='text/javascript'>alert(\"Hi\");</script>");
+        $this->assertContains("<script type='text/javascript'>alert(\"Hi\");</script>",$c);
 
     }//testPageOutput
 
