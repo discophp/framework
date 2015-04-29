@@ -16,5 +16,6 @@ before_script:
     - mkdir app
     - mkdir app/template/
     - cd app/template/ && wget https://raw.githubusercontent.com/discophp/project/master/app/template/_default.html && wget https://raw.githubusercontent.com/discophp/project/master/app/template/_layout.html
+    - cd ../../
 
 script: phpunit
