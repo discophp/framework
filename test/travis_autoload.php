@@ -15,7 +15,7 @@ $app->config['TEMPLATE_EXTENSION'] = '';
 
 $app->config['DB_USER'] = 'root';
 $app->config['DB_PASSWORD'] = '';
-$app->config['DB_HOST'] = 'localhost';
+$app->config['DB_HOST'] = '127.0.0.1';
 $app->config['DB_DB'] = 'test_db';
 
 $app->config['MEMCACHE_HOST'] = 'localhost';
