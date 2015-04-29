@@ -22,9 +22,9 @@ Class HtmlTest extends PHPUnit_Framework_TestCase {
 
         $v = View::instance();
 
-        $this->assertEquals($v->html[0],$a);
+        $this->assertEquals($v->getViewVariable('body'),$a);
 
-        $v->html = Array();
+        $v->setViewVariable('body','');
     }//testPush
 
 }//HtmlTest

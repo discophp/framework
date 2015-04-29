@@ -9,6 +9,10 @@ $app = \Disco\classes\App::instance();
 
 $app->setUp();
 
+$app->config['APP_MODE'] = 'DEV';
+$app->config['MAINTENANCE_MODE'] = 'NO';
+$app->config['TEMPLATE_EXTENSION'] = '';
+
 $app->config['DB_USER'] = 'root';
 $app->config['DB_PASSWORD'] = '';
 $app->config['DB_HOST'] = 'localhost';
