@@ -298,7 +298,7 @@ class View {
      * @param string $p The path of the resource.
      * @param string $h The host of the resource ( if not local).
     */
-    public function url($p,$h=null){
+    public static function url($p,$h=null){
         if(!empty($_SERVER['HTTPS']) && $h==null && substr($p,0,1)=='/'){
             $p = 'https://'.App::config('URL').$p;                                                                             
         }//if                                                                                                               

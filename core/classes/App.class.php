@@ -337,7 +337,6 @@ Class App extends \Pimple\Container {
             'Model'     => 'Disco\classes\ModelFactory',
             'Queue'     => 'Disco\classes\Queue',
             'Session'   => 'Disco\classes\Session',
-//            'Template'  => 'Disco\classes\Template',
             'View'      => 'Disco\classes\View'
         );
 
@@ -354,6 +353,7 @@ Class App extends \Pimple\Container {
                 'auto_reload' => ( ($this->config['APP_MODE']!='PROD') ? true : false )
             ));
 
+            //register the url function with twig
             $twig->addFunction(new \Twig_SimpleFunction('url',array('\Disco\classes\View','url')));
 
             return $twig;
