@@ -94,6 +94,20 @@ class View {
     }//setViewVariable
 
 
+
+    /**
+     * Get a variable in the view template variable.
+     *
+     * @var string $n The variable name.
+     *
+     * @return mixed 
+     */
+    public function getViewVariable($n){
+        return $this->view[$n];
+    }//setViewVariable
+
+
+
     /**
      * Specify that the output of this view should be JSON.
      *
