@@ -20,6 +20,11 @@ class View {
     */
     public $baseTemplate = '_default.html';
 
+    /**
+     * @var string The base template to use for the view.
+    */
+    public $ajaxTemplate = '_ajax_default.html';
+
     
     /**
      * @var array The data to be injected into the $baseLayout template in the view variable.
@@ -77,6 +82,19 @@ class View {
     */
     public function setBaseTemplate($template){
         $this->baseTemplate = $template;
+    }//setBodyTemplate
+
+
+
+    /**
+     * Override the default body template for the Ajax View.
+     *
+     *
+     * @var string $template The template to use.
+     * @return void
+    */
+    public function setAjaxTemplate($template){
+        $this->ajaxTemplate = $template;
     }//setBodyTemplate
 
 
@@ -219,12 +237,20 @@ class View {
     */
     public function printPage(){
 
-
         $render = $this->view;
         $render['robots'] = $this->indexes[$this->activeIndex];
         $render['header'] = $this->header();
         $render['footer'] = $this->footer();
-        echo \Template::render($this->baseTemplate,Array('view'=>$render));
+
+        if(!$this->view['isAjax']){
+            $template = $this->baseTemplate;
+        }//if
+        else {
+            $template = $this->ajaxTemplate;
+        }//el
+
+        echo \Template::render($template,Array('view'=>$render));
+
 
     }//printPage
 
