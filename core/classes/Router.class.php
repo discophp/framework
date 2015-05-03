@@ -522,13 +522,16 @@ class Router {
     * @param string $router
     * @return void
     */
-    public static function useRouter($router){
+    public static function useRouter($routerPath){
 
         if(self::$routeMatch){
             return;
         }//if
 
-        $routerPath = self::$app->path."/app/router/$router.router.php";
+        if(!self::$app->resolveAlias($routerPath)){
+            $routerPath = self::$app->path."/app/router/$routerPath.router.php";
+        }//if
+
         if(file_exists($routerPath)){
             require($routerPath);
             return;

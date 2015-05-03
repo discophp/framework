@@ -164,12 +164,12 @@ class Manager {
     public static function setConfig($find,$value){
 
         $find.='\'=>\'';
-        $f = file_get_contents('./.config.php');
+        $f = file_get_contents(\App::path().'/.config.php');
         $i = stripos($f,$find)+strlen($find);
         $ni = stripos($f,'\'',$i);
 
         $f = substr_replace($f,$value,$i,$ni-$i);
-        file_put_contents('./.config.php',$f);
+        file_put_contents(\App::path().'/.config.php',$f);
     }//setConfig
 
 
@@ -430,11 +430,13 @@ class Manager {
         }//el
     
         $date = date(DATE_RFC822);
+
+        $className = str_replace(' ','',ucwords(str_replace('_',' ',$table)));
     
         $model = 
 "<?php
 //This Model Class was generated with Disco on: {$date}
-Class {$table} extends Disco\classes\Model {
+Class {$className} extends Model {
 
     public \$table = '{$table}';
     public \$ids = {$keys};
@@ -442,7 +444,7 @@ Class {$table} extends Disco\classes\Model {
 }//{$table}   
 ?>";
     
-        $out = "app/model/{$table}.model.php";
+        $out = "app/model/{$className}.model.php";
 
         if(file_exists($out)){
             echo "Model $out already exists! Aborted".PHP_EOL;

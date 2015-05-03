@@ -14,6 +14,8 @@ Class Template extends \Twig_Environment {
 
     public $extension;
 
+
+
     /**
      * Build a template and push its html onto the Views html stack.
      *
@@ -39,7 +41,9 @@ Class Template extends \Twig_Environment {
      * @return string
     */
     public function build($name,$data=Array()){
-        if(!$this->extension) $this->extension = \App::config('TEMPLATE_EXTENSION');
+        if(!$this->extension) {
+            $this->extension = \App::config('TEMPLATE_EXTENSION');
+        }//if
         return $this->render($name.$this->extension,$data);
     }//build
 

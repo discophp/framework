@@ -65,6 +65,7 @@ Class App extends \Pimple\Container {
     public $config = Array();
 
 
+    public $alias = Array();
 
     /**
      * Assemble the pieces of the application that make it all tick.
@@ -217,6 +218,28 @@ Class App extends \Pimple\Container {
     }//error
 
 
+
+    public function registerAlias($name,$path){
+        $this->alias[$name] = $path;
+    }//registerAlias
+
+
+
+    public function resolveAlias(&$path){
+        if(substr($path,0,1) != '@'){
+            return false; 
+        }//if
+
+        $parts = explode(':',$path);
+        $alias = substr($parts[0],1,strlen($parts[0]));
+        $name = $parts[1];
+
+        $path = $this->alias[$alias].$name;
+        return true;
+
+    }//resolveAlias
+
+
     /**
      * Make sure a \Disco\classes\Router matched against the requested URI.
      *
@@ -343,6 +366,7 @@ Class App extends \Pimple\Container {
         foreach($facades as $facade=>$v){
             $this->make($facade,$v);
         }//foreach
+
 
         $this->make('Template',function(){
 
