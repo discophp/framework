@@ -239,8 +239,8 @@ class View {
 
         $render = $this->view;
         $render['robots'] = $this->indexes[$this->activeIndex];
-        $render['header'] = $this->header();
-        $render['footer'] = $this->footer();
+        $render['header'] = ($this->view['header']) ? $this->view['header'] : $this->header();
+        $render['footer'] = ($this->view['footer']) ? $this->view['footer'] : $this->footer();
 
         if(!$this->view['isAjax']){
             $template = $this->baseTemplate;
