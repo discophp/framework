@@ -540,7 +540,7 @@ class Model {
         if(count($this->limit)==1)
             $limit = "LIMIT {$this->limit[0]}";
         else if(count($this->limit)==2)
-            $limit = "LIMIT {$this->limit[0]},{$this->limit[0]}";
+            $limit = "LIMIT {$this->limit[0]},{$this->limit[1]}";
 
 
         $alias = '';
