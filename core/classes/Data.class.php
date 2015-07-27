@@ -123,6 +123,9 @@ class Data {
             $this->workingDataType='GET';
             return $this;
         }//if
+        else if(is_array($g)){
+            return array_intersect_key($_GET,array_flip($g));
+        }//elif
         else if(isset($_GET[$g])){
             return $_GET[$g];
         }//if
@@ -145,6 +148,9 @@ class Data {
             $this->workingDataType='POST';
             return $this;
         }//if
+        else if(is_array($p)){
+            return array_intersect_key($_POST,array_flip($p));
+        }//elif
         else if(isset($_POST[$p])){
             return $_POST[$p];
         }//if
@@ -167,6 +173,9 @@ class Data {
             $this->workingDataType='DELETE';
             return $this;
         }//if
+        else if(is_array($d)){
+            return array_intersect_key($this->deleteData,array_flip($d));
+        }//elif
         else if(isset($this->deleteData[$d])){
             return $this->deleteData[$d];
         }//if
@@ -189,6 +198,9 @@ class Data {
             $this->workingDataType='PUT';
             return $this;
         }//if
+        else if(is_array($p)){
+            return array_intersect_key($this->putData,array_flip($p));
+        }//elif
         else if(isset($this->putData[$p])){
             return $this->putData[$p];
         }//if

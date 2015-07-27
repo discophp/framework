@@ -26,7 +26,8 @@ class ModelFactory {
      * @return object Return $this->models[$name] the instance of the Model
     */
     public final function m($name){
-        return $this->app->with($name);
+        //return $this->app->with($name);
+        return new $name;
     }//use
 
 }//ModelFactory

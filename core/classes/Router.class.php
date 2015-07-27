@@ -16,6 +16,8 @@ class Router {
 
     public static $app;
 
+    public static $url;
+
     /**
      * @var boolean Has a Disco\classesself matched a request?
     */
@@ -52,6 +54,16 @@ class Router {
     private $isFilter=false;
 
     /**
+     * @var boolean When we a do a filter we store the base here
+    */
+    private $filterBase;
+
+    /**
+     * @var boolean When we a do a filter we store the filtered portion here
+    */
+    private $filteredOn;
+
+    /**
      * @var null|string|\Closure Send a filtered route to Router file, or Closure.
     */
     private $useRouter=null;
@@ -60,6 +72,8 @@ class Router {
      * @var null|string|array Store authentication requirements on route.
     */
     public $auth=null;
+
+    public $allowURLParameters=false;
 
 
 
@@ -80,6 +94,9 @@ class Router {
     */
     public function __destruct(){
 
+        if(!$this->param){ 
+            return;
+        }//if
 
         if($this->secureRoute && empty($_SERVER['HTTPS'])){
             return;
@@ -89,7 +106,7 @@ class Router {
         if(!self::routeMatch() && $this->isFilter && $this->filterMatch($this->param,$this->auth)){
 
             if($this->useRouter instanceof \Closure){
-                call_user_func($this->useRouter);
+                call_user_func_array($this->useRouter,Array($this->filterBase,$this->filteredOn));
             }//if
             else {
                 self::useRouter($this->useRouter);
@@ -97,11 +114,18 @@ class Router {
 
         }//if
         //have no match already and this matches?
-        else if(!self::routeMatch() && ($this->variables = $this->match($this->param,$this->variableRestrictions,$this->auth))){
+        else if(!self::routeMatch() && ($this->variables = $this->match($this->param,$this->variableRestrictions,$this->auth,$this->allowURLParameters))){
             return $this->executeRoute($this->function,$this->variables);
         }//if
 
     }//destruct
+
+
+
+    public function allowURLParameters($params = Array()){
+        $this->allowURLParameters = $params;
+        return $this;
+    }//allowUrlParamaters
 
 
 
@@ -308,15 +332,29 @@ class Router {
      *
      * @return boolean Was this $param a match to the REQUEST_URI?
      */
-    public static function match($param,$restrict,$auth){
+    public static function match($param,$restrict,$auth,$allowParams){
 
         $url = $_SERVER['REQUEST_URI'];
+
+        if($allowParams === false && $_SERVER['QUERY_STRING']){
+            return false;
+        }//if
+        else if($allowParams !== false && $_SERVER['QUERY_STRING']){
+            $url = explode('?' . $_SERVER['QUERY_STRING'],$url)[0]; 
+            if(count($allowParams)){
+                parse_str($_SERVER['QUERY_STRING'],$params);
+                if(count(array_diff_key($params,array_flip($allowParams)))){
+                    return false;
+                }//if
+            }//if
+        }//if
 
         //direct match?
         if($param==$url){
             if(!self::authenticated($auth)) return false;
             return true;
         }//if
+
 
         //if theres no variables an no direct match, then no match
         if(count($restrict)<=0){
@@ -405,12 +443,17 @@ class Router {
             return false;
         }//if
 
+        $filter = substr($param,0,$i);
+
         //filter route does not match url?
-        if(substr($param,0,$i) != substr($url,0,$i)){
+        if($filter  != substr($url,0,$i)){
             return false;
         }//if
 
         if(!self::authenticated($auth)) return false;
+
+        $this->filterBase = $filter;
+        $this->filteredOn = substr($url,$i,strlen($url));
 
         return true;
 
@@ -528,26 +571,30 @@ class Router {
             return;
         }//if
 
-        if(!self::$app->resolveAlias($routerPath)){
-            $routerPath = self::$app->path."/app/router/$routerPath.router.php";
-        }//if
-
-        if(file_exists($routerPath)){
-            require($routerPath);
+        if(($path = self::$app->resolveAlias($routerPath)) !== false && file_exists($path)){
+            require($path);
             return;
-        }//if
-        else {
-            $routers = self::$app->addonAutoloads();
-            $routers = $routers['.router.php'];
-            foreach($routers as $r){
-                $test = substr($r,0,strlen($r)-strlen('.router.php'));
-                $tail = substr($test,strlen($test)-strlen($router),strlen($router));
-                if($router==$tail && is_file($r)){
-                    self::$routeMatch=false;
-                    require($r);
-                    return;
-                }//if
-            }//foreach
+        } else {
+
+            $routerPath = self::$app->path."/app/router/$path.router.php";
+            if(file_exists($routerPath)){
+                require($routerPath);
+                return;
+            }//if
+            else {
+                $routers = self::$app->addonAutoloads();
+                $routers = $routers['.router.php'];
+                foreach($routers as $r){
+                    $test = substr($r,0,strlen($r)-strlen('.router.php'));
+                    $tail = substr($test,strlen($test)-strlen($router),strlen($router));
+                    if($router==$tail && is_file($r)){
+                        self::$routeMatch=false;
+                        require($r);
+                        return;
+                    }//if
+                }//foreach
+            }//el
+
         }//el
 
         self::$app->error("Router $router.router.php not found",Array('unknown','useRouter'),debug_backtrace(TRUE,4));

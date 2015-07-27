@@ -36,7 +36,7 @@ class View {
         'lang'              => 'en',
         'favIcon'           => '/favicon.png',
         'robots'            => '',
-        'isAjax'              => false,
+        'ajax'              => false,
         'scriptSrcs'        => Array(),
         'scripts'           => '',
         'headScriptSrcs'    => Array(),
@@ -71,6 +71,18 @@ class View {
      * @var integer Standard scrape for $indexes
     */
     public $activeIndex=0;
+
+
+
+    //public function get($k){
+
+    //    if(isset($this->view[$k])){
+    //        return $this->view[$k];
+    //    }//if
+
+    //    return null;
+
+    //}//get
 
 
     /**
@@ -133,7 +145,7 @@ class View {
      * @return void
     */
     public function json(){
-        $this->isAjax();
+        $this->ajax();
         header('Content-type: application/json');
     }//json
 
@@ -196,7 +208,8 @@ class View {
      * @param string $lang The language to set the page as.
      * @return void
     */
-    public function lang($lang){
+    public function lang($lang = null){
+        if(!$lang) return $this->view['lang'];
         $this->view['lang'] = $lang;
     }//lang
 
@@ -209,7 +222,8 @@ class View {
      * @param string $charset the charset the page should use 
      * @return void
     */
-    public function charset($charset){
+    public function charset($charset = null){
+        if(!$charset) return $this->view['charset'];
         $this->view['charset'] = $charset;
     }//charset
 
@@ -222,9 +236,17 @@ class View {
      * @param string $extra the markup to put in the head of the page
      * @return void
     */
-    public function headExtra($extra){
+    public function headExtra($extra = null){
+        if(!$extra) return $this->view['headExtra'];
         $this->view['headExtra'] .= $extra;
     }//headExtra
+
+
+
+    public function robots(){
+        $this->indexes[$this->activeIndex];
+    }//robots
+
 
 
 
@@ -237,19 +259,19 @@ class View {
     */
     public function printPage(){
 
-        $render = $this->view;
-        $render['robots'] = $this->indexes[$this->activeIndex];
-        $render['header'] = ($this->view['header']) ? $this->view['header'] : $this->header();
-        $render['footer'] = ($this->view['footer']) ? $this->view['footer'] : $this->footer();
 
-        if(!$this->view['isAjax']){
+        if(!$this->view['ajax']){
             $template = $this->baseTemplate;
         }//if
         else {
             $template = $this->ajaxTemplate;
         }//el
 
-        echo \Template::render($template,Array('view'=>$render));
+        if(($alias = \App::resolveAlias($template)) !== false){
+            $template = $alias;
+        }//if
+
+        echo \Template::render($template);
 
 
     }//printPage
@@ -262,8 +284,19 @@ class View {
      * @var boolean $bool 
      * @return void
     */
-    public function isAjax($bool = true){
-        $this->view['isAjax'] = $bool;
+    public function ajax($bool = true){
+        $this->view['ajax'] = $bool;
+    }//isAjax
+
+
+
+    /**
+     * Is the request AJAX?
+     *
+     * @return boolean
+    */
+    public function isAjax(){
+        return $this->view['ajax'];
     }//isAjax
 
 
@@ -274,7 +307,8 @@ class View {
      *
      * @param string $t the title of the page
     */
-    public function title($t){
+    public function title($t = null){
+        if(!$t) return $this->view['title'];
         $this->view['title'] = $t;
     }//setTitle
 
@@ -286,7 +320,8 @@ class View {
      *
      * @param string $d the description of the page
     */
-    public function desc($d){
+    public function desc($d = null){
+        if(!$d) return $this->view['description'];
         $this->view['description'] = $d;
     }//setDesc
 
@@ -303,6 +338,12 @@ class View {
     }//html
 
 
+
+    public function body(){
+        return $this->view['body'];
+    }//body
+
+
     /**
      * Set the favicon to be used by the page.
      *
@@ -310,7 +351,8 @@ class View {
      * @param string $v the path to the favicon
      * @return void
     */
-    public function favIcon($v){
+    public function favIcon($v = null){
+        if(!$v) return $this->view['favIcon'];
         $this->view['favIcon'] = $v;
     }//favIcon
 
@@ -325,12 +367,32 @@ class View {
      * @param string $h The host of the resource ( if not local).
     */
     public static function url($p,$h=null){
-        if(!empty($_SERVER['HTTPS']) && $h==null && substr($p,0,1)=='/'){
-            $p = 'https://'.App::config('URL').$p;                                                                             
+        if(!empty($_SERVER['HTTPS']) && $h===null && substr($p,0,1)=='/'){
+            $p = 'https://'.\App::config('URL').$p;                                                                             
         }//if                                                                                                               
-        else if($h!=null && substr($h,0,3)!='http'){                                                                        
+        else if($h!==null && substr($h,0,3)!='http'){                                                                        
             $p = 'http://'.$h.$p;                                                                                           
         }//elif   
+        return $p;
+    }//url
+
+
+
+    /**
+     * When we create full path links to resources and the browser is using SSL/HTTPS
+     * we need to make sure we request that resource as such in order to avoid mixed content errors.
+     *
+     *
+     * @param string $p The path of the resource.
+     * @param string $h The host of the resource ( if not local).
+    */
+    public static function localUrl($p){
+        if(!empty($_SERVER['HTTPS']) && substr($p,0,1)=='/'){
+            $p = 'https://'.\App::config('URL').$p;
+        }//if
+        else if(substr($h,0,3)!='http'){
+            $p = 'http://'.\App::config('URL').$p;
+        }//elif
         return $p;
     }//url
 
@@ -389,9 +451,7 @@ class View {
      * @return self 
     */
     public function headScriptSrc($s){
-
         $this->view['headScriptSrcs'][]=Array('src'=>$s,'props'=>Array());
-
         $this->lastCallType='headScript';
         return $this;
     }//pushScriptSrc
@@ -498,12 +558,15 @@ class View {
      *
      * @return void 
     */
-    public final function serve($code=200){
+    public final function serve($code=200,$callable=false){
 
         if($code!=200){
             http_response_code($code);
             $file = \App::path()."/app/{$code}.php";
-            if(is_file($file)){
+            if($callable !== false){
+                //call_user_func($callable);
+            }//if
+            else if(is_file($file)){
                 $action = require($file);
                 call_user_func($action,\App::instance());
             }//if
@@ -514,9 +577,77 @@ class View {
             View::printPage();
         }//if
 
-    }//handle404
+        //exit;
+
+    }//serve
 
 
+
+    public function printStyleSrcs(){
+
+        $styles = '';
+        foreach($this->view['styleSrcs'] as $s){
+            $styles .= '<link rel="stylesheet" href="'.$this->url($s['src']).'" type="text/css"';
+            foreach($s['props'] as $p=>$a){
+                $styles .= " {$p}=\"{$a}\"";
+            }//foreach
+            $styles .= '/>';
+        }//foreach
+
+        return $styles;
+
+    }//printStyleSrcs
+
+
+
+    public function printStyles(){
+        if($this->view['styles']){
+            return '<style>'.$this->view['styles'].'</style>';
+        }//if
+    }//printStyles
+
+
+
+    public function printHeadScriptSrcs(){
+        return $this->printScriptsFromSource($this->view['headScriptSrcs']);
+    }//printScriptSrcs
+
+
+
+    public function printScriptSrcs(){
+        return $this->printScriptsFromSource($this->view['scriptSrcs']);
+    }//printScriptSrcs
+
+
+
+    private function printScriptsFromSource($src){
+
+        $scripts = '';
+        foreach($src as $s){
+            $scripts .= '<script src="' . $this->url($s['src']) . '" type="text/javascript"';
+            foreach($s['props'] as $p=>$a){
+                $scripts .= " {$p}=\"{$a}\"";
+            }//foreach
+            $scripts .= '></script>';
+        }//foreach
+
+        return $scripts;
+
+    }//printStyleSrcs
+
+
+
+    public function printScripts(){
+        if($this->view['scripts']){
+            return '<script type="text/javascript">' . $this->view['scripts'] . '</script>';
+        }//if
+    }//printScripts
+
+
+
+    public function abort($closure = false){
+        $this->serve(404,$closure);
+    }//status
 
 
 }//BaseView

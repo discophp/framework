@@ -40,12 +40,27 @@ class Email {
      *
      * @return void
      */
-    public function __construct(\App $app){
-        $this->app = $app;
+    public function __construct(){
+        $this->app = \App::instance();
         if(is_file($this->app->path.'/.mail.config.php')){
             $this->settings=require($this->app->path.'/.mail.config.php');
         }//if
     }//construct
+
+
+
+    public function getSetting($key){
+        if(!isset($this->settings[$key])){
+            return false;
+        }//if
+        return $this->settings[$key];
+    }//getSetting
+
+
+
+    public function setSetting($key,$value){
+        $this->settings[$key] = $value;
+    }//setSetting
 
 
 
@@ -130,6 +145,7 @@ class Email {
 
         if(!isset($this->settings[$key])){
             $this->app->error("Email::Error account $key does not exist",Array('send'),debug_backtrace(TRUE,6));
+            exit;
         }//if
 
         if($this->delay!=null){
@@ -205,11 +221,11 @@ class Email {
             return $result;
         }//try
         catch(\Swift_TransportException $e){
-            TRIGGER_ERROR('Email::Error send failed '.$e,E_USER_WARNING);
+            TRIGGER_ERROR('Email::Error Caught Swift_TransportException '.$e->getMessage(),E_USER_WARNING);
             return false;
         }//catch
         catch(\Exception $e){
-            TRIGGER_ERROR('Email::Error send failed '.$e,E_USER_WARNING);
+            TRIGGER_ERROR('Email::Error send failed '.$e->getMessage(),E_USER_WARNING);
             return false;
         }//catch
 

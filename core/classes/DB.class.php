@@ -59,14 +59,19 @@ class DB extends \mysqli {
             $db=$this->app->config['DB_DB'];
         }//if
 
+        $charset=$this->app->config['DB_CHARSET'];
+
         $this->link = parent::__construct($host, $user, $pw, $db);
+
 
         if($this->connect_error){
             TRIGGER_ERROR('DB::Connect Error '.$this->connect_errno.' '.$this->connect_error,E_USER_WARNING);
             $this->app['View']->serve(500);
         }//if
-        else
-            $this->connected = true;
+
+
+        $this->connected = true;
+        $this->set_charset($charset);
 
     }//end constructor
 

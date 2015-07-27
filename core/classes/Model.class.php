@@ -66,7 +66,7 @@ class Model {
     /**
      * @var string The last query this model executed.
     */
-    private $lastQuery;
+    public $lastQuery;
 
     /**
      * @var \mysqli_result The last resultSet from a query.
@@ -93,7 +93,7 @@ class Model {
         $this->order=Array();
         $this->lastResultSet=null;
         $this->update=Array();
-        //$this->alias = null;
+        $this->alias = null;
     }//clearData
 
 
@@ -112,7 +112,6 @@ class Model {
      * @return self 
      */
     public final function select(){
-        $this->clearData();
         $data = func_get_args();
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
@@ -210,9 +209,7 @@ class Model {
         $values = rtrim($values,',');
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
-        $this->lastQuery = $this->app['DB']->set($query,$tempValues);
-        $this->app['DB']->query($this->lastQuery);
-        return $this->app['DB']->lastId();
+        return $this->executeQuery($this->app['DB']->set($query,$tempValues));
 
     }//insert
 
@@ -228,8 +225,7 @@ class Model {
     public final function delete(){
         $this->clearData();
         $this->where = $this->prepareCondition(func_get_args(),'AND');
-        $this->lastQuery = "DELETE FROM {$this->table} WHERE {$this->where}";
-        return $this->app['DB']->query($this->lastQuery);
+        return $this->executeQuery("DELETE FROM {$this->table} WHERE {$this->where}");
     }//delete
 
 
@@ -241,9 +237,181 @@ class Model {
      * @return self
     */
     public final function where(){
-        $this->where = $this->prepareCondition(func_get_args(),'AND');
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND');
         return $this;
     }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereOr(){
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'OR');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereNotOr(){
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'OR','<>');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereAlso(){
+        if($this->where){
+            $this->where = "{$this->where} AND ALSO ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereNot(){
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND','<>');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereNotAlso(){
+        if($this->where){
+            $this->where = "{$this->where} AND ALSO ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND','<>');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereLike(){
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' LIKE ');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereAlsoLike(){
+        if($this->where){
+            $this->where = "{$this->where} AND ALSO ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' LIKE ');
+        return $this;
+    }//where
+
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereNotLike(){
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' NOT LIKE ');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function whereNotAlsoLike(){
+        if($this->where){
+            $this->where = "{$this->where} AND ALSO ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' NOT LIKE ');
+        return $this;
+    }//where
+
+
+
+
+
+    private final function buildWhere(){
+
+        $pieces = explode(' AND ALSO ',$this->where);
+
+        if(!isset($pieces[1])){
+            return $this->where;
+        }//if
+
+        $where = '';
+
+        foreach($pieces as $part){
+            $where .= "({$part}) AND ";
+        }//foreach
+
+        $where = substr($where,0,strlen($where)-5);
+
+        return $where;
+
+    }//buildWhere
 
 
 
@@ -473,8 +641,7 @@ class Model {
         if($where)
             $where='WHERE '.$where;
 
-        $this->lastQuery ="UPDATE {$this->table} SET {$update} {$where}"; 
-        return $this->app['DB']->query($this->lastQuery);
+        return $this->executeQuery("UPDATE {$this->table} SET {$update} {$where}"); 
 
     }//do
 
@@ -486,15 +653,28 @@ class Model {
      * @return \mysqli_result MySQLi result set of last query.
     */
     public final function data(){
-        if($this->lastResultSet)
-            return $this->lastResultSet;
-
-        $this->lastResultSet = $this->fetchData();
-        if($this->aliasWasSet){
-            $this->alias = null;
-        }//if
-        return $this->lastResultSet;
+        return $this->fetchData();
     }//data
+
+
+
+
+    /**
+     * Return the data from the execution of the previous query.
+     *
+     * @return \mysqli_result MySQLi result set of last query.
+    */
+    public final function asArray(){
+        return $this->data()->fetchAll();
+        //return $this->fetchData()->fetch_all(MYSQLI_ASSOC);
+        //return \mysqli_fetch_all($this->fetchData(),MYSQLI_ASSOC);
+    }//data
+
+
+
+    public final function first(){
+        return $this->data()->fetch();
+    }//first
 
 
 
@@ -519,9 +699,11 @@ class Model {
      * @return \mysqli_result  
     */
     private final function fetchData(){
+
         $select = implode(',',array_values($this->select));
 
-        $where = $this->where;
+        //$where = $this->where;
+        $where = $this->buildWhere();
 
         if($where){
             $where='WHERE '.$where;
@@ -547,14 +729,20 @@ class Model {
         if($this->alias){
             $alias = " AS {$this->alias}";
         }//if
-        $this->lastQuery = "SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}";
 
-        $this->app['DB']->query($this->lastQuery); 
-
-        return $this->app['DB']->last();
+        return $this->executeQuery("SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}");
 
     }//fetchData
 
+
+
+    private final function executeQuery($query){
+
+        $this->lastQuery = $query;
+        $this->clearData();
+        return $this->app['DB']->query($query); 
+
+    }//executeQuery
 
 
     /**
@@ -580,16 +768,19 @@ class Model {
      *
      * @return mixed $where Either return the condition or false if there was no condition to prepare.
     */
-    private final function prepareCondition($data,$conjunction){
+    public final function prepareCondition($data,$conjunction,$comparator = '='){
 
         $return = '';
 
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
-                $return .= $this->app['DB']->set($k.'=?',$v).' '.$conjunction.' ';
+                $return .= $this->app['DB']->set($k . $comparator . '?',$v).' '.$conjunction.' ';
             }//foreach
             $return = rtrim($return,$conjunction.' ');
         }//if
+        else if(!isset($data[1]) && is_string($data[0])){
+            $return = $data[0];
+        }//elif
         else if(!isset($data[2])){
             $data[0] = explode(',',$data[0]);
             foreach($data[0] as $k=>$v){
@@ -597,7 +788,13 @@ class Model {
             }//foreach
             $data[0] = implode(',',$data[0]);
             $return .= $this->app['DB']->set($data[0],(isset($data[1])) ? $data[1] : null);
-        }//if
+        } else {
+            $length = count($data);
+            for($i = 0; $i < $length; $i = $i + 3){
+                $return .= $this->app['DB']->set($data[$i].$data[$i+1].'?',$data[$i+2]).' '.$conjunction.' ';
+            }//for
+            $return = rtrim($return,$conjunction.' ');
+        }//el
 
         return str_replace('=NULL',' IS NULL',$return);
 
@@ -615,7 +812,7 @@ class Model {
         return $this->app['DB']->query('
             SELECT *                                                                                                                                                                                                       
             FROM information_schema.tables                                                                  
-            WHERE table_type="BASE TABLE" AND table_schema="swell" AND table_name="'.$this->table.'"
+            WHERE table_type="BASE TABLE" AND table_schema="'.$this->app->config('DB_DB').'" AND table_name="'.$this->table.'"
         ')->fetch_assoc();
     }//about
 

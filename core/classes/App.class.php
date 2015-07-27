@@ -93,6 +93,9 @@ Class App extends \Pimple\Container {
         $this->services();
 
 
+        $this->registerAlias('disco.mime',$this->path.'/vendor/discophp/framework/core/util/mimeTypes.php');
+
+
         /**
          * Are we running in CLI mode?
         */
@@ -151,11 +154,6 @@ Class App extends \Pimple\Container {
             if($this->config['APP_MODE']!='PROD' && is_file($this->path.'/.dev.config.php')){
                 $this->config = array_merge($this->config,require($this->path.'/.dev.config.php'));
             }//if
-        }//if
-        
-        //if the COMPOSER PATH isn't set then resort to the default installer path "vendor/"
-        if(!isset($this->config['COMPOSER_PATH'])){
-            $this->config['COMPOSER_PATH'] = 'vendor';
         }//if
 
     }//prep
@@ -225,7 +223,13 @@ Class App extends \Pimple\Container {
 
 
 
-    public function resolveAlias(&$path){
+    public function getAlias($name){
+        return $this->alias[$name];
+    }//getAlias
+
+
+
+    public function resolveAlias($path){
         if(substr($path,0,1) != '@'){
             return false; 
         }//if
@@ -234,8 +238,7 @@ Class App extends \Pimple\Container {
         $alias = substr($parts[0],1,strlen($parts[0]));
         $name = $parts[1];
 
-        $path = $this->alias[$alias].$name;
-        return true;
+        return $this->alias[$alias].$name;
 
     }//resolveAlias
 
@@ -349,36 +352,45 @@ Class App extends \Pimple\Container {
     public function services(){
 
         $facades = Array(
-            'Cache'     => 'Disco\classes\Cache',
-            'Crypt'     => 'Disco\classes\Crypt',
-            'Data'      => 'Disco\classes\Data',
-            'DB'        => 'Disco\classes\DB',
-            'Email'     => 'Disco\classes\Email',
-            'Event'     => 'Disco\classes\Event',
-            'Html'      => 'Disco\classes\Html',
-            'Form'      => 'Disco\classes\Form',
-            'Model'     => 'Disco\classes\ModelFactory',
-            'Queue'     => 'Disco\classes\Queue',
-            'Session'   => 'Disco\classes\Session',
-            'View'      => 'Disco\classes\View'
+            'Cache'         => 'Disco\classes\Cache',
+            'Crypt'         => 'Disco\classes\Crypt',
+            'Data'          => 'Disco\classes\Data',
+            'Email'         => 'Disco\classes\Email',
+            'Event'         => 'Disco\classes\Event',
+            'Html'          => 'Disco\classes\Html',
+            'FileHelper'    => 'Disco\classes\FileHelper',
+            'Form'          => 'Disco\classes\Form',
+            'Model'         => 'Disco\classes\ModelFactory',
+            'Queue'         => 'Disco\classes\Queue',
+            'Session'       => 'Disco\classes\Session',
+            'View'          => 'Disco\classes\View'
         );
 
         foreach($facades as $facade=>$v){
             $this->make($facade,$v);
         }//foreach
 
+        if(strtolower(App::config('DB_DRIVER')) == 'pdo'){
+            $this->make('DB','Disco\classes\PDO');
+        } else {
+            $this->make('DB','Disco\classes\DB');
+        }//el
 
         $this->make('Template',function(){
 
-            $path = $this->path.'/app/template';
+            $path = trim(\App::config('TEMPLATE_PATH'),'/');
+            $cachePath = trim(\App::config('TEMPLATE_CACHE'),'/');
+            $path = $this->path . '/' .$path;
             $loader = new \Twig_Loader_Filesystem($path);
             $twig = new \Disco\classes\Template($loader, array(
-                'cache' => $path.'/.cached',
-                'auto_reload' => ( ($this->config['APP_MODE']!='PROD') ? true : false )
+                'cache'         => $this->path. '/' . $cachePath,
+                'auto_reload'   => \App::config('TEMPLATE_RELOAD'),
+                'autoescape'    => \App::config('TEMPLATE_AUTOESCAPE')
             ));
 
             //register the url function with twig
             $twig->addFunction(new \Twig_SimpleFunction('url',array('\Disco\classes\View','url')));
+            $twig->addGlobal('View',$this->with('View'));
 
             return $twig;
 
