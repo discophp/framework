@@ -41,7 +41,7 @@ class Model {
     /**
      * @var string The working update statement.
     */
-    private $update=Array();
+    private $update='';
 
     /**
      * @var string The where condition or the working query.
@@ -92,7 +92,7 @@ class Model {
         $this->limit=Array();
         $this->order=Array();
         $this->lastResultSet=null;
-        $this->update=Array();
+        $this->update='';
         $this->alias = null;
     }//clearData
 
@@ -148,29 +148,38 @@ class Model {
         $this->clearData();
         $data = func_get_args();
 
-
-        if(is_array($data[0])){
-            //$this->update = array_merge($this->update,$data[0]);
-            $this->update = $data[0];
+        if($this->update){
+            $this->update = ',' . $this->update;
         }//if
-        else if(!isset($data[1])){
-            $data[0] = explode(',',$data[0]);
-            foreach($data[0] as $k=>$v){
-               $data[0][$k] = $v; 
-            }//foreach
-            $this->update = array_merge($this->update,$data[0]);
-        }//elif
-        else {
-            foreach($data as $k=>$v){
-                if(!isset($data[$k+1])){
-                    break;
-                }//if
-                $this->update = array_merge($this->update,Array($k=>$v));
-            }//foreach
-        }//el
+
+        $this->update .= str_replace('IS NULL','=NULL',$this->prepareCondition($data,','));
 
         return $this;
+
     }//update
+
+
+
+    /**
+     * Execute the UPDATE statement that was previously prepared.
+     *
+     *
+     * @return boolean Return whether the update was successful.
+    */
+    public final function finalize(){
+
+        if(!$this->update){
+            throw new \InvalidArgumentException;
+        }//if
+
+        $where = $this->where;
+        if($where) {
+            $where='WHERE '.$where;
+        }//if
+
+        return $this->executeQuery("UPDATE {$this->table} SET {$this->update} {$where}"); 
+
+    }//finalize
 
 
 
@@ -209,7 +218,9 @@ class Model {
         $values = rtrim($values,',');
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
-        return $this->executeQuery($this->app['DB']->set($query,$tempValues));
+        if($this->executeQuery($this->app['DB']->set($query,$tempValues))){
+            return $this->app['DB']->lastId();
+        }//if
 
     }//insert
 
@@ -225,6 +236,21 @@ class Model {
     public final function delete(){
         $this->clearData();
         $this->where = $this->prepareCondition(func_get_args(),'AND');
+        return $this->executeQuery("DELETE FROM {$this->table} WHERE {$this->where}");
+    }//delete
+
+
+
+    /**
+     * Execute a DELETE statement. 
+     * Accepts its arguements thruogh func_get_args(). 
+     *
+     *
+     * @return boolean Whether or not the delete was successful.
+    */
+    public final function deleteOr(){
+        $this->clearData();
+        $this->where = $this->prepareCondition(func_get_args(),'OR');
         return $this->executeQuery("DELETE FROM {$this->table} WHERE {$this->where}");
     }//delete
 
@@ -619,32 +645,6 @@ class Model {
 
 
 
-    /**
-     * Execute the UPDATE statement that was previously prepared.
-     *
-     *
-     * @return boolean Return whether the update was successful.
-    */
-    public final function finalize(){
-
-        if(count($this->update)==0){
-            throw new \InvalidArgumentException;
-        }//if
-
-        $update = '';
-        foreach($this->update as $k=>$v){
-            $update .= $this->app['DB']->set("$k=?,",$v);
-        }//foreach
-        $update = rtrim($update,',');
-
-        $where = $this->where;
-        if($where)
-            $where='WHERE '.$where;
-
-        return $this->executeQuery("UPDATE {$this->table} SET {$update} {$where}"); 
-
-    }//do
-
 
 
     /**
@@ -772,22 +772,30 @@ class Model {
 
         $return = '';
 
+        //array was passed
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
                 $return .= $this->app['DB']->set($k . $comparator . '?',$v).' '.$conjunction.' ';
             }//foreach
             $return = rtrim($return,$conjunction.' ');
         }//if
+        //just a string was passed
         else if(!isset($data[1]) && is_string($data[0])){
             $return = $data[0];
         }//elif
-        else if(!isset($data[2])){
+        //a string with ? placeholders was passed as first arg,
+        //and an array was passed as second
+        else if(is_string($data[0]) && is_array($data[1])){
             $data[0] = explode(',',$data[0]);
             foreach($data[0] as $k=>$v){
                 $data[0][$k] = $v;
             }//foreach
             $data[0] = implode(',',$data[0]);
             $return .= $this->app['DB']->set($data[0],(isset($data[1])) ? $data[1] : null);
+        }//elif
+        //a single value was passed with a string
+        else if(!isset($data[2])){
+            $return = $this->app['DB']->set($data[0],$data[1]);
         } else {
             $length = count($data);
             for($i = 0; $i < $length; $i = $i + 3){

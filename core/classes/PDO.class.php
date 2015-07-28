@@ -64,8 +64,20 @@ class PDO extends \PDO {
 
 
 
+    public function insert($query, $data = null){
+
+        if($this->query($query,$data)){
+            return $this->lastId();
+        }//if
+
+        return null;
+
+    }//insert
+
+
+
     public function lastId(){
-        $this->lastInsertId;
+        return parent::lastInsertId();
     }//lastId
 
 
