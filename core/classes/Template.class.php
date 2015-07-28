@@ -42,18 +42,25 @@ Class Template extends \Twig_Environment {
     */
     public function build($name,$data=Array()){
 
-        if(!$this->extension) {
-            $this->extension = \App::config('TEMPLATE_EXTENSION');
-        }//if
 
         if(($alias = \App::resolveAlias($name)) !== false){
             $name = $alias; 
         }//if
 
+        if(!$this->extension) {
+            $this->extension = \App::config('TEMPLATE_EXTENSION');
+            $extLen = strlen($this->extension);
+            $nameLen = strlen($name);
+            if($extLen && substr($name,$nameLen-$extLen,$nameLen) !== $this->extension){
+                $name .= $this->extension;
+            }//if
+        }//if
+
+
         //var_dump($name);
         //exit;
 
-        return $this->render($name.$this->extension,$data);
+        return $this->render($name,$data);
 
     }//build
 

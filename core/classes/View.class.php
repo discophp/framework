@@ -390,7 +390,7 @@ class View {
         if(!empty($_SERVER['HTTPS']) && substr($p,0,1)=='/'){
             $p = 'https://'.\App::config('URL').$p;
         }//if
-        else if(substr($h,0,3)!='http'){
+        else if(substr($p,0,3)!='http'){
             $p = 'http://'.\App::config('URL').$p;
         }//elif
         return $p;
