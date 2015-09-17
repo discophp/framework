@@ -18,6 +18,11 @@ class Router {
 
     public static $url;
 
+    //collection of all instances of Routers we make
+    public static $routers = Array();
+
+    private static $numberOfProcessedRoutes = 0;
+
     /**
      * @var boolean Has a Disco\classesself matched a request?
     */
@@ -76,12 +81,32 @@ class Router {
     public $allowURLParameters=false;
 
 
+    public static function factory(){
+
+        self::processAvailableRoutes();
+        $r = new self::$base;
+        self::$routers[] = $r;
+        return $r;
+
+    }//factory
+
+
+    public static function processLastCreatedRoute(){
+        if(isset(self::$routers[self::$numberOfProcessedRoutes])){
+            self::$numberOfProcessedRoutes++;
+            self::$routers[self::$numberOfProcessedRoutes-1]->process();
+        }//if
+    }//processLastCreatedRoute
+
+
+    public static function processAvailableRoutes(){
+        while(!self::routeMatch() && self::$numberOfProcessedRoutes < count(self::$routers)){
+            self::processLastCreatedRoute();
+        }//while
+    }//processAvailableRoutes
 
     /*
-     * When we tear down the object is when we do the work.
-     *
-     * Since the (this)Router instance is instantiated and never referenced is it destroyed as soon as it is 
-     * called and its method chain has been executed.
+     * Process the the router.
      *
      * Find if there is a match and take the appropriate action:
      *     - Execute an instance of a Closure
@@ -92,7 +117,7 @@ class Router {
      *
      * @return void
     */
-    public function __destruct(){
+    public function process(){
 
         if(!$this->param){ 
             return;
@@ -112,14 +137,16 @@ class Router {
                 self::useRouter($this->useRouter);
             }//el
 
+            //process the Routers that became available from calling the filter
+            self::processAvailableRoutes();
+
         }//if
         //have no match already and this matches?
         else if(!self::routeMatch() && ($this->variables = $this->match($this->param,$this->variableRestrictions,$this->auth,$this->allowURLParameters))){
-            return $this->executeRoute($this->function,$this->variables);
+            self::executeRoute($this->function,$this->variables);
         }//if
 
-    }//destruct
-
+    }//process
 
 
     public function allowURLParameters($params = Array()){
@@ -544,7 +571,7 @@ class Router {
             }//if
             else if(self::$routeMatch==true && $m==false){
                 self::$app->as_factory('Router',function(){
-                    return new self::$base;
+                    return \Disco\classes\Router::factory();
                 });
             }//el
 
@@ -581,19 +608,6 @@ class Router {
                 require($routerPath);
                 return;
             }//if
-            else {
-                $routers = self::$app->addonAutoloads();
-                $routers = $routers['.router.php'];
-                foreach($routers as $r){
-                    $test = substr($r,0,strlen($r)-strlen('.router.php'));
-                    $tail = substr($test,strlen($test)-strlen($router),strlen($router));
-                    if($router==$tail && is_file($r)){
-                        self::$routeMatch=false;
-                        require($r);
-                        return;
-                    }//if
-                }//foreach
-            }//el
 
         }//el
 

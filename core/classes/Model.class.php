@@ -417,6 +417,129 @@ class Model {
 
 
 
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function whereIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+
+        $this->where .= "{$field} IN ({$array})";
+
+        return $this;
+
+    }//whereIn
+
+
+
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function whereNotIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} AND ";
+        }//if
+
+        $this->where .= "{$field} NOT IN ({$array})";
+
+        return $this;
+
+    }//whereNotIn
+
+
+
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function whereOrIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+
+        $this->where .= "{$field} IN ({$array})";
+
+        return $this;
+
+    }//whereOrIn
+
+
+
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function whereOrNotIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+
+        $this->where .= "{$field} NOT IN ({$array})";
+
+        return $this;
+
+    }//whereOrNotIn
+
+
+
+    /**
+     * Get a commas delimited string of values for use in an IN query.
+     *
+     *
+     * @param array $array The array of values.
+     * @return string
+    */
+    private final function buildWhereInArray($array){
+
+        if(!is_array($array)){
+            return $array;
+        }//if
+
+        $values = '';
+
+        foreach($array as $v){
+            $v = $this->app['DB']->clean($v);
+            $values .= "{$v},";
+        }//foreach
+
+        return rtrim($values,',');
+
+    }//buildWhereInArray
 
 
     private final function buildWhere(){
@@ -526,7 +649,7 @@ class Model {
                     $joinType .= "ON {$k}={$v} ";
                 }//foreach
             }//if
-            else if($data){
+            else if($data !== null){
                 $joinType .= 'ON '.$this->app['DB']->set($on,$data).' ';
             }//el
             else {

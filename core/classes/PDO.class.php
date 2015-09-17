@@ -22,11 +22,17 @@ class PDO extends \PDO {
 
         try {
 
-            parent::__construct($engine . ':dbname=' . $db . ';host=' . $host . ';charset=' . $charset, $user, $pw,Array(
-                \PDO::ATTR_PERSISTENT => true,
-                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
-            ));
+            //parent::__construct($engine . ':dbname=' . $db . ';host=' . $host . ';charset=' . $charset, $user, $pw,Array(
+            //    \PDO::ATTR_PERSISTENT => true,
+            //    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            //    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+            //));
+
+            parent::__construct($engine . ':dbname=' . $db . ';host=' . $host . ';charset=' . $charset, $user, $pw);
+            parent::setAttribute(\PDO::ATTR_PERSISTENT, true);
+            parent::setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+            parent::setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
 
         } catch(\PDOException $e){
             TRIGGER_ERROR('DB::Connect Error | '.$e->getMessage(),E_USER_WARNING);
@@ -56,7 +62,7 @@ class PDO extends \PDO {
             return $query;
 
         } catch(\PDOException $e){
-            TRIGGER_ERROR('DB:: Query Error | '.$e->getMessage(),E_USER_WARNING);
+            TRIGGER_ERROR('DB:: Query Error | '.$e->getMessage() . ' | ' . $e->getTraceAsString(),E_USER_WARNING);
             $this->app['View']->serve(500);
         }//catch
 

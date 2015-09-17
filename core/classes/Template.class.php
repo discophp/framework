@@ -14,6 +14,44 @@ Class Template extends \Twig_Environment {
 
     public $extension;
 
+    private $path;
+
+    public function __construct(){
+
+        $path = trim(\App::config('TEMPLATE_PATH'),'/');
+        $cachePath = trim(\App::config('TEMPLATE_CACHE'),'/');
+        $path = \App::path() . '/' .$path;
+
+        $this->path = $path;
+
+        $loader = new \Twig_Loader_Filesystem($path);
+
+        parent::__construct($loader, array(
+            'cache'         => \App::path(). '/' . $cachePath,
+            'auto_reload'   => \App::config('TEMPLATE_RELOAD'),
+            'autoescape'    => \App::config('TEMPLATE_AUTOESCAPE')
+        ));
+
+        //register the url function with twig
+        $this->addFunction(new \Twig_SimpleFunction('url',array('\Disco\classes\View','url')));
+        $this->addGlobal('View',\App::with('View'));
+        $this->addGlobal('Request',\App::with('Request'));
+
+    }//construct
+
+
+
+    public function isTemplate($name){
+
+        $name = $this->buildTemplatePath($name);
+
+        if(!is_file($this->path . '/' . $name)){
+            return false;
+        }//if
+
+        return true;
+
+    }//isTemplate
 
 
     /**
@@ -31,17 +69,7 @@ Class Template extends \Twig_Environment {
 
 
 
-    /**
-     * Build a template.
-     *
-     *
-     * @param string $name The template name.
-     * @param array $data The data to pass the template.
-     *
-     * @return string
-    */
-    public function build($name,$data=Array()){
-
+    private function buildTemplatePath($name){
 
         if(($alias = \App::resolveAlias($name)) !== false){
             $name = $alias; 
@@ -56,9 +84,23 @@ Class Template extends \Twig_Environment {
             }//if
         }//if
 
+        return $name;
 
-        //var_dump($name);
-        //exit;
+    }//buildTemplatePath
+
+
+    /**
+     * Build a template.
+     *
+     *
+     * @param string $name The template name.
+     * @param array $data The data to pass the template.
+     *
+     * @return string
+    */
+    public function build($name,$data=Array()){
+
+        $name = $this->buildTemplatePath($name);
 
         return $this->render($name,$data);
 

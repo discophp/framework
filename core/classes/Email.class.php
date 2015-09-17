@@ -9,12 +9,12 @@ namespace Disco\classes;
 /**
  * Email class.
  * Handle sending emails through different setup accounts.
- * This class relies on the settings set in http://github.com/discophp/project/blob/master/.mail.config.php .
+ * This class relies on the settings set in http://github.com/discophp/project/blob/master/config/mail.config.php .
 */
 class Email {
 
     /**
-     * @var array Holds config data from .mail.config.php .
+     * @var array Holds config data from config/mail.config.php .
     */
     private $settings;
 
@@ -35,15 +35,15 @@ class Email {
 
 
     /**
-     * Load our Email setting from .mail.config.php . 
+     * Load our Email setting from config/mail.config.php . 
      *
      *
      * @return void
      */
     public function __construct(){
         $this->app = \App::instance();
-        if(is_file($this->app->path.'/.mail.config.php')){
-            $this->settings=require($this->app->path.'/.mail.config.php');
+        if(is_file($this->app->path.'/config/mail.config.php')){
+            $this->settings=require($this->app->path.'/config/mail.config.php');
         }//if
     }//construct
 
@@ -222,11 +222,11 @@ class Email {
         }//try
         catch(\Swift_TransportException $e){
             TRIGGER_ERROR('Email::Error Caught Swift_TransportException '.$e->getMessage(),E_USER_WARNING);
-            return false;
+            throw $e;
         }//catch
         catch(\Exception $e){
             TRIGGER_ERROR('Email::Error send failed '.$e->getMessage(),E_USER_WARNING);
-            return false;
+            throw $e;
         }//catch
 
     }//send

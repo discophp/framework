@@ -39,8 +39,8 @@ class FileHelper {
             $this->mimeCache = require \App::getAlias('disco.mime');
         }//if
 
-        if($mime = $this->mimeCache[$this->getExtension($path)]){
-            return $mime;
+        if(isset($this->mimeCache[$this->getExtension($path)])){
+            return $this->mimeCache[$this->getExtension($path)];
         }//if
 
         return null;
@@ -48,9 +48,16 @@ class FileHelper {
     }//getMimeTypeByExtension
 
 
+
+    public function recursiveIterate($path){
+        return new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
+    }//revursiveIterate
+
+
+
     public function serveFile($path){
 
-        $this->isFile($path);
+        $this->isFileOrDie($path);
 
         header('Content-type: ' . $this->getMimeTypeByExtension($path));
         $this->serve($path);
@@ -61,7 +68,7 @@ class FileHelper {
 
     public function XServeFile($path){
 
-        $this->isFile($path);
+        $this->isFileOrDie($path);
 
         header('Content-type: ' . $this->getMimeTypeByExtension($path));
         $this->Xserve($path);
@@ -72,7 +79,7 @@ class FileHelper {
 
     public function serveAsDownload($path){
 
-        $this->isFile($path);
+        $this->isFileOrDie($path);
 
         $this->downloadHeaders($path);
         $this->serve($path);
@@ -83,7 +90,7 @@ class FileHelper {
 
     public function XServeAsDownload($path){
 
-        $this->isFile($path);
+        $this->isFileOrDie($path);
 
         $this->downloadHeaders($path);
         $this->XServe($path);
@@ -117,12 +124,13 @@ class FileHelper {
     }//XServe
 
 
-    private function isFile($path){
+    private function isFileOrDie($path){
         if(!is_file($path)){
             http_response_code(404);
             exit;
         }//if
-    }//isFile
+    }//isFileOrDie
+
 
 
 }//FileHelper

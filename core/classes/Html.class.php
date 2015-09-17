@@ -78,7 +78,11 @@ Class Html {
 
             $method .= ' '.$props;
 
-            $html = $args[1];
+            $html = '';
+            if(isset($args[1])){
+                $html = $args[1];
+            }//if
+
         }//if
         else {
             $html = $args[0];

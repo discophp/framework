@@ -47,11 +47,6 @@ Class App extends \Pimple\Container {
     public static $app;
 
     /**
-     * @var null|array The autoload paths of addons
-    */
-    public $addonAutoloads=null;
-
-    /**
      * @var array Default regex matching conditions.
     */
     public $defaultMatchCondition = Array(
@@ -80,6 +75,19 @@ Class App extends \Pimple\Container {
         */
         parent::__construct($values);
 
+
+        /**
+         * Are we running in CLI mode?
+        */
+        if(php_sapi_name() == 'cli'){
+            $this->cli = true;
+            global $argv;
+            if(isset($argv[1]) && $argv[1]=='routes'){
+                \Disco\classes\Router::$base = '\Disco\manage\Router';
+            }//if
+        }//if
+
+
         /**
          * Prep the App.
         */
@@ -93,19 +101,10 @@ Class App extends \Pimple\Container {
         $this->services();
 
 
-        $this->registerAlias('disco.mime',$this->path.'/vendor/discophp/framework/core/util/mimeTypes.php');
+        //$this->registerAlias('disco.mime',$this->path.'/vendor/discophp/framework/core/util/mimeTypes.php');
+        $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
 
 
-        /**
-         * Are we running in CLI mode?
-        */
-        if(php_sapi_name() == 'cli'){
-            $this->cli = true;
-            global $argv;
-            if(isset($argv[1]) && $argv[1]=='routes'){
-                \Disco\classes\Router::$base = '\Disco\manage\Router';
-            }//if
-        }//if
 
         /**
          * Handle maintenance mode.
@@ -125,9 +124,9 @@ Class App extends \Pimple\Container {
 
 
     /**
-     * Prepare the Application for usage by loading the [.config.php] 
-     * http://github.com/discophp/project/blob/master/.config.php and potentially overriding it 
-     * with a [.dev.config.php] file if the application is in DEV mode and the file exists. 
+     * Prepare the Application for usage by loading the [config/config.php] 
+     * http://github.com/discophp/project/blob/master/config/config.php and potentially overriding it 
+     * with a [config/dev.config.php] file if the application is in DEV mode and the file exists. 
      *
      * Also, set some php.ini setting:
      *      - session.use_trans_sid = 0
@@ -145,14 +144,20 @@ Class App extends \Pimple\Container {
 
         //base directory of application
         //$this->path = dirname($_SERVER['DOCUMENT_ROOT']);
-        $this->path = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
+        //$this->path = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
+        if(!$this->cli){
+            $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+        } else {
+            $this->path = rtrim(__DIR__,'/') . '/';
+        }//el
+
         
         //load the appropriate application production configuration 
         //and override with any dev config.
-        if(is_file($this->path.'/.config.php')){
-            $this->config = require($this->path.'/.config.php');
-            if($this->config['APP_MODE']!='PROD' && is_file($this->path.'/.dev.config.php')){
-                $this->config = array_merge($this->config,require($this->path.'/.dev.config.php'));
+        if(is_file($this->path.'/config/config.php')){
+            $this->config = require($this->path.'/config/config.php');
+            if($this->config['APP_MODE']!='PROD' && is_file($this->path.'/config/dev.config.php')){
+                $this->config = array_merge($this->config,require($this->path.'/config/dev.config.php'));
             }//if
         }//if
 
@@ -169,7 +174,7 @@ Class App extends \Pimple\Container {
      * @return mixed
     */
     public static function config($name,$value=null){
-        if(!$value){
+        if($value === null){
             return self::instance()->config[$name];
         }//if
         self::instance()->config[$name] = $value;
@@ -251,7 +256,9 @@ Class App extends \Pimple\Container {
     */
     public final function tearDown(){
 
-        \Disco\classes\Router::processRoutes();
+
+        \Disco\classes\Router::processLastCreatedRoute();
+        //\Disco\classes\Router::processRoutes();
 
         /**
          * did this requested URI not find a match? If so thats a 404.
@@ -300,35 +307,6 @@ Class App extends \Pimple\Container {
 
 
 
-
-    /**
-     * Get the file contents of vendor/discophp/framework/addon-autoloads.php which is generated after updates
-     * and unserialize it then return it.
-     *
-     *
-     * @return array
-    */
-    public function addonAutoloads(){
-
-        if($this->addonAutoloads==null){
-            $p = $this->path.'/'.$this->config['COMPOSER_PATH'].'/discophp/framework/addon-autoloads.php';
-            if(is_file($p)){
-                $this->addonAutoloads = unserialize(file_get_contents($p));
-                if(!is_array($this->addonAutoloads)){
-                    $this->addonAutoloads = Array();
-                }//if
-            }//if
-            else {
-                $this->addonAutoloads = Array();
-            }//el
-        }//el
-
-        return $this->addonAutoloads;
-
-    }//addonAutoloads
-
-
-
     /**
      * Add a default matching condition for use with Router and Data. Store the $k and $v in 
      * $this->defaultMatchConditions .
@@ -363,8 +341,14 @@ Class App extends \Pimple\Container {
             'Model'         => 'Disco\classes\ModelFactory',
             'Queue'         => 'Disco\classes\Queue',
             'Session'       => 'Disco\classes\Session',
+            'Template'      => 'Disco\classes\Template',
             'View'          => 'Disco\classes\View'
         );
+
+        $services_path = $this->path . '/config/services.php';
+        if(is_file($services_path)){
+            $facades = array_merge($facades,require($services_path));
+        }//if
 
         foreach($facades as $facade=>$v){
             $this->make($facade,$v);
@@ -376,31 +360,11 @@ Class App extends \Pimple\Container {
             $this->make('DB','Disco\classes\DB');
         }//el
 
-        $this->make('Template',function(){
-
-            $path = trim(\App::config('TEMPLATE_PATH'),'/');
-            $cachePath = trim(\App::config('TEMPLATE_CACHE'),'/');
-            $path = $this->path . '/' .$path;
-            $loader = new \Twig_Loader_Filesystem($path);
-            $twig = new \Disco\classes\Template($loader, array(
-                'cache'         => $this->path. '/' . $cachePath,
-                'auto_reload'   => \App::config('TEMPLATE_RELOAD'),
-                'autoescape'    => \App::config('TEMPLATE_AUTOESCAPE')
-            ));
-
-            //register the url function with twig
-            $twig->addFunction(new \Twig_SimpleFunction('url',array('\Disco\classes\View','url')));
-            $twig->addGlobal('View',$this->with('View'));
-
-            return $twig;
-
-        });
-
         $this->as_factory('Router',function(){
-            return new \Disco\classes\Router::$base;
+            return \Disco\classes\Router::factory();
         });
 
-    }//registerDefaults
+    }//services
 
 
 
@@ -439,6 +403,21 @@ Class App extends \Pimple\Container {
         $this[$obj] = $val;
     }//set
 
+
+
+    public function extend($obj,$val){
+
+        $app = self::$app;
+
+        if(!$val instanceof \Closure){
+            $val = function() use($val,$app){
+                return $app->resolve_dependencies($val);
+            };
+        }//if
+       
+        parent::extend($obj,$val);
+
+    }//extend
 
 
     /**
@@ -494,7 +473,9 @@ Class App extends \Pimple\Container {
 
         $instance = $this->with($key);
 
+
         $args = (!is_array($args)) ? Array() : array_values($args);
+
         switch (count($args)) {
             case 0:
                 return $instance->$method();
