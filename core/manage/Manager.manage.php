@@ -412,6 +412,7 @@ class Manager {
      * @return void
     */
     public static function buildModel($table){
+
         $db = \App::instance()->config['DB_DB'];
         $result = \DB::query("SHOW KEYS FROM {$db}.{$table} WHERE Key_name='PRIMARY'");
     
@@ -573,6 +574,102 @@ Class {$className} extends Model {
         }//el
 
     }//html_routes
+
+
+
+
+
+    public static function buildValidator($table){
+
+        $result = \DB::query('SHOW COLUMNS FROM ' . $table);
+
+        $rules = '';
+
+        $map = Array(
+            'int'   => function($type){
+
+                $rule = 'intType()';
+                $length = \Disco\manage\Manager::getLengthBetweenParanthesis($type); 
+                if($length){
+                    $length = str_repeat('9',$length);
+                    $rule .= "->between(0,{$length})";
+                }//if
+
+                return $rule;
+            },
+            'char' => function($type){
+                $rule = 'stringType()';
+                $length = \Disco\manage\Manager::getLengthBetweenParanthesis($type); 
+                if($length){
+                    $rule .= "->length(0,{$length})";
+                }//if
+
+                return $rule;
+
+            },
+            'datetime' => function($type){
+                return 'date(\'Y-m-d H:i:s\')';
+            },
+            'date' => function($type){
+                return 'date(\'Y-m-d\')';
+            },
+            'time' => function($type){
+                return 'date(\'H:i:s\')';
+            }
+
+        );
+
+        while($row = $result->fetch()){
+
+            $rule = '';
+
+            foreach($map as $type=>$closure){
+                if(stripos($row['Type'],$type) !== false){
+                    $rule = $closure($row['Type']);
+                    break;
+                }//if
+            }//foreach
+
+            $orNull = '';
+            if($row['Null'] == 'YES'){
+                $orNull = ' || \Respect\Validation\Validator::nullType()->validate(\$v)';
+            }//if
+
+            $rules .= "
+            '{$row['Field']}' => function(\$v){
+                return \Respect\Validation\Validator::{$rule}->validate(\$v){$orNull};
+            },"; 
+
+
+        }//while
+
+        $rules = rtrim($rules,',');
+
+        $camel = str_replace(' ','',ucwords(str_replace('_',' ',$table)));
+
+        $rules = "
+namespace Enact\model\\validation;
+
+class {$camel} {
+
+    public \$validation = Array(
+{$rules}
+    );
+
+}//{$camel}";
+
+        var_dump($rules);
+
+    }//generateValidation
+
+
+    private static function getLengthBetweenParanthesis($type){
+
+        preg_match('|[a-zA-Z]+\(([0-9]+)\)|',$type,$matches);
+
+        return $matches[1];
+
+    }//getLengthBetweenParanthesis
 
 }//Manager
 ?>

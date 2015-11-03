@@ -148,7 +148,8 @@ Class App extends \Pimple\Container {
         if(!$this->cli){
             $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
         } else {
-            $this->path = rtrim(__DIR__,'/') . '/';
+            $this->path = dirname($_SERVER['SCRIPT_FILENAME']);
+            //$this->path = rtrim(__DIR__,'/') . '/';
         }//el
 
         

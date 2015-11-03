@@ -35,7 +35,7 @@ class View {
         'charset'           => 'utf-8',
         'lang'              => 'en',
         'favIcon'           => '/favicon.png',
-        'robots'            => '',
+        'robots'            => 'index,follow',
         'ajax'              => false,
         'scriptSrcs'        => Array(),
         'scripts'           => '',
@@ -223,7 +223,7 @@ class View {
      * @return void
     */
     public function charset($charset = null){
-        if(!$charset) return $this->view['charset'];
+        if($charset === null) return $this->view['charset'];
         $this->view['charset'] = $charset;
     }//charset
 
@@ -237,14 +237,14 @@ class View {
      * @return void
     */
     public function headExtra($extra = null){
-        if(!$extra) return $this->view['headExtra'];
+        if($extra === null) return $this->view['headExtra'];
         $this->view['headExtra'] .= $extra;
     }//headExtra
 
 
 
     public function robots(){
-        $this->indexes[$this->activeIndex];
+        return $this->indexes[$this->activeIndex];
     }//robots
 
 
@@ -267,11 +267,7 @@ class View {
             $template = $this->ajaxTemplate;
         }//el
 
-        if(($alias = \App::resolveAlias($template)) !== false){
-            $template = $alias;
-        }//if
-
-        echo \Template::render($template);
+        echo \Template::build($template);
 
 
     }//printPage
@@ -286,7 +282,7 @@ class View {
     */
     public function ajax($bool = true){
         $this->view['ajax'] = $bool;
-    }//isAjax
+    }//ajax
 
 
 
@@ -308,7 +304,7 @@ class View {
      * @param string $t the title of the page
     */
     public function title($t = null){
-        if(!$t) return $this->view['title'];
+        if($t === null) return $this->view['title'];
         $this->view['title'] = $t;
     }//setTitle
 
@@ -321,7 +317,7 @@ class View {
      * @param string $d the description of the page
     */
     public function desc($d = null){
-        if(!$d) return $this->view['description'];
+        if($d === null) return $this->view['description'];
         $this->view['description'] = $d;
     }//setDesc
 
@@ -339,8 +335,9 @@ class View {
 
 
 
-    public function body(){
-        return $this->view['body'];
+    public function body($b = null){
+        if($b === null) return $this->view['body'];
+        $this->view['body'] = $b;
     }//body
 
 
@@ -352,7 +349,7 @@ class View {
      * @return void
     */
     public function favIcon($v = null){
-        if(!$v) return $this->view['favIcon'];
+        if($v === null) return $this->view['favIcon'];
         $this->view['favIcon'] = $v;
     }//favIcon
 
@@ -563,8 +560,8 @@ class View {
         if($code!=200){
             http_response_code($code);
             $file = \App::path()."/app/{$code}.php";
-            if($callable !== false){
-                //call_user_func($callable);
+            if($callable !== false && $callable instanceof \Closure){
+                call_user_func($callable);
             }//if
             else if(is_file($file)){
                 $action = require($file);

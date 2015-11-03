@@ -518,6 +518,152 @@ class Model {
 
 
     /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhere(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhereOr(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'OR');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhereNotOr(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'OR','<>');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhereNot(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND','<>');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhereLike(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' LIKE ');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare the WHERE condition for the working query. 
+     * Accepts its arguements through func_get_args(). 
+     *
+     * @return self
+    */
+    public final function orWhereNotLike(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'AND',' NOT LIKE ');
+        return $this;
+    }//where
+
+
+
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function orWhereIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+
+        $this->where .= "{$field} IN ({$array})";
+
+        return $this;
+
+    }//orWhereIn
+
+
+
+    /**
+     * Prepare a WHERE IN condition for the query.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function orWhereNotIn($field,$array){
+
+        $array = $this->buildWhereInArray($array);
+
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+
+        $this->where .= "{$field} NOT IN ({$array})";
+
+        return $this;
+
+    }//orWhereNotIn
+
+
+
+    /**
      * Get a commas delimited string of values for use in an IN query.
      *
      *
@@ -645,9 +791,10 @@ class Model {
 
         if($on !== null){
             if(is_array($on)){
-                foreach($on as $k=>$v){
-                    $joinType .= "ON {$k}={$v} ";
-                }//foreach
+                $joinType .= 'ON ' . $this->prepareCondition(Array($on),'AND');
+                //foreach($on as $k=>$v){
+                //    $joinType .= "ON {$k}={$v} ";
+                //}//foreach
             }//if
             else if($data !== null){
                 $joinType .= 'ON '.$this->app['DB']->set($on,$data).' ';
@@ -944,7 +1091,7 @@ class Model {
             SELECT *                                                                                                                                                                                                       
             FROM information_schema.tables                                                                  
             WHERE table_type="BASE TABLE" AND table_schema="'.$this->app->config('DB_DB').'" AND table_name="'.$this->table.'"
-        ')->fetch_assoc();
+        ')->fetch();
     }//about
 
 
@@ -958,7 +1105,7 @@ class Model {
     public final function columns(){
         $result = $this->app['DB']->query('SHOW COLUMNS FROM '.$this->table);
         $columns = Array();
-        while($row = $result->fetch_assoc()){
+        while($row = $result->fetch()){
             $columns[] = $row;
         }//while
         return $columns;

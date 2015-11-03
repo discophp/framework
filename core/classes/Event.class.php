@@ -32,6 +32,7 @@ class Event {
      * @return void
     */
     public final function listen($event,$action,$priority=0){
+
         if(!isset($this->events[$event])){
             $this->events[$event]=Array('actions'=>Array());
         }//if
@@ -39,6 +40,10 @@ class Event {
         if($action instanceof \Closure){
             $action = new \Jeremeamia\SuperClosure\SerializableClosure($action);
         }//if
+
+        while(isset($this->events[$event]['actions'][$priority])){
+            $priority++;
+        }//while
 
         $this->events[$event]['actions'][$priority]=$action;
 
@@ -92,10 +97,6 @@ class Event {
             }//foreach
 
         }//if
-        else {
-            $app = \App::$app;
-            $app->error("Event::Error event \"{$event}\" not found",Array('fire'),debug_backtrace(TRUE,6));
-        }//el
 
     }//fire
 

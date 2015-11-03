@@ -12,8 +12,6 @@ namespace Disco\classes;
 */
 Class Template extends \Twig_Environment {
 
-    public $extension;
-
     private $path;
 
     public function __construct(){
@@ -54,6 +52,16 @@ Class Template extends \Twig_Environment {
     }//isTemplate
 
 
+
+
+    public function render($name,array $data = Array()){
+        $name = $this->buildTemplatePath($name);
+        return parent::render($name,$data);
+    }//render
+
+
+
+
     /**
      * Build a template and push its html onto the Views html stack.
      *
@@ -69,19 +77,17 @@ Class Template extends \Twig_Environment {
 
 
 
-    private function buildTemplatePath($name){
+    public function buildTemplatePath($name){
 
         if(($alias = \App::resolveAlias($name)) !== false){
             $name = $alias; 
         }//if
 
-        if(!$this->extension) {
-            $this->extension = \App::config('TEMPLATE_EXTENSION');
-            $extLen = strlen($this->extension);
-            $nameLen = strlen($name);
-            if($extLen && substr($name,$nameLen-$extLen,$nameLen) !== $this->extension){
-                $name .= $this->extension;
-            }//if
+        $extension = \App::config('TEMPLATE_EXTENSION');
+        $extLen = strlen($extension);
+        $nameLen = strlen($name);
+        if($extLen && substr($name,$nameLen-$extLen,$nameLen) !== $extension){
+            $name .= $extension;
         }//if
 
         return $name;
@@ -99,8 +105,6 @@ Class Template extends \Twig_Environment {
      * @return string
     */
     public function build($name,$data=Array()){
-
-        $name = $this->buildTemplatePath($name);
 
         return $this->render($name,$data);
 

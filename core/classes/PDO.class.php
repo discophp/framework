@@ -7,6 +7,10 @@ class PDO extends \PDO {
     private $app;
 
 
+    protected $transactionCounter = 0;
+
+
+
     public function __construct($host=null,$user=null,$pw=null,$db=null,$engine='mysql') {
 
         $this->app = \App::instance();
@@ -36,10 +40,54 @@ class PDO extends \PDO {
 
         } catch(\PDOException $e){
             TRIGGER_ERROR('DB::Connect Error | '.$e->getMessage(),E_USER_WARNING);
-            $this->app['View']->serve(500);
+            throw new \Disco\exceptions\DBConnection($e->getMessage(),$e->getCode());
         }//catch
 
     }//end constructor
+
+
+
+    public function inTransaction(){
+        return $this->transactionCounter > 0;
+    }//inTransaction
+
+
+
+    public function beginTransaction() {
+
+        if(!$this->transactionCounter++){
+            return parent::beginTransaction();
+        }//if
+
+        return $this->transactionCounter >= 0;
+
+    }//beginTransaction
+    
+
+
+    public function commit() {
+
+        if(!--$this->transactionCounter){
+            return parent::commit();
+        }//if
+
+        return $this->transactionCounter >= 0;
+
+    }//commit
+    
+
+
+    public function rollback() {
+
+        if($this->transactionCounter >= 0) {
+            $this->transactionCounter = 0;
+            return parent::rollback();
+        }//if
+
+        $this->transactionCounter = 0;
+        return false;
+
+    }//rollback
 
 
 
@@ -63,7 +111,7 @@ class PDO extends \PDO {
 
         } catch(\PDOException $e){
             TRIGGER_ERROR('DB:: Query Error | '.$e->getMessage() . ' | ' . $e->getTraceAsString(),E_USER_WARNING);
-            $this->app['View']->serve(500);
+            throw new \Disco\exceptions\DBQuery($e->getMessage(),$e->getCode());
         }//catch
 
     }//query
@@ -139,16 +187,16 @@ class PDO extends \PDO {
             return $arg;
         }//if
         return $arg;
-    }//wrapStrings
+    }//prepareType
 
 
     private function replaceQuestionMarks($arg){
         return str_replace('?','+:-|:-+',$arg);
-    }//escapeQuestionMarks
+    }//replaceQuestionMarks
 
     private function resetQuestionMarks($arg){
         return str_replace('+:-|:-+','?',$arg);
-    }//escapeQuestionMarks
+    }//resetQuestionMarks
 
 
 
