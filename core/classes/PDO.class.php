@@ -48,7 +48,7 @@ class PDO extends \PDO {
 
 
     public function inTransaction(){
-        return $this->transactionCounter > 0;
+        return $this->transactionCounter >= 0;
     }//inTransaction
 
 
@@ -79,7 +79,7 @@ class PDO extends \PDO {
 
     public function rollback() {
 
-        if($this->transactionCounter >= 0) {
+        if($this->transactionCounter > 0) {
             $this->transactionCounter = 0;
             return parent::rollback();
         }//if

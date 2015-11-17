@@ -43,7 +43,7 @@ class View {
         'styles'            => '',
         'styleSrcs'         => Array(),
         'headExtra'         => '',
-        'bodyStyles'        => '',
+        'bodyClass'        => Array(),
         'header'            => '',
         'body'              => '',
         'footer'            => ''
@@ -133,7 +133,12 @@ class View {
      * @return mixed 
      */
     public function getViewVariable($n){
-        return $this->view[$n];
+
+        if(isset($this->view[$n])){
+            return $this->view[$n];
+        }//if
+
+        return false;
     }//setViewVariable
 
 
@@ -163,6 +168,18 @@ class View {
 
 
 
+    public function getHeader(){
+
+        if($this->view['header']){
+            return $this->view['header'];
+        }//if
+
+        return $this->header();
+
+    }//getHeader
+
+
+
     /**
      * Set the markup for the view header, in $this->header.
      * 
@@ -185,6 +202,18 @@ class View {
     public function footer(){
         return $this->view['footer'];
     }//footer
+
+
+
+    public function getFooter(){
+
+        if($this->view['footer']){
+            return $this->view['footer'];
+        }//if
+
+        return $this->footer();
+
+    }//getHeader
 
 
 
@@ -491,9 +520,14 @@ class View {
      *
      * @param string $s A CSS class.
     */
-    public function bodyStyle($s){
-        $this->view['bodyStyles'] .= $s.' ';
+    public function bodyClass($class){
+        $this->view['bodyClass'][] = $class;
     }//pushBodyStyle
+
+
+    public function bodyClasses(){
+        return implode(' ',$this->view['bodyClass']);
+    }//bodyClasses
 
 
 

@@ -62,6 +62,9 @@ Class App extends \Pimple\Container {
 
     public $alias = Array();
 
+
+    public $domain;
+
     /**
      * Assemble the pieces of the application that make it all tick.
      * 
@@ -123,6 +126,7 @@ Class App extends \Pimple\Container {
     }//instance
 
 
+
     /**
      * Prepare the Application for usage by loading the [config/config.php] 
      * http://github.com/discophp/project/blob/master/config/config.php and potentially overriding it 
@@ -142,15 +146,10 @@ Class App extends \Pimple\Container {
         //only allow sessions to be used with cookies
         ini_set('session.use_only_cookies',1);
 
-        //base directory of application
-        //$this->path = dirname($_SERVER['DOCUMENT_ROOT']);
-        //$this->path = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
-        if(!$this->cli){
-            $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
-        } else {
-            $this->path = dirname($_SERVER['SCRIPT_FILENAME']);
-            //$this->path = rtrim(__DIR__,'/') . '/';
-        }//el
+
+        $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+
+        $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
 
         
         //load the appropriate application production configuration 
@@ -191,6 +190,13 @@ Class App extends \Pimple\Container {
     public static function path(){
         return self::instance()->path;
     }//path
+
+
+
+    public function domain(){
+        return $this->domain;     
+    }//domain
+
 
 
     /**

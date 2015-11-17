@@ -13,6 +13,7 @@ namespace Disco\classes;
 */
 class Email {
 
+
     /**
      * @var array Holds config data from config/mail.config.php .
     */
@@ -31,8 +32,6 @@ class Email {
     public $plainTextOnly=false;
     
 
-    private $app;
-
 
     /**
      * Load our Email setting from config/mail.config.php . 
@@ -41,14 +40,25 @@ class Email {
      * @return void
      */
     public function __construct(){
-        $this->app = \App::instance();
-        if(is_file($this->app->path.'/config/mail.config.php')){
-            $this->settings=require($this->app->path.'/config/mail.config.php');
+
+        if(is_file(\App::path() . '/config/mail.config.php')){
+            $this->settings=require(\App::path() . '/config/mail.config.php');
         }//if
+
+        \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
+
     }//construct
 
 
 
+    /**
+     * Get a email configuration setting.
+     *
+     *
+     * @param string $key The key of the config.
+     *
+     * @return mixed
+    */
     public function getSetting($key){
         if(!isset($this->settings[$key])){
             return false;
@@ -58,9 +68,70 @@ class Email {
 
 
 
+    /**
+     * Set a email configuration setting.
+     *
+     *
+     * @param string $key The key of the config.
+     * @param mixed $value The value of the config
+     *
+     * @return void
+    */
     public function setSetting($key,$value){
         $this->settings[$key] = $value;
     }//setSetting
+
+
+
+    /**
+     * Set the account to send emails through.
+     *
+     *
+     * @param string $key The account key.
+     *
+     * @return void
+    */
+    public function setCurrentAccount($key){
+        $this->setSetting('DEFAULT_ACCOUNT',$key);
+    }//account
+
+
+
+    /**
+     * Get the account currently configuration to send emails through.
+     *
+     *
+     * @return array The account configuration.
+    */
+    public function getCurrentAccount(){
+        return $this->getSetting($this->getSetting('DEFAULT_ACCOUNT'));
+    }//getCurrentAccount
+
+
+
+    /**
+     * Set the server configuration used to send emails through.
+     *
+     *
+     * @param string $key The key of the server.
+     *
+     * @return void
+    */
+    public function setCurrentServer($key){
+        $this->setSetting('DEFAULT_SERVER',$key);
+    }//getCurrentServer
+
+
+
+    /**
+     * Get the server configuration currently being used to send emails through.
+     *
+     *
+     * @return array The server confiuration.
+    */
+    public function getCurrentServer(){
+        return $this->getSetting($this->getSetting('DEFAULT_SERVER'));
+    }//getCurrentServer
 
 
 
@@ -75,42 +146,6 @@ class Email {
     public function plainText($bool=true){
         $this->plainTextOnly=$bool;
     }//plainText
-
-
-
-    /**
-     * Use SSL protocol to send email.
-     *
-     *
-     * @return void
-    */
-    public function useSSL(){
-        $this->settings['DEFAULT']="SSL";
-    }//useSSL
-
-
-
-    /**
-     * Use TLS protocol to send email.
-     *
-     *
-     * @return void
-    */
-    public function useTLS(){
-        $this->settings['DEFAULT']="TLS";
-    }//useTLS
-
-
-
-    /**
-     * Use SMTP protocol to send email.
-     *
-     *
-     * @return void
-    */
-    public function useSMTP(){
-        $this->settings['DEFAULT']="SMTP";
-    }//useSMTP
 
 
 
@@ -133,7 +168,6 @@ class Email {
     * Send an email through a specified account.
     *
     *
-    * @param string         $key        The key of the email account in [.mail.config.php] to send this email with.
     * @param string|array   $toEmail    The email addresses to send this email to. 
     * @param string         $subject    The subject line of this email. 
     * @param string         $body       The body of this email.
@@ -141,42 +175,90 @@ class Email {
     *
     * @return boolean Success?
     */
-    public function send($key,$toEmail,$subject,$body,$attach=null){
-
-        if(!isset($this->settings[$key])){
-            $this->app->error("Email::Error account $key does not exist",Array('send'),debug_backtrace(TRUE,6));
-            exit;
-        }//if
+    public function send($toEmail,$subject,$body,$attach=null){
 
         if($this->delay!=null){
             $d = $this->delay;
             $this->delay = null;
             $body = htmlentities($body);
-            $this->app['Queue']->push('Email@send',$d,Array($key,$toEmail,$subject,$body,$attach));
+            \App::with('Queue')->push('Email@send',$d,Array($toEmail,$subject,$body,$attach));
             return true;
         }//if
 
-        \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
+        $message = $this->getMessage($toEmail,$subject,$body);
+
+        //attach attachments to message if any
+        if($attach !== null){
+            $message = $this->addAtachments($message,$attach);
+        }//if
+         
+        return $this->sendMessage($message);
+
+    }//send
+
+
+
+    /**
+     * Add attachments by absolute path to a \Swift_Message.
+     *
+     *
+     * @param \Swift_Message $message The message to add the attachments to.
+     * @param string|array $attach The aboslute paths of the attachments.
+     *
+     * @return \Swift_Message The message with the attachments
+    */
+    public function addAtachments(\Swift_Message $message,$attach){
+
+        if(is_string($attach)){
+            $attach = Array($attach);
+        }//if 
+
+        foreach($attach as $filePath){
+            $message->attach(\Swift_Attachment::fromPath($filePath));
+        }//foreach
+
+        return $message;
+
+    }//addAtachments
+
+
+
+    /**
+     * Get a \Swift_Message thats preloaded with the passed params.
+     *
+     *
+     * @param string|array   $toEmail    The email addresses to send this email to. 
+     * @param string         $subject    The subject line of this email. 
+     * @param string         $body       The body of this email.
+     *
+     * @return \Swift_Message The message.
+    */
+    public function getMessage($toEmail,$subject,$body){
 
         //Create the message
         $message = \Swift_Message::newInstance();
+
+        $account = $this->getCurrentAccount();
          
         $message->setSubject($subject);
-        if(isset($this->settings[$key]['ALIAS']) && $this->settings[$key]['ALIAS']!=''){
-            $message->setFrom($this->settings[$key]['ALIAS']);
+
+        if(isset($account['ALIAS']) && $account['ALIAS'] != ''){
+            $message->setFrom($account['ALIAS']);
         }//if
         else {
-            $message->setFrom($this->settings[$key]['EMAIL']);
+            $message->setFrom($account['EMAIL']);
         }//el
 
-        if($this->app->config['APP_MODE']=='DEV'){
-            $toEmail = $this->settings['DEV_MODE_SEND_TO'];
+        if(\App::config('APP_MODE') == 'DEV' && $this->getSetting('DEV_MODE_SEND_TO')){
+            $toEmail = $this->getSetting('DEV_MODE_SEND_TO');
         }//if
 
-        if(!is_array($toEmail))
-            $message->setTo(array($toEmail));
-        else 
-            $message->setTo($toEmail);
+        if(!is_array($toEmail)){
+            $toEmail = array($toEmail);
+        }//if
+
+        $message->setTo($toEmail);
+
 
         if($this->plainTextOnly){
             $message->setBody($body,'text/plain');
@@ -189,26 +271,51 @@ class Email {
             $message->setBody($body,'text/html');
         }//el
 
-        //attach attachments to message if any
-        if($attach!=null){
-            for($i=0;$i<count($attach);$i++){
-                $message->attach(\Swift_Attachment::fromPath($attach[$i]));
-            }//for
-        }//if
-         
+        return $message;
+
+    }//getMessage
+
+
+
+    /**
+     * Send a swiftmailer message.
+     *
+     * 
+     * @param \Swift_Message $message The message to send.
+     *
+     *
+     * @return boolean
+     *
+     * @throws \Disco\exceptions\Email
+     * @throws \Swift_TransportException
+     * @throws \Exception
+    */
+    public function sendMessage(\Swift_Message $message){
+
         try {
+
+            $serverConfig = $this->getCurrentServer();
+
+            if($serverConfig === null){
+                throw new \Disco\exceptions\Email("Email exception: Server defined by key {$this->setting['DEFAULT_SERVER']} does not exist.");
+            }//if
+
+            $serverConfig['PROTOCOL'] = strtolower($serverConfig['PROTOCOL']);
+
+            if($serverConfig['PROTOCOL'] == 'smtp') {
+                $serverConfig['PROTOCOL'] = '';
+            }//if
+
+            $account = $this->getCurrentAccount();
+
+            if($account === null){
+                throw new \Disco\exceptions\Email("Email exception: Account defined by key {$this->setting['DEFAULT_ACCOUNT']} does not exist.");
+            }//if
+
             //Create the Transport
-            $type = $this->settings['DEFAULT'];
-            $server = $this->settings[$type]['HOST'];
-            $port = $this->settings[$type]['PORT'];
-
-            $type = strtolower($type);
-            if($type=='smtp')
-                $type='';
-
-            $transport = \Swift_SmtpTransport::newInstance($server,$port,$type);
-            $transport->setUsername($this->settings[$key]['EMAIL']);
-            $transport->setPassword($this->settings[$key]['PASSWORD']);
+            $transport = \Swift_SmtpTransport::newInstance($serverConfig['HOST'],$serverConfig['PORT'],$serverConfig['PROTOCOL']);
+            $transport->setUsername($account['EMAIL']);
+            $transport->setPassword($account['PASSWORD']);
             
             // Create the Mailer using the Transport
             $mailer = \Swift_Mailer::newInstance($transport);
@@ -219,6 +326,7 @@ class Email {
             $mailer->getTransport()->stop();
 
             return $result;
+
         }//try
         catch(\Swift_TransportException $e){
             TRIGGER_ERROR('Email::Error Caught Swift_TransportException '.$e->getMessage(),E_USER_WARNING);
@@ -229,7 +337,9 @@ class Email {
             throw $e;
         }//catch
 
-    }//send
+    }//sendMessage
+
+
 
 }//Email
 ?>
