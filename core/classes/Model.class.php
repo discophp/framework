@@ -13,71 +13,72 @@ namespace Disco\classes;
 */
 class Model {
 
+
     /**
      * @var string The SQL Table associated with this model.
     */
     public $table;
+
 
     /**
      * @var string|array The SQL primary key or composite key associated with this model.
     */
     public $ids;
 
+
     /**
      * @var string|null An alias to apply to the model when making queries.
     */
     public $alias=null;
+
 
     /**
      * @var boolean Was the alias set by method call?
     */
     public $aliasWasSet = false;
 
+
     /**
      * @var string The working select statement.
     */
     private $select;
+
 
     /**
      * @var string The working update statement.
     */
     private $update='';
 
+
     /**
      * @var string The where condition or the working query.
     */
     private $where='';
 
+
     /**
      * @var array The tables we should join on with the working query.
     */
     private $joinOn=Array();
+    
 
     /**
      * @var array The result limit of the working query.
     */
     private $limit=Array();
 
+
     /**
      * @var array The ordering of the working query. 
     */
     private $order=Array();
+    
 
     /**
      * @var string The last query this model executed.
     */
     public $lastQuery;
 
-    /**
-     * @var \mysqli_result The last resultSet from a query.
-    */
-    private $lastResultSet;
-
-    private $app;
-
-    public function __construct(){
-        $this->app = \App::instance();
-    }//__construct
 
 
     /**
@@ -91,17 +92,26 @@ class Model {
         $this->joinOn=Array();
         $this->limit=Array();
         $this->order=Array();
-        $this->lastResultSet=null;
         $this->update='';
         $this->alias = null;
     }//clearData
 
 
-    public final function alias($k){
-        $this->alias = $k;
+
+    /**
+     * Alias the table name of the model. Use when performing joins.
+     *
+     *
+     * @param string $alias The alias.
+     *
+     * @return self
+    */
+    public final function alias($alias){
+        $this->alias = $alias;
         $this->aliasWasSet = true;
         return $this;
     }//alias
+
 
 
     /**
@@ -184,6 +194,15 @@ class Model {
 
 
     /**
+     * Alias of `$this->finalize()`.
+    */
+    public final function commit(){
+        return $this->finalize(); 
+    }//commit
+
+
+
+    /**
      * Execute an INSERT statement.
      * Accepts its arguements through func_get_args(). 
      *
@@ -218,8 +237,8 @@ class Model {
         $values = rtrim($values,',');
         $query = "INSERT INTO {$this->table} ({$insert}) VALUES ({$values})";
 
-        if($this->executeQuery($this->app['DB']->set($query,$tempValues))){
-            return $this->app['DB']->lastId();
+        if($this->executeQuery(\App::with('DB')->set($query,$tempValues))){
+            return \App::with('DB')->lastId();
         }//if
 
     }//insert
@@ -230,6 +249,7 @@ class Model {
      * Execute a DELETE statement. 
      * Accepts its arguements thruogh func_get_args(). 
      *
+     * Delete records where all the key/value pairs match.
      *
      * @return boolean Whether or not the delete was successful.
     */
@@ -245,6 +265,8 @@ class Model {
      * Execute a DELETE statement. 
      * Accepts its arguements thruogh func_get_args(). 
      *
+     * Will delete any records that match any of the key/values pairs.
+     *
      *
      * @return boolean Whether or not the delete was successful.
     */
@@ -252,13 +274,15 @@ class Model {
         $this->clearData();
         $this->where = $this->prepareCondition(func_get_args(),'OR');
         return $this->executeQuery("DELETE FROM {$this->table} WHERE {$this->where}");
-    }//delete
+    }//deleteOr
 
 
 
     /**
-     * Prepare the WHERE condition for the working query. 
+     * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
+     *
+     * Will find records where all key/value pairs match.
      *
      * @return self
     */
@@ -273,8 +297,10 @@ class Model {
 
 
     /**
-     * Prepare the WHERE condition for the working query. 
+     * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
+     *
+     * Will find records where any of the key/value pairs match.
      *
      * @return self
     */
@@ -289,8 +315,11 @@ class Model {
 
 
     /**
-     * Prepare the WHERE condition for the working query. 
+     * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
+     *
+     *
+     * Will find records where key/values pairs do not match any conditions.
      *
      * @return self
     */
@@ -305,9 +334,13 @@ class Model {
 
 
     /**
-     * Prepare the WHERE condition for the working query. 
+     * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
      *
+     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * condition group with an AND. Then in the new condition group match records where all of the key/value pairs 
+     * match.
+
      * @return self
     */
     public final function whereAlso(){
@@ -321,8 +354,10 @@ class Model {
 
 
     /**
-     * Prepare the WHERE condition for the working query. 
+     * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
+     *
+     * Find record where none of the values match the key/value pairs.
      *
      * @return self
     */
@@ -340,6 +375,10 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * condition group with an AND. Then in the new condition group match records where none of the key/value pairs 
+     * match. 
+     *
      * @return self
     */
     public final function whereNotAlso(){
@@ -356,6 +395,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Find records that are like the key/value pairs. AKA a regexp.
+     *
      * @return self
     */
     public final function whereLike(){
@@ -371,6 +412,9 @@ class Model {
     /**
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
+     *
+     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * condition group with an AND. Then in the new condition group match records that are like the key/value pairs. 
      *
      * @return self
     */
@@ -389,6 +433,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Find records that are not like the key/value pairs.
+     *
      * @return self
     */
     public final function whereNotLike(){
@@ -405,6 +451,9 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * condition group with an AND. Then in the new condition group match records that are not like the key/value pairs. 
+     *
      * @return self
     */
     public final function whereNotAlsoLike(){
@@ -418,7 +467,9 @@ class Model {
 
 
     /**
-     * Prepare a WHERE IN condition for the query.
+     * Prepare a WHERE condition for the query.
+     *
+     * Find records where a value is in the key/value pairs.
      *
      *
      * @param string $field The field to look in.
@@ -445,6 +496,8 @@ class Model {
     /**
      * Prepare a WHERE IN condition for the query.
      *
+     * Find records where a value is not in the key/value pairs.
+     *
      *
      * @param string $field The field to look in.
      * @param string|array $array A string of comma seperated values, or an array of values.
@@ -470,6 +523,7 @@ class Model {
     /**
      * Prepare a WHERE IN condition for the query.
      *
+     * Find records where a value is in the key/value pairs.
      *
      * @param string $field The field to look in.
      * @param string|array $array A string of comma seperated values, or an array of values.
@@ -495,6 +549,7 @@ class Model {
     /**
      * Prepare a WHERE IN condition for the query.
      *
+     * Find records where a value is not in the key/value pairs.
      *
      * @param string $field The field to look in.
      * @param string|array $array A string of comma seperated values, or an array of values.
@@ -521,6 +576,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Find records where the key/value pairs match.
+     *
      * @return self
     */
     public final function orWhere(){
@@ -536,6 +593,8 @@ class Model {
     /**
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
+     *
+     * Find records where any of the key/value pairs match.
      *
      * @return self
     */
@@ -553,6 +612,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Will find records where key/values pairs do not match any conditions.
+     *
      * @return self
     */
     public final function orWhereNotOr(){
@@ -568,6 +629,8 @@ class Model {
     /**
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
+     *
+     * Find record where none of the values match the key/value pairs.
      *
      * @return self
     */
@@ -585,6 +648,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Find records that are like the key/value pairs. AKA a regexp.
+     *
      * @return self
     */
     public final function orWhereLike(){
@@ -601,6 +666,8 @@ class Model {
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
+     * Find records that are not like the key/value pairs.
+     *
      * @return self
     */
     public final function orWhereNotLike(){
@@ -616,6 +683,7 @@ class Model {
     /**
      * Prepare a WHERE IN condition for the query.
      *
+     * Find records where a value is in the key/value pairs.
      *
      * @param string $field The field to look in.
      * @param string|array $array A string of comma seperated values, or an array of values.
@@ -641,6 +709,7 @@ class Model {
     /**
      * Prepare a WHERE IN condition for the query.
      *
+     * Find records where a value is not in the key/value pairs.
      *
      * @param string $field The field to look in.
      * @param string|array $array A string of comma seperated values, or an array of values.
@@ -679,7 +748,7 @@ class Model {
         $values = '';
 
         foreach($array as $v){
-            $v = $this->app['DB']->clean($v);
+            $v = \App::with('DB')->clean($v);
             $values .= "{$v},";
         }//foreach
 
@@ -688,6 +757,12 @@ class Model {
     }//buildWhereInArray
 
 
+    /**
+     * Build the final where condition to be used in the query statement.
+     *
+     *
+     * @return string
+    */
     private final function buildWhere(){
 
         $pieces = explode(' AND ALSO ',$this->where);
@@ -726,7 +801,7 @@ class Model {
             return $this->table.'.'.$k;
         }//if
         return $k;
-    }//alias
+    }//fieldAlias
 
 
 
@@ -743,21 +818,16 @@ class Model {
             return $this->alias;
         }//if
         return $this->table;
-    }//private function
+    }//tableAlias
 
 
 
     /**
-    * Prepare an OR statement for the WHERE condition of the working query.
-    * Accepts its arguements through func_get_args().
-    *
-    *
-    * @return self 
+    * Alias of `$this->orWhereOr()`.
     */
     public final function otherwise(){
-        $this->where.= ' OR '.$this->prepareCondition(func_get_args(),'OR');
-        return $this;
-    }//or 
+        return $this->orWhereOr();
+    }//otherwise
 
 
 
@@ -768,7 +838,9 @@ class Model {
      *
      *
      * @param string $modelName The name of the Model you will join on.
-     * @param string $joinOn    The type of JOIN that should be used, this is hidden from the user.
+     * @param string|array $on The condition used to join on.
+     * @param mixed  $data Data that should be bound into the `$on` condition.
+     * @param string $joinOn The type of JOIN that should be used, this is hidden from the user.
      *
      * @return self 
     */
@@ -784,7 +856,7 @@ class Model {
             $alias = $modelName;
         }//el
 
-        $joinTable = $this->app->with($modelName)->table;
+        $joinTable = \App::with($modelName)->table;
         $table = $this->tableAlias();
 
         $joinType .= " {$joinTable}{$tableAlias} ";
@@ -797,7 +869,7 @@ class Model {
                 //}//foreach
             }//if
             else if($data !== null){
-                $joinType .= 'ON '.$this->app['DB']->set($on,$data).' ';
+                $joinType .= 'ON ' . \App::with('DB')->set($on,$data).' ';
             }//el
             else {
                 $joinType .= "ON {$on} ";
@@ -806,7 +878,7 @@ class Model {
         else {
 
             $baseIds = (is_array($this->ids)) ? $this->ids : Array($this->ids);
-            $ids = $this->app->with($modelName)->ids;
+            $ids = \App::with($modelName)->ids;
             $ids = (is_array($ids)) ? $ids : Array($ids);
 
             $ids = array_intersect($baseIds,$ids);
@@ -829,12 +901,15 @@ class Model {
     }//join
 
 
+
     /**
      * Read docs on join function first, this simply extends that function and 
      * passes in a LEFT JOIN as the second arguement.
      *
      * 
-     * @param $modelName The name of the model you will join on.
+     * @param string $modelName The name of the Model you will join on.
+     * @param string|array $on The condition used to join on.
+     * @param mixed  $data Data that should be bound into the `$on` condition.
      *
      * @return self 
     */
@@ -850,14 +925,17 @@ class Model {
      * passes in a RIGHT JOIN as the second arguement.
      *
      * 
-     * @param $modelName The name of the model you will join on
+     * @param string $modelName The name of the Model you will join on.
+     * @param string|array $on The condition used to join on.
+     * @param mixed  $data Data that should be bound into the `$on` condition.
      *
      * @return self 
     */
     public final function rjoin($modelName,$on=null,$data=null){
         $this->join($modelName,$on,$data,'RIGHT JOIN');
         return $this;
-    }//ljoin
+    }//rjoin
+
 
 
     /**
@@ -915,33 +993,34 @@ class Model {
 
 
 
-
-
     /**
      * Return the data from the execution of the previous query.
      *
-     * @return \mysqli_result MySQLi result set of last query.
+     * @return mixed Result of last query.
     */
     public final function data(){
-        return $this->fetchData();
+        return $this->executeQuery($this->compile());
     }//data
 
 
 
-
     /**
      * Return the data from the execution of the previous query.
      *
-     * @return \mysqli_result MySQLi result set of last query.
+     * @return array
     */
     public final function asArray(){
         return $this->data()->fetchAll();
-        //return $this->fetchData()->fetch_all(MYSQLI_ASSOC);
-        //return \mysqli_fetch_all($this->fetchData(),MYSQLI_ASSOC);
     }//data
 
 
 
+    /**
+     * Get the first row of the query.
+     *
+     *
+     * @return array The first row
+    */
     public final function first(){
         return $this->data()->fetch();
     }//first
@@ -949,27 +1028,13 @@ class Model {
 
 
     /**
-     * If working with a direct instance of the Model and not 
-     * through the Facade then they can invoke the class as a method
-     * and get the data return.
+     * Compile the select query from the conditions.
      *
      *
-     * @return resultSet 
-     */
-    public function __invoke(){
-        return $this->data();
-    }//invoke
-
-
-
-    /**
-     * Execute the previous query and set the returned data.
-     *
-     *
-     * @return \mysqli_result  
+     * @return string The compiled raw query.
     */
-    private final function fetchData(){
-
+    public final function compile(){
+        
         $select = implode(',',array_values($this->select));
 
         //$where = $this->where;
@@ -1000,19 +1065,28 @@ class Model {
             $alias = " AS {$this->alias}";
         }//if
 
-        return $this->executeQuery("SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}");
+        return "SELECT {$select} FROM {$this->table}{$alias} {$joinOn} {$where} {$order} {$limit}";
 
-    }//fetchData
+    }//compile
 
 
 
+    /**
+     * Wrapper thats calls the DB service `query` method. Sets `$this->lastQuery` to the passed param. It also 
+     * clears the data on the object to clean its state for a new method chain/query.
+     *
+     * @param string $query The query to execute.
+     *
+     * @return array
+    */
     private final function executeQuery($query){
 
         $this->lastQuery = $query;
         $this->clearData();
-        return $this->app['DB']->query($query); 
+        return \App::with('DB')->query($query); 
 
     }//executeQuery
+
 
 
     /**
@@ -1045,7 +1119,7 @@ class Model {
         //array was passed
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
-                $return .= $this->app['DB']->set($k . $comparator . '?',$v).' '.$conjunction.' ';
+                $return .= \App::with('DB')->set($k . $comparator . '?',$v).' '.$conjunction.' ';
             }//foreach
             $return = rtrim($return,$conjunction.' ');
         }//if
@@ -1061,15 +1135,15 @@ class Model {
                 $data[0][$k] = $v;
             }//foreach
             $data[0] = implode(',',$data[0]);
-            $return .= $this->app['DB']->set($data[0],(isset($data[1])) ? $data[1] : null);
+            $return .= \App::with('DB')->set($data[0],(isset($data[1])) ? $data[1] : null);
         }//elif
         //a single value was passed with a string
         else if(!isset($data[2])){
-            $return = $this->app['DB']->set($data[0],$data[1]);
+            $return = \App::with('DB')->set($data[0],$data[1]);
         } else {
             $length = count($data);
             for($i = 0; $i < $length; $i = $i + 3){
-                $return .= $this->app['DB']->set($data[$i].$data[$i+1].'?',$data[$i+2]).' '.$conjunction.' ';
+                $return .= \App::with('DB')->set($data[$i].$data[$i+1].'?',$data[$i+2]).' '.$conjunction.' ';
             }//for
             $return = rtrim($return,$conjunction.' ');
         }//el
@@ -1087,10 +1161,10 @@ class Model {
      * @return Array
     */
     public final function about(){
-        return $this->app['DB']->query('
+        return \App::with('DB')->query('
             SELECT *                                                                                                                                                                                                       
             FROM information_schema.tables                                                                  
-            WHERE table_type="BASE TABLE" AND table_schema="'.$this->app->config('DB_DB').'" AND table_name="'.$this->table.'"
+            WHERE table_type="BASE TABLE" AND table_schema="' . \App::config('DB_DB') . '" AND table_name="' . $this->table.'"
         ')->fetch();
     }//about
 
@@ -1103,13 +1177,14 @@ class Model {
      * @return Array
     */
     public final function columns(){
-        $result = $this->app['DB']->query('SHOW COLUMNS FROM '.$this->table);
+        $result = \App::with('DB')->query('SHOW COLUMNS FROM '.$this->table);
         $columns = Array();
         while($row = $result->fetch()){
             $columns[] = $row;
         }//while
         return $columns;
     }//columns
+
 
 
 }//Model

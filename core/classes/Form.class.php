@@ -8,76 +8,96 @@ namespace Disco\classes;
 */
 Class Form {
 
+
     /**
-     *@var string The model to use to build the form.
+     * @var string The model to use to build the form.
     */
     public $from;
 
+
     /**
-     *@var string The condition used on the model.
+     * @var string The condition used on the model.
     */
     public $where;
 
+
     /**
-     *@var boolean Should the fields contain no data?
+     * @var boolean Should the fields contain no data?
     */
     public $blank = false;
 
+
     /**
-     *@var Array Fields to omit from the form.
+     * @var Array Fields to omit from the form.
     */
     public $without=Array();
 
+
     /**
-     *@var Array Only fields that should be allowed.
+     * @var Array Only fields that should be allowed.
     */
     public $with=Array();
 
+
     /**
-     *@var Array \Closure functions to be applied to specific fields.
+     * @var Array \Closure functions to be applied to specific fields.
     */
     public $force=Array();
 
+
     /**
-     *@var \Closure A default \Closure function to be called on each field.
+     * @var \Closure A default \Closure function to be called on each field.
     */
     public $defaultForce;
 
+
     /**
-     *@var string A string containing %1\$s & %2\$s for field name, field value respectvly.
+     * @var string A string containing %1\$s & %2\$s for field name, field value respectvly.
     */
     public $wrap;
 
+
     /**
-     *@var null|Array The html properties to appply to the created form element.
+     * @var null|Array The html properties to appply to the created form element.
     */
     public $formProps;
 
+
     /**
-     *@var Array The properties to apply to a specific field.
+     * @var Array The properties to apply to a specific field.
     */
     public $props=Array();
 
+
     /**
-     *@var Array The properties to be applied to every field.
+     * @var Array The properties to be applied to every field.
     */
     public $defaultProps=Array();
 
+
     /**
-     *@var string String that replaces the default submit button.
+     * @var string String that replaces the default submit button.
     */
     public $submitButton;
 
+
     /**
-     *@var boolean Is the form using a CSRF token?
+     * @var boolean Is the form using a CSRF token?
     */
     public $useCSRFToken = false;
 
+
+    /**
+     * @var \Disco\classes\App Reference to our app instance {@link \Disco\classes\App}.
+    */
     private $app;
+
+
 
     public function __construct(){
         $this->app = \App::instance();
     }//_construct
+
 
 
     /**
@@ -100,7 +120,7 @@ Class Form {
         $this->defaultProps = Array();
         $this->submitButton = null;
         $this->useCSRFToken = false;
-    }//clean
+    }//reset
 
 
 
@@ -186,7 +206,7 @@ Class Form {
     public function blank(){
         $this->blank = true;
         return $this;
-    }//empty
+    }//blank
 
 
 
@@ -218,7 +238,7 @@ Class Form {
     public function formProps($props){
         $this->formProps = $props;
         return $this;
-    }//props
+    }//formProps
 
 
     /**
@@ -314,7 +334,7 @@ Class Form {
 
         return $this;
 
-    }//without
+    }//with
 
 
 
@@ -338,7 +358,7 @@ Class Form {
             $this->force[$k] = $action;
         }//el
         return $this;
-    }//override
+    }//force
 
 
 
@@ -458,7 +478,7 @@ Class Form {
 
         $this->reset();
         return $this->app['Html']->form($form);
-    }//build
+    }//make
 
 
 
@@ -523,7 +543,7 @@ Class Form {
         $this->reset();
         return $res;
 
-    }//build
+    }//post
 
 
 

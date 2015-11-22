@@ -12,75 +12,106 @@ namespace Disco\classes;
 */
 class Router {
 
+
+    /**
+     * @var string ROUTES Path to text based routes.
+    */
     const ROUTES = '/app/routes';
 
-    public static $app;
 
-    public static $url;
-
-    //collection of all instances of Routers we make
+    /**
+     * @var array $routes Collection of all instances of Routers we make.
+    */
     public static $routers = Array();
 
+
+    /**
+     *@var int $numberOfProcessedRoutes The number of routes that have been processed.
+    */
     private static $numberOfProcessedRoutes = 0;
+
 
     /**
      * @var boolean Has a Disco\classesself matched a request?
     */
     public static $routeMatch=false;
 
+
     /**
      * @var string The class to resolve from the container when Router is called. 
     */
     public static $base = '\Disco\classes\Router';
+
 
     /**
      * @var string URI path to match.
     */
     public $param;
 
+
     /**
      * @var \Closure|string Action to take if matched.
     */
     public $function;
+
 
     /**
      * @var array The routers where restrictions.
     */
     public $variableRestrictions = Array();
 
+
     /**
      * @var boolean Is route HTTPS?
     */
     private $secureRoute=false;
+
 
     /**
      * @var boolean Is this Router a Filter Router?
     */
     private $isFilter=false;
 
+
     /**
      * @var boolean When we a do a filter we store the base here
     */
     private $filterBase;
+
 
     /**
      * @var boolean When we a do a filter we store the filtered portion here
     */
     private $filteredOn;
 
+
     /**
      * @var null|string|\Closure Send a filtered route to Router file, or Closure.
     */
     private $useRouter=null;
+
 
     /**
      * @var null|string|array Store authentication requirements on route.
     */
     public $auth=null;
 
+
+    /**
+     * @var boolean $allowURLParameters Allow GET variables to be contained in the route.
+    */
     public $allowURLParameters=false;
 
 
+
+    /**
+     * Get a new Router instance. This is the only method that should be used to access instances of this class. 
+     * Before the new Router instance is returned, any previously registered routers will be processed off the 
+     * router stack.
+     *
+     *
+     * @return \Disco\classes\Router
+    */
     public static function factory(){
 
         self::processAvailableRoutes();
@@ -91,6 +122,10 @@ class Router {
     }//factory
 
 
+
+    /**
+     * Process the last created router in the stack.
+    */
     public static function processLastCreatedRoute(){
         if(isset(self::$routers[self::$numberOfProcessedRoutes])){
             self::$numberOfProcessedRoutes++;
@@ -99,11 +134,17 @@ class Router {
     }//processLastCreatedRoute
 
 
+
+    /**
+     * Process all routers in the stack that haven't been processed yet.
+    */
     public static function processAvailableRoutes(){
         while(!self::routeMatch() && self::$numberOfProcessedRoutes < count(self::$routers)){
             self::processLastCreatedRoute();
         }//while
     }//processAvailableRoutes
+
+
 
     /*
      * Process the the router.
@@ -149,6 +190,15 @@ class Router {
     }//process
 
 
+
+    /**
+     * Allow URL parameters/variables to be present in the URL of the route.
+     *
+     *
+     * @param array $params The paramaters that are allowed to be present.
+     *
+     * @return self
+    */
     public function allowURLParameters($params = Array()){
         $this->allowURLParameters = $params;
         return $this;
@@ -426,8 +476,8 @@ class Router {
                 $condition = $restrict[$paramKey];
 
                 //is the condition using one of the default reserved words?
-                if(isset(self::$app->defaultMatchCondition[$condition])){
-                    $condition=self::$app->defaultMatchCondition[$condition];
+                if(\App::getCondition($condition)){
+                    $condition = \App::getCondition($condition);
                 }//if
 
 
@@ -437,7 +487,6 @@ class Router {
                 }//if
 
                 //store the variable to pass into the Closure or Controller
-                //$this->variables[$paramKey]=$urlPiece;
                 $return[$paramKey]=$urlPiece;
 
             }//el
@@ -506,7 +555,7 @@ class Router {
             //is a controller being requested?
             if(stripos($function,'@')!==false){
                 $ctrl = explode('@',$function);
-                $res = self::$app->handle($ctrl[0],$ctrl[1],$variables);
+                $res = \App::handle($ctrl[0],$ctrl[1],$variables);
             }//if
         }//if
         else if(is_array($variables)){
@@ -537,7 +586,7 @@ class Router {
     */
     public static function authenticated($auth){
 
-        if($auth && !self::$app['Session']->in($auth['session'])){
+        if($auth && !\App::with('Session')->in($auth['session'])){
             if($auth['action']) {
                 header('Location: '.$auth['action']);
                 exit;
@@ -567,10 +616,10 @@ class Router {
         if($m !== null){
 
             if($m == true){
-                self::$app->make('Router','\Disco\classes\MockBox');
+                \App::make('Router','\Disco\classes\MockBox');
             }//if
             else if(self::$routeMatch==true && $m==false){
-                self::$app->as_factory('Router',function(){
+                \App::as_factory('Router',function(){
                     return \Disco\classes\Router::factory();
                 });
             }//el
@@ -598,12 +647,12 @@ class Router {
             return;
         }//if
 
-        if(($path = self::$app->resolveAlias($routerPath)) !== false && file_exists($path)){
+        if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
             require($path);
             return;
         } else {
 
-            $routerPath = self::$app->path."/app/router/$path.router.php";
+            $routerPath = \App::path() . "/app/router/{$path}.router.php";
             if(file_exists($routerPath)){
                 require($routerPath);
                 return;
@@ -611,7 +660,10 @@ class Router {
 
         }//el
 
-        self::$app->error("Router $router.router.php not found",Array('unknown','useRouter'),debug_backtrace(TRUE,4));
+        $message = "Router $router.router.php not found";
+
+        \App::error($message,Array('unknown','useRouter'),debug_backtrace(TRUE,4));
+        throw new \Disco\exceptions\Exception($message);
 
     }//useRouter
 
@@ -626,7 +678,7 @@ class Router {
     */
     public static final function processRoutes(){
 
-        $r = file_get_contents(self::$app->path.self::ROUTES);
+        $r = file_get_contents(\App::path() . self::ROUTES);
         $routes = explode("\n",$r);
         $total = count($routes);
         $current = 0;
@@ -740,17 +792,14 @@ class Router {
 
         }//foreach
 
-        //print_r($final);
-
         foreach($final as $r){
             if(!self::routeMatch() && $match = \Disco\classes\Router::match($r['path'],$r['where'],$r['auth'])){
                 self::executeRoute($r['controller'],$match);
             }//if 
         }//foreach
 
-        //echo '</pre>';
-
     }//processRoutes
+
 
 
 }//Router

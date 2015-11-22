@@ -11,15 +11,19 @@ namespace Disco\classes;
 */
 class Event {
 
+
     /**
      * @var array Events to listen for.
     */
     private $events=Array();
 
+
     /**
      * @var string Default method to call on objects.
     */
     public $defaultMethod = 'work';
+
+
 
     /**
      * Register an event name with an associated action.
@@ -41,6 +45,7 @@ class Event {
             $action = new \Jeremeamia\SuperClosure\SerializableClosure($action);
         }//if
 
+        //keep looking till an open priority slot is found
         while(isset($this->events[$event]['actions'][$priority])){
             $priority++;
         }//while
@@ -99,6 +104,8 @@ class Event {
         }//if
 
     }//fire
+
+
 
 }//Event
 ?>

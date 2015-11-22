@@ -8,14 +8,17 @@ namespace Disco\classes;
 
 /**
  * The Cache class extends \Memcache.
- * This class depends on settings in [.config.php] in order to establish a connection the the MemCache Server.
 */
 class Cache extends \Memcache {
 
 
     /**
-     * Make the connection to the memcached server using the [.config.php] variables MEMCACHE_HOST & MEMCACHE_PORT.
+     * Make the connection to the memcached server using the app config `MEMCACHE_HOST` & `MEMCACHE_PORT`, or the 
+     * passed `$host` and `$port`
      *
+     *
+     * @param null|string $host The name of the host of the Cache provider.
+     * @param null|int $port The port of the Cache provider.
      *
      * @return void
     */
@@ -39,7 +42,7 @@ class Cache extends \Memcache {
      * @return mixed
     */
     public function get($k){
-        $k=md5($k);
+        $k = md5($k);
         return parent::get($k);
     }//get
 
@@ -54,7 +57,7 @@ class Cache extends \Memcache {
      * @return mixed
     */
     public function delete($k){
-        $k=md5($k);
+        $k = md5($k);
         return parent::delete($k);
     }//get
 
@@ -73,12 +76,18 @@ class Cache extends \Memcache {
      * @return boolean
     */
     public function set($k,$v,$compression=0,$expires=0){
-        $k=md5($k);
+
+        $k = md5($k);
+
         if($compression!=0){
             $compression = MEMCACHE_COMPRESSED;
         }//if
+
         return parent::set($k,$v,$compression,$expires);
+
     }//set
+
+
 
 }//Cache
 ?>

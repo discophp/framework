@@ -20,6 +20,7 @@ class View {
     */
     public $baseTemplate = '_default.html';
 
+
     /**
      * @var string The base template to use for the view.
     */
@@ -27,7 +28,7 @@ class View {
 
     
     /**
-     * @var array The data to be injected into the $baseLayout template in the view variable.
+     * @var array The data to be injected into the $baseTemplate template when rendered.
     */
     private $view = Array(
         'title'             => '',
@@ -51,13 +52,13 @@ class View {
 
 
     /**
-     * @var string Flips between script and style
+     * @var string Flips between script and style.
     */
     private $lastCallType;
 
 
     /**
-     * @var array How should it be scraped
+     * @var array How should it be scraped.
     */
     private $indexes = Array(
         0=>'index,follow',
@@ -68,21 +69,43 @@ class View {
 
     
     /**
-     * @var integer Standard scrape for $indexes
+     * @var integer Standard scrape for `$indexes`.
     */
     public $activeIndex=0;
 
 
 
-    //public function get($k){
+    /**
+     * Get a variable in the view template variable.
+     *
+     * @var string $n The variable name.
+     *
+     * @return mixed 
+     */
+    public function get($k){
 
-    //    if(isset($this->view[$k])){
-    //        return $this->view[$k];
-    //    }//if
+        if(isset($this->view[$k])){
+            return $this->view[$k];
+        }//if
 
-    //    return null;
+        return null;
 
-    //}//get
+    }//get
+
+
+
+    /**
+     * Set a variable in the view template variable.
+     *
+     * @var string $n The variable name.
+     * @var mixed $v The variables value.
+     *
+     * @return void
+     */
+    public function set($k,$v){
+        $this->view[$k] = $v;
+    }//set
+
 
 
     /**
@@ -168,6 +191,12 @@ class View {
 
 
 
+    /**
+     * Get the markup of the header, if its been set in `header` that will returned otherwise `$this->header()` 
+     * will be called.
+     *
+     * @return string
+    */
     public function getHeader(){
 
         if($this->view['header']){
@@ -205,6 +234,12 @@ class View {
 
 
 
+    /**
+     * Get the markup of the footer, if its been set in `footer` that will returned otherwise `$this->footer()` 
+     * will be called.
+     *
+     * @return string
+    */
     public function getFooter(){
 
         if($this->view['footer']){
@@ -213,7 +248,7 @@ class View {
 
         return $this->footer();
 
-    }//getHeader
+    }//getFooter
 
 
 
@@ -272,17 +307,20 @@ class View {
 
 
 
+    /**
+     * Return the robots index type.
+     *
+     * @return string.
+    */
     public function robots(){
         return $this->indexes[$this->activeIndex];
     }//robots
 
 
 
-
     /**
-     * This function handles putting togethor
-     * and echoing the pieces that make up the View.
-     *
+     * If the view is AJAX render and echo the tempalte `$this->ajaxTemplate` otherwise render the template 
+     * `$this->baseTemplate`.
      *
      * @return void
     */
@@ -298,15 +336,14 @@ class View {
 
         echo \Template::build($template);
 
-
     }//printPage
 
 
 
     /**
-     * Set that a request is AJAX. 
+     * Set that the view is returning a response to a client via an AJAX request.
      *
-     * @var boolean $bool 
+     * @var boolean $bool Whether were responding to an AJAX request.
      * @return void
     */
     public function ajax($bool = true){
@@ -327,28 +364,32 @@ class View {
 
 
     /**
-     * Set the title of the view.
+     * Set/Get the title of the view.
      *
      *
-     * @param string $t the title of the page
+     * @param null|string $t The title of the page.
+     *
+     * @return string|void
     */
     public function title($t = null){
         if($t === null) return $this->view['title'];
         $this->view['title'] = $t;
-    }//setTitle
+    }//title
 
 
 
     /**
-     * Set the description of the view.
+     * Set/Get the description of the view.
      *
      *
-     * @param string $d the description of the page
+     * @param null|string $d The description of the page.
+     *
+     * @return string|void
     */
     public function desc($d = null){
         if($d === null) return $this->view['description'];
         $this->view['description'] = $d;
-    }//setDesc
+    }//desc
 
 
 
@@ -364,18 +405,28 @@ class View {
 
 
 
+    /**
+     * Get/Set the body of the request.
+     *
+     *
+     * @param null|string $b The body.
+     *
+     * @return string|void
+    */
     public function body($b = null){
         if($b === null) return $this->view['body'];
         $this->view['body'] = $b;
     }//body
 
 
+
     /**
-     * Set the favicon to be used by the page.
+     * Set/Get the favicon to be used by the page.
      *
      *
-     * @param string $v the path to the favicon
-     * @return void
+     * @param null|string $v the path to the favicon
+     *
+     * @return string|void
     */
     public function favIcon($v = null){
         if($v === null) return $this->view['favIcon'];
@@ -394,7 +445,7 @@ class View {
     */
     public static function url($p,$h=null){
         if(!empty($_SERVER['HTTPS']) && $h===null && substr($p,0,1)=='/'){
-            $p = 'https://'.\App::config('URL').$p;                                                                             
+            $p = \App::domain() . $p;                                                                             
         }//if                                                                                                               
         else if($h!==null && substr($h,0,3)!='http'){                                                                        
             $p = 'http://'.$h.$p;                                                                                           
@@ -410,17 +461,10 @@ class View {
      *
      *
      * @param string $p The path of the resource.
-     * @param string $h The host of the resource ( if not local).
     */
     public static function localUrl($p){
-        if(!empty($_SERVER['HTTPS']) && substr($p,0,1)=='/'){
-            $p = 'https://'.\App::config('URL').$p;
-        }//if
-        else if(substr($p,0,3)!='http'){
-            $p = 'http://'.\App::config('URL').$p;
-        }//elif
-        return $p;
-    }//url
+        return \App::domain() . $p;
+    }//localUrl
 
 
 
@@ -466,7 +510,8 @@ class View {
         $this->view['scriptSrcs'][]=Array('src'=>$s,'props'=>Array());
         $this->lastCallType='script';
         return $this;
-    }//pushScriptSrc
+    }//scriptSrc
+
 
 
     /**
@@ -480,7 +525,7 @@ class View {
         $this->view['headScriptSrcs'][]=Array('src'=>$s,'props'=>Array());
         $this->lastCallType='headScript';
         return $this;
-    }//pushScriptSrc
+    }//headScriptSrc
 
 
 
@@ -507,10 +552,9 @@ class View {
     */
     public function styleSrc($s){
         $this->view['styleSrcs'][]=Array('src'=>$s,'props'=>Array());
-
         $this->lastCallType='style';
         return $this;
-    }//pushStyleSrc
+    }//styleSrc
 
 
 
@@ -522,9 +566,16 @@ class View {
     */
     public function bodyClass($class){
         $this->view['bodyClass'][] = $class;
-    }//pushBodyStyle
+    }//bodyClass
 
 
+
+    /**
+     * Get the class of the body.
+     *
+     *
+     * @return string
+    */
     public function bodyClasses(){
         return implode(' ',$this->view['bodyClass']);
     }//bodyClasses
@@ -533,20 +584,15 @@ class View {
 
     /**
      * Set the index type to index,follow , $this->activeIndex=0.
-     *
-     *
-     * @return void
     */
     public function index(){
         $this->activeIndex=0;
     }//index
 
 
+
     /**
      * Set the index type to noindex,nofollow , $this->activeIndex=1.
-     *
-     *
-     * @return void
     */
     public function noIndex(){
         $this->activeIndex=1;
@@ -556,9 +602,6 @@ class View {
 
     /**
      * Set the index type to index,nofollow, $this->activeIndex=2.
-     *
-     *
-     * @return void
     */
     public function indexNoFollow(){
         $this->activeIndex=2;
@@ -568,14 +611,10 @@ class View {
 
     /**
      * Set the index type to noindex,follow, $this->activeIndex=3.
-     *
-     *
-     * @return void
     */
     public function noIndexFollow(){
         $this->activeIndex=3;
     }//noIndexFollow
-
 
 
 
@@ -614,6 +653,12 @@ class View {
 
 
 
+    /**
+     * Complile the style(css) sources to html `<link>` elements.
+     *
+     *
+     * @return string The compliled elements.
+    */
     public function printStyleSrcs(){
 
         $styles = '';
@@ -631,6 +676,12 @@ class View {
 
 
 
+    /**
+     * Create a single `<style><style/>` element containing any added styles.
+     *
+     *
+     * @return null|string
+    */
     public function printStyles(){
         if($this->view['styles']){
             return '<style>'.$this->view['styles'].'</style>';
@@ -639,18 +690,38 @@ class View {
 
 
 
+    /**
+     * Complile the head script(js) sources to html `<script>` elements.
+     *
+     *
+     * @return string The compliled elements.
+    */
     public function printHeadScriptSrcs(){
         return $this->printScriptsFromSource($this->view['headScriptSrcs']);
-    }//printScriptSrcs
+    }//printHeadScriptSrcs
 
 
 
+    /**
+     * Complile the script(js) sources to html `<script>` elements.
+     *
+     *
+     * @return string The compliled elements.
+    */
     public function printScriptSrcs(){
         return $this->printScriptsFromSource($this->view['scriptSrcs']);
     }//printScriptSrcs
 
 
 
+    /**
+     * Complile the script(js) sources to html `<script>` elements.
+     *
+     *
+     * @param array $src The js sources.
+     *
+     * @return string The compliled elements.
+    */
     private function printScriptsFromSource($src){
 
         $scripts = '';
@@ -664,10 +735,16 @@ class View {
 
         return $scripts;
 
-    }//printStyleSrcs
+    }//printScriptsFromSource
 
 
 
+    /**
+     * Create a single `<script><script/>` element containing any added scripts.
+     *
+     *
+     * @return null|string
+    */
     public function printScripts(){
         if($this->view['scripts']){
             return '<script type="text/javascript">' . $this->view['scripts'] . '</script>';
@@ -676,12 +753,16 @@ class View {
 
 
 
+    /**
+     * Serve a 404, executing an optional closure.
+     *
+     * @param boolean|\Closure $closure Optional Closure function to execute.
+    */
     public function abort($closure = false){
         $this->serve(404,$closure);
-    }//status
+    }//abort
 
 
-}//BaseView
 
-
+}//View
 ?>

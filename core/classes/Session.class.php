@@ -11,6 +11,7 @@ namespace Disco\classes;
 class Session {
 
 
+
     /**
      * Start up our session by calling session_start() .
      *
@@ -19,7 +20,7 @@ class Session {
     */
     public function __construct(){
         session_start();
-    }//construct
+    }//__construct
 
 
 
@@ -39,15 +40,41 @@ class Session {
     }//has
 
 
+
+    /**
+     * Does the session have a value for the key(s)?
+     *
+     *
+     * @param string|array $k The key(s) to check for in the session.
+     *
+     * @return boolean Whether the key is in the session.
+    */
     public function in($k){
-        if(is_array($k) && count(array_intersect(array_keys($_SESSION),$k))>0) return true;
-        if(in_array($k,array_keys($_SESSION))) return true;
+
+        if(is_array($k) && count(array_intersect(array_keys($_SESSION),$k))>0){
+            return true;
+        }//if
+
+        if(isset($_SESSION[$k])){
+            return true;
+        }//if
+
         return false;
+
     }//in
 
+
+
+    /**
+     * The total number of keys in the session.
+     *
+     *
+     * @return int
+    */
     public function total(){
         return count($_SESSION);
     }//total
+
 
 
     /**
@@ -138,6 +165,8 @@ class Session {
     public function destroy(){
         session_destroy();
     }//destroy
+
+
 
 }//Session
 ?>

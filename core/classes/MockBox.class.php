@@ -19,6 +19,8 @@ namespace Disco\classes;
 */
 class MockBox {
 
+
+
     /**
      * When a method is called that doesn't exist, just return $this back.
      *
@@ -28,6 +30,8 @@ class MockBox {
     public function __call($method,$args){
         return $this;        
     }//__call
+
+
 
 }//MockBox
 ?>

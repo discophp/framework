@@ -7,28 +7,24 @@ namespace Disco\classes;
 
 /**
  * ModelFactory class.
- * Centeralized point of access to instances of models.
 */
 class ModelFactory {
 
-    private $app;
 
-    public function __construct(){
-        $this->app = \App::instance();
-    }//__construct
 
     /**
-     * Access a model.
+     * Get a new model of `$name`.
      *
      *
      * @param string $name The name of the model.
      *
-     * @return object Return $this->models[$name] the instance of the Model
+     * @return object The model.
     */
     public final function m($name){
-        //return $this->app->with($name);
         return new $name;
-    }//use
+    }//m
+
+
 
 }//ModelFactory
 ?>

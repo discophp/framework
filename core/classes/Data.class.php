@@ -12,30 +12,31 @@ namespace Disco\classes;
 */
 class Data {
 
+
     /**
      * @var array Holds the PUT data
      */
     private $putData=Array();
+
 
     /**
      * @var array Holds the DELETE data
      */
     private $deleteData=Array();
 
+
     /**
      * @var array Type of REST request 
      */
     private $workingDataType;
+
 
     /**
      * @var string Where are we parsing input data from
     */
     private $stream;
 
-    /**
-     * @var \App Reference to Application Instance
-    */
-    private $app;
+
 
     /**
      * Construct PUT and DELETE data if the REQUEST_METHOD is PUT | DELETE. 
@@ -44,8 +45,9 @@ class Data {
      * @return void
     */
     public function __construct($stream='php://input'){
-        $this->app = \App::instance();
+
         $this->stream = $stream;
+
         switch($_SERVER['REQUEST_METHOD']) {
             case 'PUT':
                 $this->setData('PUT');
@@ -54,6 +56,7 @@ class Data {
                 $this->setData('DELETE');
                 break;
         }//switch 
+
     }//construct
 
 
@@ -92,19 +95,26 @@ class Data {
      * @return string|bool|int|float 
     */
     public function where($k,$v){
+
         $dataType=$this->all();
 
         if(isset($dataType[$k])){
+
             $matchCondition = $v;
-            if(isset($this->app->defaultMatchCondition[$v]))
-                $matchCondition = $this->app->defaultMatchCondition[$v];
-            if(!preg_match("/{$matchCondition}/",$dataType[$k]))
+
+            if(\App::instance()->getCondition($v)){
+                $matchCondition = \App::instance()->getCondition($v);
+            }//if
+
+            if(!preg_match("/{$matchCondition}/",$dataType[$k])){
                 return false;
+            }//if
 
             return $dataType[$k];
         }//if
-        else 
+        else {
             return false;
+        }//el
 
     }//where
 
@@ -264,8 +274,7 @@ class Data {
                 unset($_GET[$k]);
                 break;
         }//switch
-    }//set
-
+    }//remove
 
 
 
@@ -289,5 +298,7 @@ class Data {
 
     }//all
 
-}//BaseData
+
+
+}//Data
 ?>

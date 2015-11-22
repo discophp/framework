@@ -9,7 +9,7 @@ namespace Disco\classes;
 /**
  * Email class.
  * Handle sending emails through different setup accounts.
- * This class relies on the settings set in http://github.com/discophp/project/blob/master/config/mail.config.php .
+ * This class relies on the settings set in your application mail config `app/config/mail.config.php`.
 */
 class Email {
 
@@ -41,8 +41,8 @@ class Email {
      */
     public function __construct(){
 
-        if(is_file(\App::path() . '/config/mail.config.php')){
-            $this->settings=require(\App::path() . '/config/mail.config.php');
+        if(is_file(\App::path() . '/app/config/mail.config.php')){
+            $this->settings = require(\App::path() . '/app/config/mail.config.php');
         }//if
 
         \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
@@ -60,10 +60,13 @@ class Email {
      * @return mixed
     */
     public function getSetting($key){
+
         if(!isset($this->settings[$key])){
             return false;
         }//if
+
         return $this->settings[$key];
+
     }//getSetting
 
 
@@ -165,7 +168,7 @@ class Email {
 
 
     /**
-    * Send an email through a specified account.
+    * Send an email through the current active account.
     *
     *
     * @param string|array   $toEmail    The email addresses to send this email to. 
@@ -224,7 +227,7 @@ class Email {
 
 
     /**
-     * Get a \Swift_Message thats preloaded with the passed params.
+     * Get a \Swift_Message thats preloaded with the to, subject, and body.
      *
      *
      * @param string|array   $toEmail    The email addresses to send this email to. 

@@ -8,39 +8,43 @@ namespace Disco\classes;
  * the magic method __call($method,$args) we can build any specified html
  * element from a mocked method.
  * For example:
+ * `
  * $img = Html::img(Array('src'=>'/example.png'));
  * $div = Html::div('cool div');
+ * `
 */
 Class Html {
+
 
     /**
      * @var string The base string we build markup from.
     */
-    public $base = "<%1\$s>%2\$s</%3\$s>";
+    protected $base = "<%1\$s>%2\$s</%3\$s>";
+
 
     /**
      * @var string The base string we build markup from for elements that are singletons or non closing.
     */
-    public $noCloseBase = "<%1\$s/>";
+    protected $noCloseBase = "<%1\$s/>";
+
 
     /**
      * @var string The base string we build a single properties from.
     */
-    public $prop = "%1\$s=\"%2\$s\" ";
+    protected $prop = "%1\$s=\"%2\$s\" ";
+
 
     /**
      * @var Array Html elements that are singletons and do not use a closing tag.
     */
-    public $noClose = Array('area','base','br','col','command','embed','hr','img','input','link','meta','param','source');
+    protected $noClose = Array('area','base','br','col','command','embed','hr','img','input','link','meta','param','source');
 
+
+    /**
+     * @var boolean $stack Wil the next built element be pushed onto the current application Views stack.
+    */
     public $stack = false;
 
-
-    private $app;
-
-    public function __construct(){
-        $this->app = \App::instance();
-    }//__construct
 
 
     /**
@@ -68,7 +72,7 @@ Class Html {
             if(!isset($args[1]) && in_array($method,$this->noClose)){
                 $out = sprintf($this->noCloseBase,$method.' '.$props);
                 if($this->stack){
-                    $this->app['View']->html($out);
+                    \App::with('View')->html($out);
                     $this->stack = false;
                 }//if
                 else {
@@ -91,7 +95,7 @@ Class Html {
         $out = sprintf($this->base,$method,$html,$ele);
 
         if($this->stack){
-            $this->app['View']->html($out);
+            \App::with('View')->html($out);
             $this->stack = false;
         }//if
         else {
@@ -102,10 +106,17 @@ Class Html {
 
 
 
+    /**
+     * If called in the begging of the method chain it will push the built html onto the current 
+     * applications View html stack.
+     *
+     *
+     * @return self
+    */
     public function push(){
         $this->stack = true;
         return $this;
-    }//stack
+    }//push
 
 
 }//Html

@@ -216,14 +216,7 @@ abstract class Record implements \ArrayAccess {
             return true;
         }//if
 
-        $ids = $this->primaryKeys();
-
-        if(!count($ids) || in_array(null,array_values($ids))){
-            //$ai = $this->autoIncrementField();
-            //if(!$ai || !$this->validate($ai,$this[$ai])){
-                throw new \Disco\exceptions\RecordId("Record update attempted with null id(s)!");
-            //}//if
-        }//if
+        $ids = $this->primaryKeysWithValidation();
 
         //without ids
         if(!$this->allowKeyUpdates){
@@ -253,11 +246,7 @@ abstract class Record implements \ArrayAccess {
     */
     public function delete(){
 
-        $ids = $this->primaryKeys();
-
-        if(!count($ids) || in_array(null,array_values($ids))){
-            throw new \Disco\exceptions\RecordId("Record delete attempted with null id(s)!");
-        }//if
+        $ids = $this->primaryKeysWithValidation();
 
         return \App::with($this->model)->delete($ids);
 
@@ -378,11 +367,7 @@ abstract class Record implements \ArrayAccess {
     */
     public function fetch($fields = Array()){
 
-        $ids = $this->primaryKeys();
-
-        if(!count($ids) || in_array(null,array_values($ids))){
-            throw new \Disco\exceptions\RecordId("Record cannot fetch fields when there is a NULL id.");
-        }//if
+        $ids = $this->primaryKeysWithValidation();
 
         $passed_string = false;
 
@@ -460,16 +445,16 @@ abstract class Record implements \ArrayAccess {
 
         if(!count($ids) || in_array(null,array_values($ids))){
             $ai = $this->autoIncrementField();
-            if(!$ai || !$this->validate($ai,$this[$ai])){
-                throw new \Disco\exceptions\RecordId("Record update attempted with null id(s)!");
+            if(!$ai || !$this->validate($ai,$this->fields[$ai])){
+                throw new \Disco\exceptions\RecordId("Record use/modification attempted with null id(s)!");
             }//if
 
-            return Array($ai => $this[$ai]);
+            return Array($ai => $this->fields[$ai]);
         }//if
 
         return $ids;
 
-    }//primaryKeysWithCheck
+    }//primaryKeysWithValidation
 
 
 
@@ -530,11 +515,11 @@ abstract class Record implements \ArrayAccess {
     */
     public function exists(){
 
-        $ids = $this->primaryKeys();
-
-        if(!count($ids) || in_array(null,array_values($ids))){
+        try {
+            $ids = $this->primaryKeysWithValidation();
+        } catch(\Disco\exceptions\Record $e){
             return false;
-        }//if
+        }//catch
 
         $result = \App::with($this->model)
             ->select(array_keys($ids)[0])

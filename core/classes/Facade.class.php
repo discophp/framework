@@ -7,7 +7,7 @@ namespace Disco\classes;
  * Disco Framework! It empowers our Inversion of Control and Facading principles.
  *
  * You should really get comfortable with how this Class works if you want to master the Disco PHP Framework.
- * You how ever, should only tamper with it if you are willing to break it :)
+ * You how ever, should only tamper with it if you are willing to break it. 
 */
 
 
@@ -69,7 +69,9 @@ abstract class Facade {
         $app = \Disco\classes\App::instance();
         return $app[static::returnFacadeId()];
 
-    }//callStatic
+    }//instance
+
+
 
 }//Facade
 ?>

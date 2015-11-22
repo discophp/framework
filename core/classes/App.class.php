@@ -1,7 +1,7 @@
 <?php
 namespace Disco\classes;
 /**
- * Copyright 2014 Bradley Hamilton, bradleyhamilton.com 
+ * Copyright 2014 WebYoke, webyoke.com 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,34 +36,67 @@ Class App extends \Pimple\Container {
     */
     public $path;
 
+
     /**
      * @var string Is CLI request 
      */
     public $cli = false;
 
+
     /**
-     * @var object Static reference to instance of Disco.
+     * @var object Static reference to instance of App {@link \Disco\classes\App}.
     */
     public static $app;
+
 
     /**
      * @var array Default regex matching conditions.
     */
     public $defaultMatchCondition = Array(
-        'alpha'=>'^[a-zA-Z\s\-]+$',
-        'alpha_numeric'=>'^[a-zA-Z\s\-0-9]+$',
-        'integer'=>'^[\-0-9]+$',
-        'numeric'=>'^[\-0-9\.]+$',
-        'all'=>'[.]*'
+        'alpha'         => '^[a-zA-Z\s\-]+$',
+        'alpha_numeric' => '^[a-zA-Z\s\-0-9]+$',
+        'integer'       => '^[\-0-9]+$',
+        'numeric'       => '^[\-0-9\.]+$',
+        'all'           => '[.]*'
     );
 
+
+    /**
+     * @var array $config Application configuration variables.
+    */
     public $config = Array();
 
 
+    /**
+     * @var array $alias Application aliases.
+    */
     public $alias = Array();
 
 
+    /**
+     * @var string $domain The domain name of the current application.
+    */
     public $domain;
+
+
+
+    /**
+     * Get the application instance singleton {@link \Disco\classes\App}.
+     *
+     *
+     * @return \Disco\classes\App
+    */
+    public static function instance(){
+
+        if(!self::$app){
+            self::$app = new \Disco\classes\App;
+        }//if
+
+        return self::$app;
+
+    }//instance
+
+
 
     /**
      * Assemble the pieces of the application that make it all tick.
@@ -91,58 +124,9 @@ Class App extends \Pimple\Container {
         }//if
 
 
-        /**
-         * Prep the App.
-        */
-        $this->prep();
-        $this['App'] = $this; 
-        self::$app = $this['App'];
-
-        /**
-         * Register the default Facades with Disco.
-        */
-        $this->services();
-
-
-        //$this->registerAlias('disco.mime',$this->path.'/vendor/discophp/framework/core/util/mimeTypes.php');
-        $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
-
-
-
-        /**
-         * Handle maintenance mode.
-        */
-        $this->handleMaintenance();
-
-        \Disco\classes\Router::$app = $this['App'];
-
-    }//__construct
-
-
-    public static function instance(){
-        if(!self::$app)
-            self::$app = new \Disco\classes\App;
-        return self::$app;
-    }//instance
-
-
-
-    /**
-     * Prepare the Application for usage by loading the [config/config.php] 
-     * http://github.com/discophp/project/blob/master/config/config.php and potentially overriding it 
-     * with a [config/dev.config.php] file if the application is in DEV mode and the file exists. 
-     *
-     * Also, set some php.ini setting:
-     *      - session.use_trans_sid = 0
-     *      - session.use_only_cookies = 1
-     *
-     * 
-     * @return void
-    */
-    public final function prep(){
-
         //disable apache from append session ids to requests
         ini_set('session.use_trans_sid',0);
+
         //only allow sessions to be used with cookies
         ini_set('session.use_only_cookies',1);
 
@@ -150,18 +134,89 @@ Class App extends \Pimple\Container {
         $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
 
         $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
-
         
-        //load the appropriate application production configuration 
-        //and override with any dev config.
-        if(is_file($this->path.'/config/config.php')){
-            $this->config = require($this->path.'/config/config.php');
-            if($this->config['APP_MODE']!='PROD' && is_file($this->path.'/config/dev.config.php')){
-                $this->config = array_merge($this->config,require($this->path.'/config/dev.config.php'));
-            }//if
+        //register the default configuration options
+        $this->registerConfig($this->path.'/app/config/config.php');
+
+        //register the dev configuration options if necessary
+        if(!isset($this->config['APP_MODE']) || $this->config['APP_MODE'] != 'PROD'){
+            $this->registerConfig($this->path.'/app/config/dev.config.php');
         }//if
 
-    }//prep
+        //a little magic
+        $this['App']    = $this; 
+        self::$app      = $this['App'];
+
+
+        //regiser the default services into the container
+        $this->registerServices($this->path . '/app/config/services.php');
+
+        //regiser the default factories into the container
+        $this->registerFactories($this->path . '/app/config/factories.php');
+
+        //force the registery of the Router factory.
+        $this->as_factory('Router',function(){
+            return \Disco\classes\Router::factory();
+        });
+
+        $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
+
+
+        /**
+         * Handle maintenance mode.
+        */
+        $this->handleMaintenance();
+
+
+    }//setup
+
+
+
+    /**
+     * Make sure a \Disco\classes\Router matched against the requested URI.
+     *
+     *
+     * @return void
+    */
+    public final function tearDown(){
+
+        \Disco\classes\Router::processLastCreatedRoute();
+
+        /**
+         * did this requested URI not find a match? If so thats a 404.
+        */
+        if(!\Disco\classes\Router::$routeMatch){
+            $this['View']->serve(404);
+        }//if
+        else {
+            $this['View']->serve();
+        }//el
+
+    }//tearDown
+
+
+
+    /**
+     * Merge a configuration file with the current app configuration.
+     *
+     *
+     * @param string $configFilePath The path to the config file.
+     *
+     * @return boolean Was it registered.
+    */
+    public final function registerConfig($configFilePath){
+
+        if(!is_file($configFilePath)){
+            return false;
+        }//if
+
+        $config = require $configFilePath;
+
+        $this->config = array_merge($this->config,$config);
+
+        return true;
+
+    }//registerConfig
 
 
 
@@ -174,10 +229,13 @@ Class App extends \Pimple\Container {
      * @return mixed
     */
     public static function config($name,$value=null){
+
         if($value === null){
             return self::instance()->config[$name];
         }//if
+
         self::instance()->config[$name] = $value;
+
     }//config
 
 
@@ -187,12 +245,18 @@ Class App extends \Pimple\Container {
      *
      * @return string 
     */
-    public static function path(){
+    public static final function path(){
         return self::instance()->path;
     }//path
 
 
 
+    /**
+     * Get the current fully qualified domain name. eg: `https://yoursite.com`.
+     *
+     *
+     * @return string
+    */
     public function domain(){
         return $this->domain;     
     }//domain
@@ -200,48 +264,46 @@ Class App extends \Pimple\Container {
 
 
     /**
-     * Stack trace a Disco error and log it.
+     * Register an alias. Aliases should adhere to the convention `your.alias`.
      *
      *
-     * @param string $msg The error message to log.
-     * @param Array $methods The method call names that could have generated the error.
-     * @param Array $e The debug_stacktrace call.
+     * @param string $name The alias name (key).
+     * @param string $path The alias path (value).
      *
      * @return void
     */
-    public function error($msg,$methods,$e){
-
-        $trace = Array();
-        $e = array_reverse($e);
-        foreach($e as $err){
-            if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
-                $trace['line']=$err['line'];
-                $trace['file']=$err['file'];
-                break;
-            }//if
-        }//foreach
-        $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
-        error_log($msg,0);
-        //$this['View']->serve(500);
-        //exit;
-
-    }//error
-
-
-
-    public function registerAlias($name,$path){
+    public final function registerAlias($name,$path){
         $this->alias[$name] = $path;
     }//registerAlias
 
 
 
-    public function getAlias($name){
+    /**
+     * Get a previously registerd alias.
+     *
+     *
+     * @param string $name The alias name (key).
+     * 
+     * @return string
+    */
+    public final function getAlias($name){
         return $this->alias[$name];
     }//getAlias
 
 
 
-    public function resolveAlias($path){
+    /**
+     * Resolve a path that uses an alias that has been registered. Aliases are resolved by using the syntax 
+     * `@your.alias:the/rest/of/your/path/to/file.ext` where `@your.alias:` was defined earlier by registering 
+     * `your.alias`.
+     *
+     *
+     * @param string $path The aliased path.
+     *
+     * @return boolean|string False if no alias, the resolved alias path otherwise.
+    */
+    public final function resolveAlias($path){
+
         if(substr($path,0,1) != '@'){
             return false; 
         }//if
@@ -255,64 +317,6 @@ Class App extends \Pimple\Container {
     }//resolveAlias
 
 
-    /**
-     * Make sure a \Disco\classes\Router matched against the requested URI.
-     *
-     *
-     * @return void
-    */
-    public final function tearDown(){
-
-
-        \Disco\classes\Router::processLastCreatedRoute();
-        //\Disco\classes\Router::processRoutes();
-
-        /**
-         * did this requested URI not find a match? If so thats a 404.
-        */
-        if(!\Disco\classes\Router::$routeMatch){
-            $this['View']->serve(404);
-        }//if
-        else {
-            $this['View']->serve();
-        }//el
-
-    }//tearDownApp
-
-
-
-
-    /*
-     * When MAINTENANCE_MODE=true in .config.php the application is in maintenance mode and the \Closure function 
-     * returned from app/maintenance.php should be executed.
-     *
-     *
-     * @return void 
-    */
-    public final function handleMaintenance(){
-        if(strtolower($this->config['MAINTENANCE_MODE'])!='yes'){
-            return;
-        }//if
-        global $argv;
-        if(!empty($argv[2])){
-            return;
-        }//if
-        $file = $this->path.'/app/maintenance.php';
-        if(is_file($file)){
-            $action = require($file);
-        }//if
-        else {
-            $action = function(){ View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
-        }//el
-
-        call_user_func($action);
-
-        $this['View']->printPage();
-        exit;
-
-    }//handleMaintenance
-
-
 
     /**
      * Add a default matching condition for use with Router and Data. Store the $k and $v in 
@@ -321,57 +325,114 @@ Class App extends \Pimple\Container {
      *
      * @param string $k The conditions key. 
      * @param string $v The conditions regex value.
+     *
      * @return void 
     */
-    public final function addCondition($k,$v){
+    public final function registerCondition($k,$v){
         $this->defaultMatchCondition[$k]=$v;
-    }//addCondition
+    }//registerCondition
 
 
 
     /**
-     * Register the Default Disco Facades with the Application Container.
+     * Get a matching condition.
      *
-     * @return void
+     *
+     * @param string $k The conditions key.
+     *
+     * @return string
     */
-    public function services(){
+    public final function getCondition($k){
 
-        $facades = Array(
-            'Cache'         => 'Disco\classes\Cache',
-            'Crypt'         => 'Disco\classes\Crypt',
-            'Data'          => 'Disco\classes\Data',
-            'Email'         => 'Disco\classes\Email',
-            'Event'         => 'Disco\classes\Event',
-            'Html'          => 'Disco\classes\Html',
-            'FileHelper'    => 'Disco\classes\FileHelper',
-            'Form'          => 'Disco\classes\Form',
-            'Model'         => 'Disco\classes\ModelFactory',
-            'Queue'         => 'Disco\classes\Queue',
-            'Session'       => 'Disco\classes\Session',
-            'Template'      => 'Disco\classes\Template',
-            'View'          => 'Disco\classes\View'
-        );
-
-        $services_path = $this->path . '/config/services.php';
-        if(is_file($services_path)){
-            $facades = array_merge($facades,require($services_path));
+        if(!isset($this->defaultMatchCondition[$k])){
+            return false;
         }//if
 
-        foreach($facades as $facade=>$v){
-            $this->make($facade,$v);
+        return $this->defaultMatchCondition[$k];
+
+    }//getCondition
+
+
+
+    /**
+     * Match a registered condition against a value.
+     *
+     * @param string $k The condition key.
+     * @param mixed $v The value to test the condition against.
+     *
+     * @return boolean The condition passed.
+    */
+    public final function matchCondition($k,$v){
+
+        $condition = $this->getCondition($k);
+
+        if(!$condition || !preg_match("/{$condition}/",$v)){
+            return false;
+        }//if
+
+        return true;
+
+    }//matchCondition
+
+
+    /**
+     * Register services into the application container. If the service already exists, it will be extended.
+     *
+     *
+     * @param string $servicesFilePath The path to the services file.
+     * 
+     * @return boolean Were the services registered.
+    */
+    public function registerServices($servicesFilePath){
+
+        if(!is_file($servicesFilePath)){
+            return false;
+        }//if
+
+        $services = require $servicesFilePath;
+
+        foreach($services as $k => $v){
+
+            if(!isset($this[$k])){
+                $this->make($k,$v);
+            }//if
+            else {
+                $this->extend($k,$v);
+            }//el
+
         }//foreach
 
-        if(strtolower(App::config('DB_DRIVER')) == 'pdo'){
-            $this->make('DB','Disco\classes\PDO');
-        } else {
-            $this->make('DB','Disco\classes\DB');
-        }//el
+        return true;
 
-        $this->as_factory('Router',function(){
-            return \Disco\classes\Router::factory();
-        });
+    }//registerServices
 
-    }//services
+
+
+    /**
+     * Register services as factories into the application container.
+     *
+     *
+     * @param string $factoriesFilePath The path to the services factory file.
+     * 
+     * @return boolean Were the factories registered.
+    */
+    public function registerFactories($factoriesFilePath){
+
+        if(!is_file($factoriesFilePath)){
+            return false;
+        }//if
+
+        $factories = require $factoriesFilePath;
+
+        foreach($factories as $k => $v){
+
+            $this->as_factory($k,$v);
+
+        }//foreach
+
+        return true;
+
+    }//registerFactories
 
 
 
@@ -384,11 +445,23 @@ Class App extends \Pimple\Container {
      * @return Object 
     */
     public function with($obj){
+
         if(!isset($this[$obj])){
             $this->make($obj,$obj);
         }//if
+
         return $this[$obj];
+
     }//with
+
+
+
+    /**
+     * Alias of `$this->make($obj,$val)`'.
+    */
+    public function register($obj,$val){
+        $this->make($obj,$val);
+    }//register
 
 
 
@@ -402,29 +475,47 @@ Class App extends \Pimple\Container {
      * @return void 
     */
     public function make($obj,$val){
+
         if(!$val instanceof \Closure){
+
             $val = function($app) use($val){
-                return $app->resolve_dependencies($val);
+                return $app->resolveDependencies($val);
             };
+
         }//if
+
         $this[$obj] = $val;
-    }//set
+
+    }//make
 
 
 
+    /**
+     * Overwrite an existing service in the application container with a new service.
+     *
+     *
+     * @param string $obj The service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void
+     *
+    */
     public function extend($obj,$val){
 
         $app = self::$app;
 
         if(!$val instanceof \Closure){
+
             $val = function() use($val,$app){
-                return $app->resolve_dependencies($val);
+                return $app->resolveDependencies($val);
             };
+
         }//if
        
         parent::extend($obj,$val);
 
     }//extend
+
 
 
     /**
@@ -437,12 +528,17 @@ Class App extends \Pimple\Container {
      * @return void
     */
     public function as_factory($obj,$val){
+
         if(!$val instanceof \Closure){
+
             $val = function($app) use($val){
-                return $app->resolve_dependencies($val);
+                return $app->resolveDependencies($val);
             };
+
         }//if
+
         $this[$obj] = $this->factory($val);
+
     }//factory
 
 
@@ -457,7 +553,7 @@ Class App extends \Pimple\Container {
     public function as_protected($obj,$val){
          if(!$val instanceof \Closure){
             $val = function($app) use($val){
-                return $app->resolve_dependencies($val);
+                return $app->resolveDependencies($val);
             };
         }//if
         $this[$obj] = $this->protect($val);
@@ -512,7 +608,7 @@ Class App extends \Pimple\Container {
      *
      * @return Object
     */
-    private function resolve_dependencies($v){
+    private function resolveDependencies($v){
 
         $Ref = new \ReflectionClass($v);
         $con = $Ref->getConstructor();
@@ -563,6 +659,81 @@ Class App extends \Pimple\Container {
                 break;
         }//switch
 
-    }//resolve
+    }//resolveDependencies
+
+
+
+    /*
+     * When MAINTENANCE_MODE=true in config.php the application is in maintenance mode and the \Closure function 
+     * returned from app/maintenance.php should be executed.
+     *
+     *
+     * @return void 
+    */
+    public final function handleMaintenance(){
+
+        if(!isset($this->config['MAINTENANCE_MODE']) || strtolower($this->config['MAINTENANCE_MODE'])!='yes'){
+            return;
+        }//if
+
+        global $argv;
+        if(!empty($argv[2])){
+            return;
+        }//if
+        $file = $this->path.'/app/maintenance.php';
+        if(is_file($file)){
+            $action = require($file);
+        }//if
+        else {
+            $action = function(){ View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
+        }//el
+
+        call_user_func($action);
+
+        $this['View']->printPage();
+        exit;
+
+    }//handleMaintenance
+
+
+
+    /**
+     * Stack trace a Disco error and log it.
+     *
+     *
+     * @param string $msg The error message to log.
+     * @param Array $methods The method call names that could have generated the error.
+     * @param Array $e The debug_stacktrace call.
+     *
+     * @return void
+    */
+    public function error($msg,$methods,$e){
+
+        $trace = Array();
+        $e = array_reverse($e);
+        foreach($e as $err){
+            if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
+                $trace['line']=$err['line'];
+                $trace['file']=$err['file'];
+                break;
+            }//if
+        }//foreach
+        $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
+        error_log($msg,0);
+        //$this['View']->serve(500);
+        //exit;
+
+    }//error
+
+
 
 }//Disco
+
+
+
+/**
+ * Easy global access to App Singleton {@link \App::$app}.
+*/
+function app(){
+    return \App::instance();
+}//enact

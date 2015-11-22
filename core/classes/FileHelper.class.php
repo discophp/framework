@@ -1,18 +1,41 @@
 <?php
-
 namespace Disco\classes;
 
+/**
+ * Helper for interacting with file system files.
+*/
 class FileHelper {
 
+
+    /**
+     * @var array $mimeCache MIME types cache.
+    */
     private $mimeCache;
 
 
+
+    /**
+     * Get the file extension type from a path.
+     *
+     *
+     * @param string $path The file.
+     *
+     * @return string The extension.
+    */
     public function getExtension($path){
         return pathinfo($path,PATHINFO_EXTENSION);
     }//getExtension
 
 
 
+    /**
+     * Get a file type based on the file MIME info.
+     *
+     *
+     * @param string $file The file.
+     *
+     * @return string The type.
+    */
     public function getMimeType($file){
 
         if(function_exists('finfo_open')) {
@@ -33,6 +56,14 @@ class FileHelper {
 
 
 
+    /**
+     * Get a file extension type based on the file MIME info.
+     *
+     *
+     * @param string $file The file.
+     *
+     * @return null|string The extension.
+    */
     public function getMimeTypeByExtension($path){
 
         if(!$this->mimeCache){
@@ -49,12 +80,30 @@ class FileHelper {
 
 
 
+    /**
+     * Iterate over a diretory and all its children including other directories.
+     *
+     *
+     * @param string $path The path of the directory to iterate through.
+     *
+     * @return array
+    */
     public function recursiveIterate($path){
         return new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
     }//revursiveIterate
 
 
 
+    /**
+     * Serve a file with the proper `Content-type` header value set for use in a browser context. The content type 
+     * is determined by calling `$this->getMimeTypeByExtension($path)`. If the file doesn't exist then it will 
+     * serve a 404.
+     *
+     *
+     * @param string $path The file to serve.
+     *
+     * @return void
+    */
     public function serveFile($path){
 
         $this->isFileOrDie($path);
@@ -66,6 +115,16 @@ class FileHelper {
 
 
 
+    /**
+     * Serve a file using the Apache module XSendFile `https://tn123.org/mod_xsendfile/` with the proper `Content-type` header value set for use in a browser context. The content type 
+     * is determined by calling `$this->getMimeTypeByExtension($path)`. If the file doesn't exist then it will 
+     * serve a 404.
+     *
+     *
+     * @param string $path The file to serve.
+     *
+     * @return void
+    */
     public function XServeFile($path){
 
         $this->isFileOrDie($path);
@@ -73,10 +132,18 @@ class FileHelper {
         header('Content-type: ' . $this->getMimeTypeByExtension($path));
         $this->Xserve($path);
 
-    }//serveFile
+    }//XServeFile
 
 
 
+    /**
+     * Serve a file as a download.
+     *
+     *
+     * @param string $path The file to be downloaded.
+     *
+     * @return void
+    */
     public function serveAsDownload($path){
 
         $this->isFileOrDie($path);
@@ -84,10 +151,18 @@ class FileHelper {
         $this->downloadHeaders($path);
         $this->serve($path);
 
-    }//serveFile
+    }//serveAsDownload
 
 
 
+    /**
+     * Serve a file as a download using the Apache module XSendFile.
+     *
+     *
+     * @param string $path The file to be downloaded.
+     *
+     * @return void
+    */
     public function XServeAsDownload($path){
 
         $this->isFileOrDie($path);
@@ -99,6 +174,14 @@ class FileHelper {
 
 
 
+    /**
+     * Set the header values necessary for serving a file as a dowload.
+     *
+     *
+     * @param string $path The file thats being downloaded.
+     *
+     * @return void
+    */
     private function downloadHeaders($path){
 
         header("Content-type: application/octet-stream");
@@ -108,14 +191,31 @@ class FileHelper {
 
 
 
+    /**
+     * Serve a file.
+     *
+     *
+     * @param string $path The file thats being downloaded.
+     *
+     * @return void
+    */
     private function serve($path){
 
         header('Content-Length: ' . filesize($path) );
         readfile($path); 
 
-    }//server
+    }//serve
 
 
+
+    /**
+     * Serve a file using the Apache XSendFile module.
+     *
+     *
+     * @param string $path The file thats being downloaded.
+     *
+     * @return void
+    */
     private function XServe($path){
 
         header('Content-Length: ' . filesize($path) );
@@ -124,6 +224,15 @@ class FileHelper {
     }//XServe
 
 
+
+    /**
+     * If the file doesn't exist serve a 404 and exit.
+     *
+     *
+     * @param string $path The file.
+     *
+     * @return void
+    */
     private function isFileOrDie($path){
         if(!is_file($path)){
             http_response_code(404);
