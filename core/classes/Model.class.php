@@ -279,6 +279,31 @@ class Model {
 
 
     /**
+     * Prepare a DELETE condition for the query.
+     *
+     * Delete records where a value is in the key/value pairs.
+     *
+     *
+     * @param string $field The field to look in.
+     * @param string|array $array A string of comma seperated values, or an array of values.
+     *
+     * @return self
+    */
+    public final function deleteIn($field,$array){
+
+        $this->clearData();
+
+        $array = $this->buildWhereInArray($array);
+
+        $this->where = "{$field} IN ({$array})";
+
+        return $this->executeQuery("DELETE FROM {$this->table} WHERE {$this->where}");
+
+    }//deleteIn
+
+
+
+    /**
      * Specify a WHERE condition for the working query.
      * Accepts its arguements through func_get_args(). 
      *
