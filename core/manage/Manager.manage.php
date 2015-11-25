@@ -161,15 +161,49 @@ class Manager {
      *
      * @return void
     */
-    public static function setConfig($find,$value){
+    public static function setConfig($key,$value){
 
-        $find.='\'=>\'';
-        $f = file_get_contents(\App::path().'/app/config/config.php');
-        $i = stripos($f,$find)+strlen($find);
-        $ni = stripos($f,'\'',$i);
+        $config = require \App::path() . '/app/config/config.php';
 
-        $f = substr_replace($f,$value,$i,$ni-$i);
-        file_put_contents(\App::path().'/app/config/config.php',$f);
+        $config[$key] = $value;
+
+        $largestKey = 0;
+        foreach($config as $k => $v){
+            $len = strlen($k);
+            if($len > $largestKey){
+                $largestKey = $len;
+            }//if
+        }//foreach
+
+        //one tab
+        $largestKey += 4;
+
+        $output = '';
+        foreach($config as $k => $v){
+            $padding = $largestKey - strlen($k);
+            $padding = str_repeat(' ',$padding);
+
+            if(is_bool($v)){
+                $v = ($v) ? 'true' : 'false';
+            }//if
+            else if(!is_numeric($v)){
+                $v = "'{$v}'";
+            }//elif
+
+            $output .= "   '{$k}'{$padding}=> {$v},\n";
+        }//foreach
+
+        $output = 
+"
+<?php
+return Array(
+{$output}
+);
+?>
+";
+
+        file_put_contents(\App::path().'/app/config/config.php',$output);
+
     }//setConfig
 
 
