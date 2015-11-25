@@ -170,9 +170,9 @@ Class Template extends \Twig_Environment {
      * Build a template directly from a Model.
      *
      *
-     * @param string $name  The name of the template.
+     * @param string $name The name of the template.
      * @param string $model The name of the Model.
-     * @param string $key   The key used to select data from the model with.
+     * @param mixed $key The key(s) used to select data from the model.
      *
      * @return string The built template.
     */
@@ -191,6 +191,10 @@ Class Template extends \Twig_Environment {
     /**
      * Build a template directly from a Model and push it onto the Views html stack.
      *
+     *
+     * @param string $name The name of the tempalte.
+     * @param string $model The name of the Model.
+     * @param mixed $key The key(s) used to select data from the model.
      *
      * @return void
     */

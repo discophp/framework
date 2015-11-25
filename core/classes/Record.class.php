@@ -439,6 +439,13 @@ abstract class Record implements \ArrayAccess {
 
 
 
+    /**
+     * Get the primary keys and their current values from the fields, validating each one. If not all keys are 
+     * present but the auto increment key is present and valid return just that.
+     *
+     *
+     * @return array The primary keys.
+    */
     public function primaryKeysWithValidation(){
 
         $ids = $this->primaryKeys();

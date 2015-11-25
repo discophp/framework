@@ -1134,6 +1134,7 @@ class Model {
      *
      * @param array $data Pieces of the condition that needs to be prepared.
      * @param string $conjunction The conjuction to be used if more than one condition is present.
+     * @param string $comparator The comparator used to form the comparison condition between the key and the value.
      *
      * @return mixed $where Either return the condition or false if there was no condition to prepare.
     */

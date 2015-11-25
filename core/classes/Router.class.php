@@ -146,7 +146,7 @@ class Router {
 
 
 
-    /*
+    /**
      * Process the the router.
      *
      * Find if there is a match and take the appropriate action:
@@ -406,6 +406,9 @@ class Router {
      *
      *
      * @param  string  $param The URI to match the route against.  
+     * @param array $restrict The variables that must exist in the URI.
+     * @param null|string|array The authentication for the route.
+     * @param null|array The GET URI paramaters allowed.
      *
      * @return boolean Was this $param a match to the REQUEST_URI?
      */
@@ -504,6 +507,7 @@ class Router {
      *
      *
      * @param  string  $param The URI to filter. 
+     * @param null|string|array The authentication on the route.
      *
      * @return boolean
      */
@@ -582,6 +586,8 @@ class Router {
      * Return whether or not the request is authenticated by a session.
      *
      *
+     * @param array The authentication.
+     *
      * @return boolean
     */
     public static function authenticated($auth){
@@ -597,8 +603,6 @@ class Router {
         return true;
 
     }//authenticated
-
-
 
 
 

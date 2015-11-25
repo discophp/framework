@@ -42,6 +42,8 @@ class Data {
      * Construct PUT and DELETE data if the REQUEST_METHOD is PUT | DELETE. 
      *
      *
+     * @param string $stream The stream data is passed to PHP via the webserver, default : `php://input`.
+     *
      * @return void
     */
     public function __construct($stream='php://input'){

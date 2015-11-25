@@ -78,7 +78,7 @@ class View {
     /**
      * Get a variable in the view template variable.
      *
-     * @var string $n The variable name.
+     * @param string $k The variable name.
      *
      * @return mixed 
      */
@@ -97,8 +97,8 @@ class View {
     /**
      * Set a variable in the view template variable.
      *
-     * @var string $n The variable name.
-     * @var mixed $v The variables value.
+     * @param string $k The variable name.
+     * @param mixed $v The variables value.
      *
      * @return void
      */
@@ -111,8 +111,8 @@ class View {
     /**
      * Override the default body template for the View.
      *
+     * @param string $template The template to use.
      *
-     * @var string $template The template to use.
      * @return void
     */
     public function setBaseTemplate($template){
@@ -125,7 +125,8 @@ class View {
      * Override the default body template for the Ajax View.
      *
      *
-     * @var string $template The template to use.
+     * @param string $template The template to use.
+     *
      * @return void
     */
     public function setAjaxTemplate($template){
@@ -137,13 +138,13 @@ class View {
     /**
      * Set a variable in the view template variable.
      *
-     * @var string $n The variable name.
-     * @var mixed $v The variables value.
+     * @param string $k The variable name.
+     * @param mixed $v The variables value.
      *
      * @return void
      */
-    public function setViewVariable($n,$v){
-        $this->view[$n] = $v;
+    public function setViewVariable($k,$v){
+        $this->view[$k] = $v;
     }//setViewVariable
 
 
@@ -151,14 +152,14 @@ class View {
     /**
      * Get a variable in the view template variable.
      *
-     * @var string $n The variable name.
+     * @param string $k The variable name.
      *
      * @return mixed 
      */
-    public function getViewVariable($n){
+    public function getViewVariable($k){
 
-        if(isset($this->view[$n])){
-            return $this->view[$n];
+        if(isset($this->view[$k])){
+            return $this->view[$k];
         }//if
 
         return false;
@@ -343,7 +344,7 @@ class View {
     /**
      * Set that the view is returning a response to a client via an AJAX request.
      *
-     * @var boolean $bool Whether were responding to an AJAX request.
+     * @param boolean $bool Whether were responding to an AJAX request.
      * @return void
     */
     public function ajax($bool = true){
@@ -618,13 +619,15 @@ class View {
 
 
 
-    /*
+    /**
      * Serve a specified http response code page by either executing the passed \Closure $fun function, 
      * or loading the \Closure function from the file /app/$code.php and executing it or by 
      * a default message set by the function.
      *
      *
      * @param int $code The http repsonse code sent to the client from the server.
+     * @param string|\Closure $callable A file with a callable function returned or a \Closure, to be executed when 
+     * `$code != 200`.
      *
      * @return void 
     */

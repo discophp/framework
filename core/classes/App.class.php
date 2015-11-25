@@ -102,14 +102,16 @@ Class App extends \Pimple\Container {
      * Assemble the pieces of the application that make it all tick.
      * 
      *
+     * @param array $services Default services to seed into the application container.
+     *
      * @return void
     */
-    public function setUp($values = Array()){
+    public function setUp($services = Array()){
 
         /**
          * Construct the Pimple container and pass any user predefined services.
         */
-        parent::__construct($values);
+        parent::__construct($services);
 
 
         /**
@@ -458,6 +460,12 @@ Class App extends \Pimple\Container {
 
     /**
      * Alias of `$this->make($obj,$val)`'.
+     *
+     *
+     * @param string $obj The service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void 
     */
     public function register($obj,$val){
         $this->make($obj,$val);
@@ -663,7 +671,7 @@ Class App extends \Pimple\Container {
 
 
 
-    /*
+    /**
      * When MAINTENANCE_MODE=true in config.php the application is in maintenance mode and the \Closure function 
      * returned from app/maintenance.php should be executed.
      *

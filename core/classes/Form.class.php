@@ -188,6 +188,8 @@ Class Form {
      * The condition used on the model.
      *
      *
+     * @param mixed $where The condition.
+     *
      * @return self 
     */
     public function where($where){

@@ -202,6 +202,8 @@ class Request {
     /**
      * Get a GET variable in the request.
      *
+     * @param string $k The key.
+     *
      * @return string
     */
     public function get($k = null){
@@ -212,6 +214,8 @@ class Request {
 
     /**
      * Get a POST variable in the request.
+     *
+     * @param string $k The key.
      *
      * @return string
     */
@@ -224,6 +228,8 @@ class Request {
     /**
      * Get a PUT variable in the request.
      *
+     * @param string $k The key.
+     *
      * @return string
     */
     public function put($k = null){
@@ -234,6 +240,8 @@ class Request {
 
     /**
      * Get a DELETE variable in the request.
+     *
+     * @param string $k The key.
      *
      * @return string
     */
