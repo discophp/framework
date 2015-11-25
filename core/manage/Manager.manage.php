@@ -112,7 +112,7 @@ class Manager {
 
 
     /**
-     * Set or Get the APP_MODE in .config.php .
+     * Set or Get the APP_MODE in `app/config/config.php`.
      *
      *
      * @param string|null $mode The mode to put the app into;either DEV|PROD
@@ -133,7 +133,7 @@ class Manager {
 
 
     /**
-     * Set or Get the MAINTENANCE_MODE in .config.php .
+     * Set or Get the MAINTENANCE_MODE in `app/config/config.php`.
      *
      *
      * @param string|null $mode Should the app be in maintenance mode? 
@@ -154,7 +154,7 @@ class Manager {
 
 
     /**
-     * Set a variable in .config.php .
+     * Set a variable in `app/config/config.php`.
      *
      * @param string $find  The variable to change.
      * @param string $value The value to change the variable to.
@@ -164,18 +164,18 @@ class Manager {
     public static function setConfig($find,$value){
 
         $find.='\'=>\'';
-        $f = file_get_contents(\App::path().'/.config.php');
+        $f = file_get_contents(\App::path().'/app/config/config.php');
         $i = stripos($f,$find)+strlen($find);
         $ni = stripos($f,'\'',$i);
 
         $f = substr_replace($f,$value,$i,$ni-$i);
-        file_put_contents(\App::path().'/.config.php',$f);
+        file_put_contents(\App::path().'/app/config/config.php',$f);
     }//setConfig
 
 
 
     /**
-     * Get a variable in .config.php .
+     * Get a variable in `app/config/config.php`.
      *
      *
      * @param string $find  The variable to find.
@@ -184,7 +184,7 @@ class Manager {
     */
     public static function getConfig($find){
         $find.='\'=>\'';
-        $f = file_get_contents('./.config.php');
+        $f = file_get_contents(\App::path().'/app/config/config.php');
         $i = stripos($f,$find)+strlen($find);
         $ni = stripos($f,'\'',$i);
 
