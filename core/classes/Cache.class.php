@@ -1,15 +1,24 @@
 <?php
 namespace Disco\classes;
 /**
- * This file contains the Cache class. This class extends the class \Memcache and 
- * allows us to hanlding caching using the memcache server and class.
+ * This file contains the Cache class. Simple wrapper around using \Memcache
 */
 
 
 /**
- * The Cache class extends \Memcache.
+ * Simple wrapper around using \Memcache to support basic caching operations:
+ * - Get
+ * - Set
+ * - Delete
 */
-class Cache extends \Memcache {
+class Cache {
+
+
+    /**
+     * @var \Memcache $memcache The \Memcache instance used for caching.
+    */
+    public $memcache;
+
 
 
     /**
@@ -19,17 +28,30 @@ class Cache extends \Memcache {
      *
      * @param null|string $host The name of the host of the Cache provider.
      * @param null|int $port The port of the Cache provider.
-     *
-     * @return void
     */
     public function __construct($host=null,$port=null){
+
         if(!$host){
-            $app = \App::instance();
-            $host = $app->config['MEMCACHE_HOST'];
-            $port = $app->config['MEMCACHE_PORT'];
+            $host = \App::config('MEMCACHE_HOST');
+            $port = \App::config('MEMCACHE_PORT');
         }//if
-        $this->connect($host,$port);
+
+        $this->memcache = new \Memcache;
+        $this->memcache->connect($host,$port);
+
     }//construct
+
+
+
+    /**
+     * Get the underlying instance of the \Memcache server thats being used to perform caching.
+     *
+     *
+     * @return \Memcache
+    */
+    public function memcache(){
+        return $this->memcache;
+    }//memcache
 
 
 
@@ -43,7 +65,7 @@ class Cache extends \Memcache {
     */
     public function get($k){
         $k = md5($k);
-        return parent::get($k);
+        return $this->memcache->get($k);
     }//get
 
 
@@ -58,8 +80,8 @@ class Cache extends \Memcache {
     */
     public function delete($k){
         $k = md5($k);
-        return parent::delete($k);
-    }//get
+        return $this->memcache->delete($k);
+    }//delete
 
 
 
@@ -69,13 +91,13 @@ class Cache extends \Memcache {
      *
      * @param string $k The key to store the data with. md5() will be applied to it before used.
      * @param mixed  $v The value to store with the key.
+     * @param integer $expires The number of seconds the cached object should live for, 0 for max life.
      * @param mixed $compression If any value is passed here that is not 0 the constant MEMCACHE_COMPRESSED will be 
      * passed to the parent function set().
-     * @param integer $expires The number of seconds the cached object should live for, 0 for max life.
      *
      * @return boolean
     */
-    public function set($k,$v,$compression=0,$expires=0){
+    public function set($k,$v,$expires=0,$compression=0){
 
         $k = md5($k);
 
@@ -83,7 +105,7 @@ class Cache extends \Memcache {
             $compression = MEMCACHE_COMPRESSED;
         }//if
 
-        return parent::set($k,$v,$compression,$expires);
+        return $this->memcache->set($k,$v,$compression,$expires);
 
     }//set
 
