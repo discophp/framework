@@ -11,6 +11,7 @@
     "minimum-stability": "dev",
     "require": {
         "php":">=5.4.0",
+        "ext-mcrypt":"*",
         "swiftmailer/swiftmailer":"v5.0.3",
         "jeremeamia/superclosure":"~1.0",
         "pimple/pimple":"3.0",
