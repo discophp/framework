@@ -15,7 +15,6 @@
         "jeremeamia/superclosure":"~1.0",
         "pimple/pimple":"3.0",
         "twig/twig":"~1.0",
-        "defuse/php-encryption":"1.2",
         "respect/validation":"1.0",
         "ifsnop/mysqldump-php": "1.6",
         "nervo/yuicompressor":"2.4.8"

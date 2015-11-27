@@ -2,7 +2,7 @@
 namespace Disco\classes;
 /**
  * This file contains the class Crypt. It provides helper functions to use AES encryption via the 
- * \Defuse\Crypt\Crypt class. It also provides SHA512 hashing and a timing safe comparsion function.
+ * mcrypt module. It also provides SHA512 hashing and a timing safe comparsion function.
 */
 
 
@@ -27,10 +27,17 @@ class Crypt {
     public function encrypt($input, $key256){
     
         if($key256 === null){
-            $key256 = \App::instance()->config('AES_KEY256');
+            $key256 = \App::config('AES_KEY256');
         }//if
 
-        return \Defuse\Crypto\Crypto::encrypt($input,$key256);
+        $key256 = pack('H*', $key256);
+
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
+        $iv = mcrypt_create_iv($iv_size,MCRYPT_DEV_URANDOM);
+
+        $cipherText = mcrypt_encrypt(MCRYPT_RIJNDAEL_128,$key256,$input,MCRYPT_MODE_CBC,$iv);
+
+        return trim(base64_encode($iv.$cipherText));
 
     }//encrypt
 
@@ -50,10 +57,20 @@ class Crypt {
     public function decrypt($crypt, $key256 = null){
 
         if($key256 === null){
-            $key256 = \App::instance()->config('AES_KEY256');
+            $key256 = \App::config('AES_KEY256');
         }//if
 
-        return \Defuse\Crypto\Crypto::decrypt($crypt,$key256);
+        $key256 = pack('H*',$key256);
+
+        $cipherText = base64_decode($crypt);
+
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
+        $iv = substr($cipherText,0,$iv_size);
+
+        $cipherText = substr($cipherText,$iv_size);
+
+        return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_128,$key256,$cipherText,MCRYPT_MODE_CBC,$iv));
+
 
     }//decrypt
 
@@ -76,8 +93,8 @@ class Crypt {
     public function hash($s,$sha512SaltLead = null,$sha512SaltTail = null){
 
         if($sha512SaltLead === null){
-            $sha512SaltLead = \App::instance()->config('SHA512_SALT_LEAD');
-            $sha512SaltTail = \App::instance()->config('SHA512_SALT_TAIL');
+            $sha512SaltLead = \App::config('SHA512_SALT_LEAD');
+            $sha512SaltTail = \App::config('SHA512_SALT_TAIL');
         }//if
 
         return hash('sha512', $sha512SaltLead . $s . $sha512SaltTail);
