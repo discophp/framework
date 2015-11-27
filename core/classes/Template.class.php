@@ -59,10 +59,17 @@ Class Template extends \Twig_Environment {
             'autoescape'    => $escape
         ));
 
-        //register the url function with twig
-        $this->addGlobal('View',\App::with('View'));
-        $this->addGlobal('Request',\App::with('Request'));
-        $this->addGlobal('Cache',\App::with('Cache'));
+        $this->addFunction(new \Twig_SimpleFunction('View',function(){
+            return \App::with('View');
+        }));
+
+        $this->addFunction(new \Twig_SimpleFunction('Request',function(){
+            return \App::with('Request');
+        }));
+
+        $this->addFunction(new \Twig_SimpleFunction('Cache',function(){
+            return \App::with('Cache');
+        }));
 
     }//construct
 
