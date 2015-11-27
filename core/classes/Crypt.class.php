@@ -24,7 +24,7 @@ class Crypt {
      *
      * @return string The encrypted value of $input.
     */
-    public function encrypt($input, $key256){
+    public function encrypt($input, $key256 = null){
     
         if($key256 === null){
             $key256 = \App::config('AES_KEY256');
