@@ -38,6 +38,7 @@ class View {
         'favIcon'           => '/favicon.png',
         'robots'            => 'index,follow',
         'ajax'              => false,
+        'json'              => false,
         'scriptSrcs'        => Array(),
         'scripts'           => '',
         'headScriptSrcs'    => Array(),
@@ -168,15 +169,39 @@ class View {
 
 
     /**
-     * Specify that the output of this view should be JSON.
+     * Specify that the output of this view should be JSON. If `$data` is provided the response will be sent 
+     * immeditatly and the application will exit.
      *
+     *
+     * @param null|mixed $data The response to JSON encode and return to the client.
+     * @param int $code The HTTP response code to be returned to the client.
      *
      * @return void
     */
-    public function json(){
+    public function json($data = null,$code = 200){
         $this->ajax();
         header('Content-type: application/json');
+        $this->view['json'] = true;
+
+        if($data !== null){
+            http_response_code($code);
+            echo json_encode($data);
+            exit;
+        }//if
+
     }//json
+
+
+
+    /**
+     * Return whether the View is JSON.
+     *
+     *
+     * @return boolean
+    */
+    public function isJson(){
+        return $this->view['json'];
+    }//isJson
 
 
 
@@ -331,8 +356,10 @@ class View {
         if(!$this->view['ajax']){
             $template = $this->baseTemplate;
         }//if
-        else {
+        else if(!$this->view['json']){
             $template = $this->ajaxTemplate;
+        } else {
+            return;
         }//el
 
         echo \Template::build($template);
