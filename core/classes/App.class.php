@@ -26,7 +26,7 @@ namespace Disco\classes;
 
 
 /**
- * Our applications primary Container and Controller. 
+ * The application container. This class is a Singleton.
 */
 Class App extends \Pimple\Container {
 
@@ -141,7 +141,7 @@ Class App extends \Pimple\Container {
         $this->registerConfig($this->path.'/app/config/config.php');
 
         //register the dev configuration options if necessary
-        if(!isset($this->config['APP_MODE']) || $this->config['APP_MODE'] != 'PROD'){
+        if(isset($this->config['APP_MODE']) && $this->config['APP_MODE'] != 'PROD'){
             $this->registerConfig($this->path.'/app/config/dev.config.php');
         }//if
 
@@ -157,7 +157,7 @@ Class App extends \Pimple\Container {
         $this->registerFactories($this->path . '/app/config/factories.php');
 
         //force the registery of the Router factory.
-        $this->as_factory('Router',function(){
+        $this->makeFactory('Router',function(){
             return \Disco\classes\Router::factory();
         });
 
@@ -228,15 +228,21 @@ Class App extends \Pimple\Container {
      * @param string $name Configuration setting to touch.
      * @param mixed $value The value to set.
      *
-     * @return mixed
+     * @return false|mixed False if not set, the value otherwise.
     */
-    public static function config($name,$value=null){
+    public function config($name,$value=null){
 
         if($value === null){
-            return self::instance()->config[$name];
+
+            if(!isset($this->config[$name])){
+                return false;
+            }//if
+
+            return $this->config[$name];
+
         }//if
 
-        self::instance()->config[$name] = $value;
+        $this->config[$name] = $value;
 
     }//config
 
@@ -247,8 +253,8 @@ Class App extends \Pimple\Container {
      *
      * @return string 
     */
-    public static final function path(){
-        return self::instance()->path;
+    public function path(){
+        return $this->path;
     }//path
 
 
@@ -428,7 +434,7 @@ Class App extends \Pimple\Container {
 
         foreach($factories as $k => $v){
 
-            $this->as_factory($k,$v);
+            $this->makeFactory($k,$v);
 
         }//foreach
 
@@ -455,21 +461,6 @@ Class App extends \Pimple\Container {
         return $this[$obj];
 
     }//with
-
-
-
-    /**
-     * Alias of `$this->make($obj,$val)`'.
-     *
-     *
-     * @param string $obj The service to register.
-     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
-     *
-     * @return void 
-    */
-    public function register($obj,$val){
-        $this->make($obj,$val);
-    }//register
 
 
 
@@ -535,7 +526,7 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public function as_factory($obj,$val){
+    public function makeFactory($obj,$val){
 
         if(!$val instanceof \Closure){
 
@@ -558,7 +549,7 @@ Class App extends \Pimple\Container {
      * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
      *
     */
-    public function as_protected($obj,$val){
+    public function makeProtected($obj,$val){
          if(!$val instanceof \Closure){
             $val = function($app) use($val){
                 return $app->resolveDependencies($val);
@@ -741,7 +732,18 @@ Class App extends \Pimple\Container {
 
 /**
  * Easy global access to App Singleton {@link \App::$app}.
+ *
+ *
+ * @param null|string $service A service to return from the application container.
+ *
+ * @return mixed|\Disco\classes\App
 */
-function app(){
+function app($service = null){
+
+    if($service !== null){
+        return \App::instance()->with($service);
+    }//if
+
     return \App::instance();
-}//enact
+
+}//app

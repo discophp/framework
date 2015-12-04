@@ -17,7 +17,7 @@ class Email {
     /**
      * @var array Holds config data from config/mail.config.php .
     */
-    private $settings;
+    private $settings = Array();
 
 
     /**
@@ -42,7 +42,11 @@ class Email {
     public function __construct(){
 
         if(is_file(\App::path() . '/app/config/mail.config.php')){
-            $this->settings = require(\App::path() . '/app/config/mail.config.php');
+            $this->settings = require(\App::path() . '/app/config/email.php');
+        }//if
+
+        if(isset($this->config['APP_MODE']) && $this->config['APP_MODE'] != 'PROD'){
+            $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php');
         }//if
 
         \Swift_Preferences::getInstance()->setCharset('iso-8859-2');

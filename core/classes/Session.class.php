@@ -33,10 +33,7 @@ class Session {
      * @return boolean
     */
     public function has($k){
-        if(isset($_SESSION[$k]))
-            return true;
-        else 
-            return false;
+        return isset($_SESSION[$k]);
     }//has
 
 
@@ -55,11 +52,7 @@ class Session {
             return true;
         }//if
 
-        if(isset($_SESSION[$k])){
-            return true;
-        }//if
-
-        return false;
+        return isset($_SESSION[$k]);
 
     }//in
 
@@ -98,10 +91,16 @@ class Session {
      *
      * @param string $k The SESSION to get.
      *
-     * @return mixed
+     * @return false|mixed
     */
     public function get($k){
+
+        if(!isset($_SESSION[$k])){
+            return false;
+        }//if
+
         return $_SESSION[$k];
+
     }//get
 
 

@@ -39,15 +39,16 @@ class PDO extends \PDO {
      * @param null|string $pw The password to connect with.
      * @param null|string $db The schema to connect to.
      * @param string $engine The engine type to use, default is `mysql`.
+     * @param string $charset The charset to use, default is `utf8`.
      *
      * @return void
     */
-    public function __construct($host=null,$user=null,$pw=null,$db=null,$engine='mysql') {
+    public function __construct($host=null,$user=null,$pw=null,$db=null,$engine='mysql',$charset='utf8') {
 
         $app = \App::instance();
 
         if($host === null){
-            $engine     = $app->config['PDO_ENGINE'];
+            $engine     = $app->config['DB_ENGINE'];
             $host       = $app->config['DB_HOST'];
             $user       = $app->config['DB_USER'];
             $pw         = $app->config['DB_PASSWORD'];
@@ -247,6 +248,9 @@ class PDO extends \PDO {
      * @param string|array  $args   The variables to bind to the $q.
      *
      * @return string               The $q with $args bound into it.
+     *
+     * @throws \Disco\exceptions\DBQuery When the number of arguements doesn't match the numebr of `?` 
+     * placeholders.
     */
     public function set($q,$args){
 

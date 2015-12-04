@@ -493,6 +493,20 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
+     * Validate a single field of the record.
+     *
+     * 
+     * @param string $key The field name to validate.
+     *
+     * @return boolean The field passed validation.
+    */
+    public function validateField($key){
+        return $this->validate($key,$this[$key]);
+    }//validateField
+
+
+
+    /**
      * Get the fields that have changed since the instantiation of the record or the last update or insert.
      *
      *

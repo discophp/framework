@@ -91,32 +91,38 @@ class Data {
      * Determine if the specific $k data matches the found value using the regular expression $v.
      *
      *
-     * @param string $k The key of the data.
-     * @param string $v The regex pattern or default matching condition to use.
+     * @param string|array $k The key of the data, or an assoc array of key/condition pairs.
+     * @param string|null $v The regex pattern or default matching condition to use.
      *
      * @return string|bool|int|float 
     */
-    public function where($k,$v){
+    public function where($k,$v=null){
 
         $dataType=$this->all();
 
-        if(isset($dataType[$k])){
-
-            $matchCondition = $v;
-
-            if(\App::instance()->getCondition($v)){
-                $matchCondition = \App::instance()->getCondition($v);
-            }//if
-
-            if(!preg_match("/{$matchCondition}/",$dataType[$k])){
-                return false;
-            }//if
-
-            return $dataType[$k];
+        if(!is_array($k)){
+            $k = Array($k => $v);
         }//if
-        else {
-            return false;
-        }//el
+
+        foreach($k as $key => $condition){
+
+            if(isset($dataType[$key])){
+
+                if(\App::getCondition($condition)){
+                    $condition = \App::getCondition($condition);
+                }//if
+
+                if(!preg_match("/{$condition}/",$dataType[$key])){
+                    return false;
+                }//if
+
+                return $dataType[$key];
+            }//if
+            else {
+                return false;
+            }//el
+
+        }//foreach
 
     }//where
 
