@@ -837,8 +837,6 @@ return Array(
     */
     public static function writeRecord($table, $record, $templatePath, $outputPath){
 
-        $table = explode('enact_',$table)[1];
-
         $format = Array(
             'camelTable'    => str_replace(' ','',ucwords(str_replace('_',' ',$table))),
             'table'         => $table,

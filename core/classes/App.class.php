@@ -719,8 +719,6 @@ Class App extends \Pimple\Container {
         }//foreach
         $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
         error_log($msg,0);
-        //$this['View']->serve(500);
-        //exit;
 
     }//error
 

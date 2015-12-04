@@ -647,43 +647,6 @@ class View {
 
 
     /**
-     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
-     * or loading the \Closure function from the file /app/$code.php and executing it or by 
-     * a default message set by the function.
-     *
-     *
-     * @param int $code The http repsonse code sent to the client from the server.
-     * @param string|\Closure $callable A file with a callable function returned or a \Closure, to be executed when 
-     * `$code != 200`.
-     *
-     * @return void 
-    */
-    public final function serve($code=200,$callable=false){
-
-        if($code!=200){
-            http_response_code($code);
-            $file = \App::path()."/app/{$code}.php";
-            if($callable !== false && $callable instanceof \Closure){
-                call_user_func($callable);
-            }//if
-            else if(is_file($file)){
-                $action = require($file);
-                call_user_func($action,\App::instance());
-            }//if
-        }//if
-
-        //Print out the Current View.
-        if(!\App::instance()->cli){
-            View::printPage();
-        }//if
-
-        //exit;
-
-    }//serve
-
-
-
-    /**
      * Complile the style(css) sources to html `<link>` elements.
      *
      *
@@ -791,6 +754,57 @@ class View {
     public function abort($closure = false){
         $this->serve(404,$closure);
     }//abort
+
+
+
+    /**
+     * Redirect the request to another URL.
+     *
+     *
+     * @param string $url The URL to redirect to.
+     * @return void
+    */
+    public function redirect($url){
+        header('Location: ' . $url . ';');
+        exit;
+    }//redirect
+
+
+
+    /**
+     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
+     * or loading the \Closure function from the file /app/$code.php and executing it or by 
+     * a default message set by the function.
+     *
+     *
+     * @param int $code The http repsonse code sent to the client from the server.
+     * @param string|\Closure $callable A file with a callable function returned or a \Closure, to be executed when 
+     * `$code != 200`.
+     *
+     * @return void 
+    */
+    public final function serve($code=200,$callable=false){
+
+        if($code!=200){
+            http_response_code($code);
+            $file = \App::path()."/app/{$code}.php";
+            if($callable !== false && $callable instanceof \Closure){
+                call_user_func($callable);
+            }//if
+            else if(is_file($file)){
+                $action = require($file);
+                call_user_func($action,\App::instance());
+            }//if
+        }//if
+
+        //Print out the Current View.
+        if(!\App::instance()->cli){
+            View::printPage();
+        }//if
+
+        //exit;
+
+    }//serve
 
 
 
