@@ -10,17 +10,51 @@ namespace Disco\classes;
 */
 class Session {
 
+    const FLASH_KEY = 'disco_flash';
+
+    /**
+     * @var array $newFlash Flash data set during current request.
+    */
+    private $newFlash = Array();
 
 
     /**
-     * Start up our session by calling session_start() .
+     * @var array $flash Flash data from previous request.
+    */
+    private $flash = Array();
+
+
+
+    /**
+     * Start up our session by calling `session_start()` and set the flash data if necessary.
      *
      *
      * @return void
     */
     public function __construct(){
+
         session_start();
+
+        if($this->has(self::FLASH_KEY)){
+            $this->flash = json_decode($this->get(self::FLASH_KEY));
+        }//if
+
     }//__construct
+
+
+
+    /**
+     * Set the current flash if necessary.
+    */
+    public function __destruct(){
+
+        if(count($this->newFlash)){
+            $this->set(self::FLASH_KEY, json_encode($this->newFlash));
+        } else if(count($this->flash)){
+            $this->remove(self::FLASH_KEY);            
+        }//elif
+
+    }//__destruct
 
 
 
@@ -165,6 +199,48 @@ class Session {
         session_destroy();
     }//destroy
 
+
+
+    /**
+     * Set a piece of flash data.
+     *
+     * 
+     * @param string $key The flash data key.
+     * @param mixed $value The flash data value.
+    */
+    public function setFlash($key, $value){
+        $this->newFlash[$key] = $value;
+    }//flash
+
+
+
+    /**
+     * Get a piece of flash data.
+     *
+     *
+     * @param string $key The flash data key.
+     * @return false|mixed False if not set.
+    */
+    public function getFlash($key){
+
+        if(!isset($this->flash[$key])){
+            return false;
+        }//if
+
+        return $this->flash[$key];
+
+    }//getFlash
+
+
+
+    /**
+     * Get the current flash data.
+     *
+     * @return array
+    */
+    public function flash(){
+        return $this->flash;
+    }//flash
 
 
 }//Session
