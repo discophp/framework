@@ -46,7 +46,7 @@ class Email {
         }//if
 
         if(isset($this->config['APP_MODE']) && $this->config['APP_MODE'] != 'PROD'){
-            $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php');
+            $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php'));
         }//if
 
         \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
