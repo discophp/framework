@@ -188,10 +188,10 @@ Class App extends \Pimple\Container {
          * did this requested URI not find a match? If so thats a 404.
         */
         if(!\Disco\classes\Router::$routeMatch){
-            $this['View']->serve(404);
+            \View::serve(404);
         }//if
         else {
-            $this['View']->serve();
+            \View::serve();
         }//el
 
     }//tearDown
@@ -684,12 +684,12 @@ Class App extends \Pimple\Container {
             $action = require($file);
         }//if
         else {
-            $action = function(){ View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
+            $action = function(){ \View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
         }//el
 
         call_user_func($action);
 
-        $this['View']->printPage();
+        \View::printPage();
         exit;
 
     }//handleMaintenance
