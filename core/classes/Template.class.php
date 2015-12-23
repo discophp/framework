@@ -78,13 +78,29 @@ Class Template extends \Twig_Environment {
 
         $name = $this->buildTemplatePath($name);
 
+        return $this->isTemplateFile($name);
+
+    }//isTemplate
+
+
+
+    /**
+     * Is the file a template that exists (does not apply any transformations to the template name)
+     *
+     *
+     * @param string $name The template.
+     *
+     * @return boolean Whether the template exists.
+    */
+    public function isTemplateFile($name){
+
         if(!is_file($this->path . '/' . $name)){
             return false;
         }//if
 
         return true;
 
-    }//isTemplate
+    }//isTemplateFile
 
 
 
@@ -134,11 +150,21 @@ Class Template extends \Twig_Environment {
             $name = $alias; 
         }//if
 
-        $extension = \App::config('TEMPLATE_EXTENSION');
-        $extLen = strlen($extension);
-        $nameLen = strlen($name);
-        if($extLen && substr($name,$nameLen-$extLen,$nameLen) !== $extension){
-            $name .= $extension;
+        $extensions = \App::config('TEMPLATE_EXTENSION');
+
+        if(!is_array($extensions)){
+            $extensions = Array($extensions);
+        }//if
+
+        $currentExtension = pathinfo($name, PATHINFO_EXTENSION);
+
+        if(!$currentExtension || !in_array($currentExtension,$extensions)){
+            foreach($extensions as $ext){
+                $template = $name . $ext;
+                if($this->isTemplateFile($template)){
+                    return $template;
+                }//if
+            }//foreach
         }//if
 
         return $name;
