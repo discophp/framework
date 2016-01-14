@@ -556,6 +556,43 @@ abstract class Record implements \ArrayAccess {
     }//exists
 
 
+
+    /**
+     * Convert a single field, an array of fields, or all fields which are empty strings to null values.
+     *
+     *
+     * @param null|string|array $fields An optional subset of fields or single field to convert.
+     *
+     * @return void
+     *
+     * @throws \Disco\exceptions\RecordValidation If a passed field fails to exist.
+    */
+    public function convertEmptyStringsToNull($fields = Array()){
+
+        if(is_string($fields)){
+            $fields = Array($fields);
+        }//if
+
+        if(!count($fields)){
+            $fields = $this->fields;
+        }//if
+
+        foreach($fields as $key => $value){
+
+            if(!isset($this->fields[$key])){
+                throw new \Disco\exceptions\RecordValidation("Record field `{$key}` does not exist!");
+            }//if
+
+            if($value === ''){
+                $this->fields[$key] = null;
+            }//if
+
+        }//foreach
+
+    }//convertEmptyStringsToNull
+
+
+
     /**
      * Check to see if a value is null.
      *
