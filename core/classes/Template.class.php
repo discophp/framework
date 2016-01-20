@@ -12,57 +12,63 @@ namespace Disco\classes;
 Class Template extends \Twig_Environment {
 
 
-    /**
-     * @var string $path The root directory to mount the \Twig_Loader_Filesystem at.
-    */
-    private $path;
-
-
 
     /**
-     * Using the application coniguration `TEMPLATE_PATH` create a \Twig_Loader_Filesystem and construct the 
-     * \Twig_Environment specifying from the application configuration:
-     * - `cache => TEMPLATE_CACHE`
-     * - `auto_reload => TEMPLATE_RELOAD`
-     * - `autoescape => TEMPLATE_AUTOESCAPE`
+     * Get the default disco twig loader which enables extension-less template use.
      *
-     * or you can specify these in the constructor arguements.
      *
-     * Adds as globals to the twig environment 3 services:
-     * - `View`
-     * - `Request`
-     * - `Cache`
+     * @param null|string|array $path The absolute path to the template directory, or an array of directories.
      *
-     * @param null|string $path The path relative to the projects root directory that contains templates.
-     * @param null|string $cachePath The path relative to the projects root directory to store compiled templates in.
-     * @param null|boolean $reload Auto reload templates.
-     * @param null|boolean $escape Auto escape html entities.
+     * @return \Disco\classes\TemplateLoader
     */
-    public function __construct($path=null, $cachePath=null, $reload=null, $escape=null){
+    public static function defaultLoader($path = null){
 
         if($path === null){
-
-            $path       = \App::path() . '/' . trim(\App::config('TEMPLATE_PATH'),'/');
-            $cachePath  = \App::path() . '/' . trim(\App::config('TEMPLATE_CACHE'),'/');
-            $reload     = \App::config('TEMPLATE_RELOAD');
-            $escape     = \App::config('TEMPLATE_AUTOESCAPE');
-
+            $path = \App::path() . '/' . trim(\App::config('TEMPLATE_PATH'),'/');
         }//if
 
-        $this->path = $path;
+        return new \Disco\classes\TemplateLoader($path);
 
-        $loader = new \Twig_Loader_Filesystem($path);
+    }//defaultLoader
 
-        parent::__construct($loader, array(
-            'cache'         => $cachePath,
-            'auto_reload'   => $reload,
-            'autoescape'    => $escape
-        ));
+
+
+    /**
+     * Construct the \Twig_Environment.
+     *
+     *
+     * @param null|\Twig_Loader_Filesystem|\Twig_Loader_Array $loader The loader in charge of finding twig 
+     * templates.
+     * @param null|string|array $options Either a relative string path to the twig configuration options, an array 
+     * of configuration options, or null for no options.
+    */
+    public function __construct($loader = null, $options = 'app/config/twig.php'){
+
+        if($loader === null){
+            $loader = self::defaultLoader();
+        }//if
+
+        if($options !==null && !is_array($options)){
+            $options = require \App::path() . '/' . trim($options,'/');
+        }//if
+
+        parent::__construct($loader, $options);
+
+        $this->registerGlobals();
+
+    }//construct
+
+
+
+    /**
+     * Register the default globals with the twig environment.
+    */
+    public function registerGlobals(){
 
         $this->addGlobal('View',\App::with('View'));
         $this->addGlobal('Request',\App::with('Request'));
 
-    }//construct
+    }//registerGlobals
 
 
 
@@ -76,31 +82,14 @@ Class Template extends \Twig_Environment {
     */
     public function isTemplate($name){
 
-        $name = $this->buildTemplatePath($name);
-
-        return $this->isTemplateFile($name);
+        try {
+            $this->loadTemplate($name);
+            return true;
+        } catch(\Twig_Error_Loader $e){
+            return false;
+        }//catch 
 
     }//isTemplate
-
-
-
-    /**
-     * Is the file a template that exists (does not apply any transformations to the template name)
-     *
-     *
-     * @param string $name The template.
-     *
-     * @return boolean Whether the template exists.
-    */
-    public function isTemplateFile($name){
-
-        if(!is_file($this->path . '/' . $name)){
-            return false;
-        }//if
-
-        return true;
-
-    }//isTemplateFile
 
 
 
@@ -114,7 +103,7 @@ Class Template extends \Twig_Environment {
      * @return string The rendered template.
     */
     public function render($name,array $data = Array()){
-        $name = $this->buildTemplatePath($name);
+        //$name = $this->buildTemplatePath($name);
         return parent::render($name,$data);
     }//render
 
@@ -136,44 +125,6 @@ Class Template extends \Twig_Environment {
 
 
     /**
-     * Resolve any aliases contained in the template path name and apply a default template extension if the 
-     * extension is not already present in the path name. Returned the corrected path name.
-     *
-     *
-     * @param string $name The template name.
-     *
-     * @return string The corrected path.
-    */
-    public function buildTemplatePath($name){
-
-        if(($alias = \App::resolveAlias($name)) !== false){
-            $name = $alias; 
-        }//if
-
-        $extensions = \App::config('TEMPLATE_EXTENSION');
-
-        if(!is_array($extensions)){
-            $extensions = Array($extensions);
-        }//if
-
-        $currentExtension = pathinfo($name, PATHINFO_EXTENSION);
-
-        if(!$currentExtension || !in_array($currentExtension,$extensions)){
-            foreach($extensions as $ext){
-                $template = $name . $ext;
-                if($this->isTemplateFile($template)){
-                    return $template;
-                }//if
-            }//foreach
-        }//if
-
-        return $name;
-
-    }//buildTemplatePath
-
-
-
-    /**
      * Build a template.
      *
      *
@@ -183,9 +134,7 @@ Class Template extends \Twig_Environment {
      * @return string
     */
     public function build($name,$data=Array()){
-
         return $this->render($name,$data);
-
     }//build
 
 

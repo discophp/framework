@@ -32,9 +32,15 @@ Class App extends \Pimple\Container {
 
 
     /**
-     * @var string Absolute Path of project.
+     * @var string Absolute path of project.
     */
     public $path;
+
+
+    /**
+     * @var string The configuration directory.
+    */
+    public $configDir = '/app/config/';
 
 
     /**
@@ -106,24 +112,23 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public function setUp($services = Array()){
+    public function setUp(){
 
-        /**
-         * Construct the Pimple container and pass any user predefined services.
-        */
-        parent::__construct($services);
-
-
-        /**
-         * Are we running in CLI mode?
-        */
+        //Are we running in CLI mode?
         if(php_sapi_name() == 'cli'){
+
+            $this->path = dirname($_SERVER['PHP_SELF']);
             $this->cli = true;
+
             global $argv;
             if(isset($argv[1]) && $argv[1]=='routes'){
                 \Disco\classes\Router::$base = '\Disco\manage\Router';
             }//if
+
         }//if
+        else {
+            $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+        }//el
 
 
         //disable apache from append session ids to requests
@@ -132,17 +137,14 @@ Class App extends \Pimple\Container {
         //only allow sessions to be used with cookies
         ini_set('session.use_only_cookies',1);
 
-
-        $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
-
         $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
         
         //register the default configuration options
-        $this->registerConfig($this->path.'/app/config/config.php');
+        $this->registerConfig($this->path . $this->configDir . 'config.php');
 
         //register the dev configuration options if necessary
-        if(isset($this->config['APP_MODE']) && $this->config['APP_MODE'] != 'PROD'){
-            $this->registerConfig($this->path.'/app/config/dev.config.php');
+        if($this->config('DEV_MODE')){
+            $this->registerConfig($this->path . $this->configDir . 'dev.config.php');
         }//if
 
         //a little magic
@@ -151,10 +153,10 @@ Class App extends \Pimple\Container {
 
 
         //regiser the default services into the container
-        $this->registerServices($this->path . '/app/config/services.php');
+        $this->registerServices($this->path . $this->configDir . 'services.php');
 
         //regiser the default factories into the container
-        $this->registerFactories($this->path . '/app/config/factories.php');
+        $this->registerFactories($this->path . $this->configDir . 'factories.php');
 
         //force the registery of the Router factory.
         $this->makeFactory('Router',function(){
@@ -671,7 +673,7 @@ Class App extends \Pimple\Container {
     */
     public final function handleMaintenance(){
 
-        if(!isset($this->config['MAINTENANCE_MODE']) || strtolower($this->config['MAINTENANCE_MODE'])!='yes'){
+        if(!$this->config('MAINTENANCE_MODE')){
             return;
         }//if
 

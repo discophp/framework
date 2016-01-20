@@ -26,6 +26,12 @@ class View {
     */
     public $ajaxTemplate = '_ajax_default.html';
 
+
+    /**
+     * @var string The relative path to the directory which holds server error responses.
+    */
+    public $errorDir = 'app/error/';
+
     
     /**
      * @var array The data to be injected into the $baseTemplate template when rendered.
@@ -358,11 +364,14 @@ class View {
         }//if
         else if(!$this->view['json']){
             $template = $this->ajaxTemplate;
-        } else {
+        }//elif 
+        else {
             return;
         }//el
 
-        echo \Template::build($template);
+        if($template){
+            echo \Template::build($template);
+        }//if
 
     }//printPage
 
@@ -747,12 +756,24 @@ class View {
 
 
     /**
-     * Serve a 404, executing an optional closure.
+     * Serve a 404, executing an optional closure or template.
      *
-     * @param boolean|\Closure $closure Optional Closure function to execute.
+     * @param boolean|string|\Closure $action Optional template or Closure function.
     */
-    public function abort($closure = false){
-        $this->serve(404,$closure);
+    public function abort($action = false){
+        $this->serve(404,$action);
+    }//abort
+
+
+
+    /**
+     * Serve an error page, defined by a template or an error file, stored in $this->errorDir.
+     *
+     * @param int $code The HTTP Error code.
+     * @param boolean|string|\Closure $action Optional template or Closure function.
+    */
+    public function error($code = 500, $action = false){
+        $this->serve($code,$action);
     }//abort
 
 
@@ -772,29 +793,32 @@ class View {
 
 
     /**
-     * Serve a specified http response code page by either executing the passed \Closure $fun function, 
-     * or loading the \Closure function from the file /app/$code.php and executing it or by 
+     * Serve a specified http response code page by either executing a template or the passed \Closure $fun function, 
+     * or loading the \Closure function from the file $this->errorDir . $code.php and executing it or by 
      * a default message set by the function.
      *
      *
      * @param int $code The http repsonse code sent to the client from the server.
-     * @param string|\Closure $callable A file with a callable function returned or a \Closure, to be executed when 
-     * `$code != 200`.
-     *
+     * @param boolean|string|\Closure $action A template or closure to execute when $code != 200.
      * @return void 
     */
-    public final function serve($code=200,$callable=false){
+    public final function serve($code = 200, $action = false){
 
         if($code!=200){
             http_response_code($code);
-            $file = \App::path()."/app/{$code}.php";
-            if($callable !== false && $callable instanceof \Closure){
-                call_user_func($callable);
+            if(is_string($action)){
+                \Template::with($action);
             }//if
-            else if(is_file($file)){
-                $action = require($file);
-                call_user_func($action,\App::instance());
+            else if($action !== false && $action instanceof \Closure){
+                call_user_func($action);
             }//if
+            else {
+                $file = \App::path() . trim($this->errorDir,'/') . '/' . $code . '.php';
+                if(is_file($file)){
+                    $action = require($file);
+                    call_user_func($action,\App::instance());
+                }//if
+            }//el
         }//if
 
         //Print out the Current View.
@@ -802,7 +826,7 @@ class View {
             View::printPage();
         }//if
 
-        //exit;
+        exit;
 
     }//serve
 

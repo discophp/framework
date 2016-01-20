@@ -201,6 +201,8 @@ class FileHelper {
     */
     private function serve($path){
 
+        ob_end_clean();
+
         header('Content-Length: ' . filesize($path) );
         readfile($path); 
 
@@ -217,6 +219,8 @@ class FileHelper {
      * @return void
     */
     private function XServe($path){
+
+        ob_end_clean();
 
         header('Content-Length: ' . filesize($path) );
         header("X-Sendfile: $path");
