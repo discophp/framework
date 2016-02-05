@@ -1,6 +1,6 @@
 <?php
 
-class Request extends Disco\classes\Request {
+class Request extends Disco\classes\Facade {
 
     protected static function returnFacadeId(){
         return 'Request';
