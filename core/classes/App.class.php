@@ -104,20 +104,20 @@ Class App extends \Pimple\Container {
 
 
 
-    /**
-     * Assemble the pieces of the application that make it all tick.
-     * 
-     *
-     * @param array $services Default services to seed into the application container.
-     *
-     * @return void
-    */
-    public function setUp(){
+    public function __construct($path = null){
+
+        //construct the PimpContainer
+        parent::__construct();
 
         //Are we running in CLI mode?
         if(php_sapi_name() == 'cli'){
 
-            $this->path = dirname($_SERVER['PHP_SELF']);
+            $_SERVER['SERVER_NAME'] = null;
+
+            if($path === null){
+                $this->path = dirname(dirname(array_pop(debug_backtrace())['file']));
+            }//if
+
             $this->cli = true;
 
             global $argv;
@@ -126,19 +126,16 @@ Class App extends \Pimple\Container {
             }//if
 
         }//if
-        else {
+        else if($path === null){
             $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+        } else {
+            $this->path = $path;
         }//el
 
+        //a little magic
+        $this['App']    = $this; 
+        self::$app      = $this['App'];
 
-        //disable apache from append session ids to requests
-        ini_set('session.use_trans_sid',0);
-
-        //only allow sessions to be used with cookies
-        ini_set('session.use_only_cookies',1);
-
-        $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
-        
         //register the default configuration options
         $this->registerConfig($this->path . $this->configDir . 'config.php');
 
@@ -146,11 +143,6 @@ Class App extends \Pimple\Container {
         if($this->config('DEV_MODE')){
             $this->registerConfig($this->path . $this->configDir . 'dev.config.php');
         }//if
-
-        //a little magic
-        $this['App']    = $this; 
-        self::$app      = $this['App'];
-
 
         //regiser the default services into the container
         $this->registerServices($this->path . $this->configDir . 'services.php');
@@ -163,8 +155,35 @@ Class App extends \Pimple\Container {
             return \Disco\classes\Router::factory();
         });
 
+    }//__construct
+
+
+
+    /**
+     * Assemble the pieces of the application that make it all tick.
+     * 
+     *
+     * @param array $services Default services to seed into the application container.
+     *
+     * @return void
+    */
+    public function setUp(){
+
+
+        //disable apache from append session ids to requests
+        ini_set('session.use_trans_sid',0);
+
+        //only allow sessions to be used with cookies
+        ini_set('session.use_only_cookies',1);
+
+        $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
+        
         $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
 
+        //handle console commands
+        if($this->cli){
+            $console = new \Disco\classes\Console;
+        }//if
 
         /**
          * Handle maintenance mode.
@@ -185,6 +204,7 @@ Class App extends \Pimple\Container {
     public final function tearDown(){
 
         \Disco\classes\Router::processLastCreatedRoute();
+
 
         /**
          * did this requested URI not find a match? If so thats a 404.

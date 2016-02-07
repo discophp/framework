@@ -112,23 +112,23 @@ class Manager {
 
 
     /**
-     * Set or Get the APP_MODE in `app/config/config.php`.
+     * Set or Get the DEV_MODE in `app/config/config.php`.
      *
      *
-     * @param string|null $mode The mode to put the app into;either DEV|PROD
+     * @param null|boolean $mode Whether or not to place into dev mode.
      *
      * @return void
     */
-    public static function appMode($mode=null){
+    public static function devMode($mode=null){
 
-        if($mode!=null){
-            self::setConfig('APP_MODE',$mode);
+        if($mode !== null){
+            self::setConfig('DEV_MODE',$mode);
         }//if
         else {
-            return self::getConfig('APP_MODE');
+            return self::getConfig('DEV_MODE');
         }//el
 
-    }//appMode
+    }//devMode
 
 
 
@@ -163,46 +163,20 @@ class Manager {
     */
     public static function setConfig($key,$value){
 
-        $config = require \App::path() . '/app/config/config.php';
+        $configPath = \App::path() . '/app/config/config.php'
+
+        $config = require $configPath;
 
         $config[$key] = $value;
 
-        $largestKey = 0;
-        foreach($config as $k => $v){
-            $len = strlen($k);
-            if($len > $largestKey){
-                $largestKey = $len;
-            }//if
-        }//foreach
-
-        //one tab
-        $largestKey += 4;
-
-        $output = '';
-        foreach($config as $k => $v){
-            $padding = $largestKey - strlen($k);
-            $padding = str_repeat(' ',$padding);
-
-            if(is_bool($v)){
-                $v = ($v) ? 'true' : 'false';
-            }//if
-            else if(!is_numeric($v)){
-                $v = "'{$v}'";
-            }//elif
-
-            $output .= "   '{$k}'{$padding}=> {$v},\n";
-        }//foreach
-
         $output = 
-"
-<?php
-return Array(
-{$output}
-);
-?>
-";
+"<?php
+return %1\$s
+:";
 
-        file_put_contents(\App::path().'/app/config/config.php',$output);
+        if(!file_put_contents($configPath,sprintf($output,var_export($config,true)))){
+            echo "Unable to write to {$configPath}, please fix this and try again.";
+        }//if
 
     }//setConfig
 
@@ -217,13 +191,8 @@ return Array(
      * @return string The value of $find.
     */
     public static function getConfig($find){
-        $find.='\'=>\'';
-        $f = file_get_contents(\App::path().'/app/config/config.php');
-        $i = stripos($f,$find)+strlen($find);
-        $ni = stripos($f,'\'',$i);
-
-        return substr($f,$i,$ni-$i);
-    }//setConfig
+        return \App::config($find);
+    }//getConfig
 
 
     /**
