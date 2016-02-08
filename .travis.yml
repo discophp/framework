@@ -4,8 +4,6 @@ php:
     - 5.5
     - 5.4
 
-install: composer install
-
 before_script: 
     - mysql -e 'CREATE DATABASE test_db;' -uroot
     - sudo apt-get update -qq
