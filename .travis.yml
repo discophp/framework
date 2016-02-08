@@ -6,16 +6,12 @@ php:
 
 install: composer install
 
-services:
-    - memcached
-
 before_script: 
-    - printf "\n" | pecl install -f memcache-3.0.8
-    -   mysql -e 'CREATE DATABASE test_db;' -uroot
+    - mysql -e 'CREATE DATABASE test_db;' -uroot
     - sudo apt-get update -qq
-    - mkdir app
-    - mkdir app/template/
-    - cd app/template/ && wget https://raw.githubusercontent.com/discophp/project/master/app/template/_default.html && wget https://raw.githubusercontent.com/discophp/project/master/app/template/_layout.html
-    - cd ../../
+    - git clone https://github.com/discophp/project.git
+    - cd project
+    - git branch dev-master
+    - composer install
 
 script: phpunit
