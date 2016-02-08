@@ -104,7 +104,10 @@ Class App extends \Pimple\Container {
 
 
 
-    public function __construct($path = null){
+    /**
+     * Set up the application path, domain, configs, services, factories, 
+    */
+    public function __construct($path = null,$domain = null){
 
         //construct the PimpContainer
         parent::__construct();
@@ -132,6 +135,15 @@ Class App extends \Pimple\Container {
             $this->path = $path;
         }//el
 
+        if($domain === null){
+            $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
+        } else {
+            if(substr($domain,0,4) != 'http'){
+                $domain = 'http://' . $domain;
+            }//if
+            $this->domain = $domain;
+        }//el
+
         //a little magic
         $this['App']    = $this; 
         self::$app      = $this['App'];
@@ -155,15 +167,15 @@ Class App extends \Pimple\Container {
             return \Disco\classes\Router::factory();
         });
 
+
     }//__construct
 
 
 
     /**
-     * Assemble the pieces of the application that make it all tick.
-     * 
+     * Set up some basic ini settings, the domain, running console commands if CLI, maintenance mode screen, and 
+     * forcing requests to be HTTPS if necessary.
      *
-     * @param array $services Default services to seed into the application container.
      *
      * @return void
     */
@@ -176,13 +188,15 @@ Class App extends \Pimple\Container {
         //only allow sessions to be used with cookies
         ini_set('session.use_only_cookies',1);
 
-        $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
-        
         $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
 
         //handle console commands
         if($this->cli){
             $console = new \Disco\classes\Console;
+        }//if
+
+        if(!$this->cli && $this->config('FORCE_HTTPS') && empty($_SERVER['HTTPS'])){
+            \View::redirect(str_replace('http','https',$this->domain));
         }//if
 
         /**
@@ -196,7 +210,7 @@ Class App extends \Pimple\Container {
 
 
     /**
-     * Make sure a \Disco\classes\Router matched against the requested URI.
+     * Make sure a \Disco\classes\Router matched against the requested URI, and serve the necessary page.
      *
      *
      * @return void
@@ -267,6 +281,17 @@ Class App extends \Pimple\Container {
         $this->config[$name] = $value;
 
     }//config
+
+
+
+    /**
+     * Whether the application is running in dev mode.
+     *
+     * @return boolean
+    */
+    public function devMode(){
+        return $this->config('DEV_MODE');
+    }//devMode
 
 
 

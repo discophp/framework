@@ -37,6 +37,12 @@ class Request {
     protected $ip;
 
 
+    /**
+     * @var boolean $secure Whether the request was made over HTTPS.
+    */
+    protected $secure;
+
+
 
     /**
      * Pull necessary information from $_SERVER and make available on the class.
@@ -48,6 +54,7 @@ class Request {
         $this->pathParts    = explode('/',$this->url['path']);
         $this->type         = $_SERVER['REQUEST_METHOD'];
         $this->ip           = $_SERVER['REMOTE_ADDR'];
+        $this->secure       = !empty($_SERVER['HTTPS']);
 
     }//__construct
 
@@ -82,6 +89,17 @@ class Request {
     public function ip(){
         return $this->ip;
     }//ip
+
+
+
+    /**
+     * Whether the request was made via HTTPS.
+     *
+     * @return boolean
+    */
+    public function secure(){
+        return $this->secure;
+    }//secure
 
 
 

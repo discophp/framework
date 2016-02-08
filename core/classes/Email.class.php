@@ -41,15 +41,17 @@ class Email {
      */
     public function __construct(){
 
-        if(is_file(\App::path() . '/app/config/mail.config.php')){
+        if(is_file(\App::path() . '/app/config/email.php')){
             $this->settings = require(\App::path() . '/app/config/email.php');
         }//if
 
-        if(isset($this->config['APP_MODE']) && $this->config['APP_MODE'] != 'PROD'){
+        if(\App::devMode()){
             $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php'));
         }//if
 
-        \Swift_Preferences::getInstance()->setCharset('iso-8859-2');
+        $charset = $this->getSetting('CHARSET') || 'iso-8859-2';
+
+        \Swift_Preferences::getInstance()->setCharset($charset);
 
     }//construct
 
@@ -249,14 +251,14 @@ class Email {
          
         $message->setSubject($subject);
 
-        if(isset($account['ALIAS']) && $account['ALIAS'] != ''){
+        if(isset($account['ALIAS']) && $account['ALIAS']){
             $message->setFrom($account['ALIAS']);
         }//if
         else {
             $message->setFrom($account['EMAIL']);
         }//el
 
-        if(\App::config('APP_MODE') == 'DEV' && $this->getSetting('DEV_MODE_SEND_TO')){
+        if(\App::devMode() && $this->getSetting('DEV_MODE_SEND_TO')){
             $toEmail = $this->getSetting('DEV_MODE_SEND_TO');
         }//if
 

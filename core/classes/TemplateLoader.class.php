@@ -45,7 +45,7 @@ class TemplateLoader extends \Twig_Loader_Filesystem {
 
         }//catch
 
-        throw new \Twig_Error_Loader($name);
+        throw new \Twig_Error_Loader("Twig Error Loader Exception : Could name find template `{$name}`");
 
     }//getFinalName
 
