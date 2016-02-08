@@ -163,7 +163,7 @@ class Manager {
     */
     public static function setConfig($key,$value){
 
-        $configPath = \App::path() . '/app/config/config.php'
+        $configPath = \App::path() . '/app/config/config.php';
 
         $config = require $configPath;
 
@@ -172,7 +172,7 @@ class Manager {
         $output = 
 "<?php
 return %1\$s
-:";
+;";
 
         if(!file_put_contents($configPath,sprintf($output,var_export($config,true)))){
             echo "Unable to write to {$configPath}, please fix this and try again.";
@@ -347,13 +347,17 @@ return %1\$s
         self::setSaltTail(self::genSalt(12));
         echo ' done.'.PHP_EOL;
 
-        echo 'Creating app/template/.cached for Twig cached templates ...';
-        $dir = \App::path().'/app/template/.cached/';
+        echo 'Creating app/template/.cache for Twig cached templates ...';
+        $dir = \App::path().'/app/template/.cache/';
         if(!file_exists($dir)){
             mkdir($dir);
         }//if
         chmod($dir,0777);
         echo ' done.'.PHP_EOL;
+
+        echo 'Changing permissions on cache folder for phpfastcache';
+        chmod(\App::path() . '/cache/',0777);
+        echo ' done'.PHP_EOL;
 
 
     }//install
