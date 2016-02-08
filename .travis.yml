@@ -5,6 +5,8 @@ php:
     - 5.4
 
 before_script: 
+    - cd ../..
+    - rm -R *
     - mysql -e 'CREATE DATABASE test_db;' -uroot
     - sudo apt-get update -qq
     - git clone https://github.com/discophp/project.git
