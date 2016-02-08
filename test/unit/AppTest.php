@@ -32,12 +32,12 @@ Class AppTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($pem instanceof \PersonEmailModelTest);
 
 
-        $this->app->as_protected('testProtect',function(){
+        $this->app->makeProtected('testProtect',function(){
             return true;
         });
         $this->assertTrue($this->app['testProtect']());
 
-        $this->app->as_factory('testFactory','DiscoPhpTestFactory');
+        $this->app->makeFactory('testFactory','DiscoPhpTestFactory');
 
         $this->assertEquals(1,$this->app['testFactory']->addOne());
         $this->assertEquals(1,$this->app['testFactory']->addOne());

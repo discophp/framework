@@ -22,9 +22,9 @@ Class ViewTest extends PHPUnit_Framework_TestCase {
         $this->assertContains('<title>Test Title</title>',$c);
         $this->assertContains("<meta name='description' content=\"Test Desc\">",$c);
         $this->assertContains('Content',$c);
-        $this->assertContains("<link rel='stylesheet' href='/css/css.css' type='text/css'/>",$c);
-        $this->assertContains("<script type='text/javascript' src='/js/js.js'></script>",$c);
-        $this->assertContains("<script type='text/javascript'>alert(\"Hi\");</script>",$c);
+        $this->assertContains('<link rel="stylesheet" href="/css/css.css" type="text/css"/>',$c);
+        $this->assertContains('<script src="/js/js.js" type="text/javascript"></script>',$c);
+        $this->assertContains('<script type="text/javascript">alert("Hi");</script>',$c);
 
     }//testPageOutput
 

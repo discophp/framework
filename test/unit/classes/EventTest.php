@@ -3,7 +3,7 @@
 Class EventTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
-        $this->Event = new \Disco\classes\Event;
+        $this->Event = \Event::instance();
     }//setUp
 
     public function testEvent(){

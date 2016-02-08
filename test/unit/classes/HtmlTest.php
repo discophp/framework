@@ -3,7 +3,7 @@
 Class HtmlTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
-        $this->Html = new \Disco\classes\Html;
+        $this->Html = \Html::instance();
     }//setUp
 
     public function testElementCreation(){

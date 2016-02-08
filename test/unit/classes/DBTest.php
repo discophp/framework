@@ -4,10 +4,10 @@ Class DBTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
 
-        $this->DB = new \Disco\classes\DB;
+        $this->DB = \DB::instance();
 
         //CREATE THE TEST SCHEMA
-        $this->DB->multi_query("
+        $this->DB->query("
 CREATE  TABLE `discophp_test_person` (
       `person_id` INT NOT NULL AUTO_INCREMENT ,
       `name` VARCHAR(120) NOT NULL ,
@@ -37,22 +37,12 @@ INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,3,
 INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,'test5@email.com');
 ");
 
-        while ($this->DB->more_results() && $this->DB->next_result()) {;} // flush multi_queries
-
-        //CREATE A STORED PROCEDURE 
-        $this->DB->query('
-CREATE PROCEDURE `discophp_test_sp` ()
-BEGIN
-    SELECT name FROM discophp_test_person WHERE person_id=1;
-END');
-
     }//setUp
 
     public function tearDown(){
 
         $this->DB->query('DROP TABLE discophp_test_person');
         $this->DB->query('DROP TABLE discophp_test_person_email');
-        $this->DB->query('DROP PROCEDURE discophp_test_sp');
 
     }//tearDown
 
@@ -71,9 +61,9 @@ END');
 
         $result = $this->DB->query('SELECT name,age FROM discophp_test_person WHERE person_id=?',1);
 
-        $this->assertEquals(1,$result->num_rows);
+        $this->assertEquals(1,$result->rowCount());
 
-        $row = $result->fetch_assoc();
+        $row = $result->fetch();
 
         $this->assertEquals(Array('name'=>'Person One','age'=>30),$row);
 
@@ -90,15 +80,5 @@ END');
 
     }//testLastId
 
-
-    public function testStoredProcedure(){
-
-        $result = $this->DB->sp('CALL discophp_test_sp()');
-
-        $this->assertEquals(1,count($result));
-
-        $this->assertEquals(Array('name'=>'Person One'),$result[0]);
-
-    }//testStoredProcedure
 
 }//DBTest

@@ -20,7 +20,7 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
     public function testSelect(){
 
         $result = $this->Person->select('name')->data();
-        $this->assertEquals(6,$result->num_rows);
+        $this->assertEquals(6,$result->rowCount());
 
     }//testSelect
 
@@ -32,27 +32,27 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
         $result = $this->Person->select('name')
             ->where('person_id=?',1)
-            ->data()->fetch_assoc();
+            ->data()->fetch();
 
         $this->assertEquals('Person One',$result['name']);
 
         $result = $this->Person->select('name')
             ->where(Array('person_id'=>1))
-            ->data()->fetch_assoc();
+            ->data()->fetch();
 
         $this->assertEquals('Person One',$result['name']);
 
         $result = $this->Person->select('name')
             ->where(Array('person_id'=>11,'person_id'=>22))
             ->otherwise(Array('person_id'=>12,'person_id'=>1))
-            ->data()->fetch_assoc();
+            ->data()->fetch();
 
         $this->assertEquals('Person One',$result['name']);
 
         $result = $this->Person->select('name')
             ->where('person_id=? AND person_id=?',Array(22,20))
             ->otherwise('person_id=?',1)
-            ->data()->fetch_assoc();
+            ->data()->fetch();
 
         $this->assertEquals('Person One',$result['name']);
 
@@ -66,12 +66,12 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
         $result = $this->Person->select('person_id')->limit(2)->order('person_id')->data();
 
-        $this->assertEquals(2,$result->num_rows);
+        $this->assertEquals(2,$result->rowCount());
 
-        $row = $result->fetch_assoc();
+        $row = $result->fetch();
         $this->assertEquals(1,$row['person_id']);
 
-        $row = $result->fetch_assoc();
+        $row = $result->fetch();
         $this->assertEquals(2,$row['person_id']);
 
 
@@ -98,7 +98,7 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
     public function testUpdate(){
 
         $this->Person->update(Array('age'=>10))->where('person_id=?',1)->finalize();
-        $row = $this->Person->select('age')->where('person_id=?',1)->data()->fetch_assoc();
+        $row = $this->Person->select('age')->where('person_id=?',1)->data()->fetch();
 
         $this->assertEquals(10,$row['age']);
 
@@ -113,11 +113,11 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
         $this->Person->delete('person_id=?',7);
         $result = $this->Person->select('name')->where(Array('person_id'=>7))->data();
-        $this->assertEquals(0,$result->num_rows);
+        $this->assertEquals(0,$result->rowCount());
 
         $this->Person->delete(Array('person_id'=>8));
         $result = $this->Person->select('name')->where(Array('person_id'=>8))->data();
-        $this->assertEquals(0,$result->num_rows);
+        $this->assertEquals(0,$result->rowCount());
 
     }//testDelete
 
@@ -133,7 +133,7 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
             ->join('PersonEmailModelTest AS e','p.person_id=e.person_id')
             ->data();
 
-        $row = $result->fetch_assoc();
+        $row = $result->fetch();
 
         $this->assertEquals('test1@email.com',$row['email']);
 

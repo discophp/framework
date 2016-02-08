@@ -11,7 +11,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::get('/test',function() use(&$t) {
             $t = true;
             return false;
-        });
+        })->process();
 
         $this->assertTrue($t);
 
@@ -27,7 +27,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::post('/test',function() use(&$t) {
             $t = true;
             return false;
-        });
+        })->process();
 
         $this->assertTrue($t);
 
@@ -43,7 +43,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::put('/test',function() use(&$t) {
             $t = true;
             return false;
-        });
+        })->process();
 
         $this->assertTrue($t);
 
@@ -59,7 +59,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::delete('/test',function() use(&$t) {
             $t = true;
             return false;
-        });
+        })->process();
 
         $this->assertTrue($t);
 
@@ -75,18 +75,18 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::get('/test/{str}',function($str) use(&$t) {
             $t = ($str=='random');
             return false;
-        })->where('str','alpha');
+        })->where('str','alpha')->process();
 
         $this->assertTrue($t);
 
 
-        $_SERVER['REQUEST_URI'] = '/test/random/test/again';
+        $_SERVER['REQUEST_URI'] = '/test/random/test/509';
         $t = false;
 
-        Router::get('/test/{str}/test/{str1}',function($str,$str1) use(&$t) {
-            $t = ($str=='random') && ($str1=='again');
+        Router::get('/test/{str}/test/{int}',function($str,$int) use(&$t) {
+            $t = ($str=='random') && ($int==509);
             return false;
-        })->where(Array('str'=>'alpha','str1'=>'alpha'));
+        })->where(Array('str'=>'alpha','int'=>'integer'))->process();
 
         $this->assertTrue($t);
 
@@ -100,7 +100,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
         ob_start();
-        Router::get('/test','DiscoPhpUnitTestController@index');
+        Router::get('/test','DiscoPhpUnitTestController@index')->process();
         $output = ob_get_contents();
         ob_end_clean();
 
@@ -109,7 +109,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $_SERVER['REQUEST_URI'] = '/test/random';
 
         ob_start();
-        Router::get('/test/{var}','DiscoPhpUnitTestController@withVar')->where('var','alpha');
+        Router::get('/test/{var}','DiscoPhpUnitTestController@withVar')->where('var','alpha')->process();
         $output = ob_get_contents();
         ob_end_clean();
 
@@ -126,7 +126,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $t = false;
         Router::filter('/test/{*}')->to(function() use(&$t){
             $t = true;
-        });
+        })->process();
 
         $this->assertTrue($t);
 

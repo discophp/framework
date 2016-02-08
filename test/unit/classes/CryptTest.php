@@ -3,8 +3,8 @@
 Class CryptTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
-        $this->Crypt = new \Disco\classes\Crypt(\App::instance());
-    }//setUp
+        $this->Crypt = \Crypt::instance();
+    }//setup
 
     public function testSha(){
         $org = 'String to test sha on 52309';

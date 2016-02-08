@@ -1,9 +1,24 @@
 <?php
 namespace Disco\classes;
+/**
+ * This file holds the Console class.
+*/
 
+
+/**
+ * Bridge between {@link \Disco\manager\Manager} and CLI requests.
+ *
+ * Its used by calling `public/index.php` via the CLI and passing an arguement(s). Each method is actually 
+ * a command eg `php public/index.php with Crypt hash 'kitty kat'`.
+*/
 class Console {
 
 
+    /**
+     * Call the appropriate method of the class based on the arguements passed to the CLI.
+     *
+     * Passes all arguemnts to the appropriate method via an array.
+    */
     public function __construct(){
 
         global $argv;
@@ -33,7 +48,25 @@ class Console {
 
 
 
+    /**
+     * Run after install via composer.
+    */
+    public function postInstallCmd(){
 
+        \Disco\manage\Manager::install();
+        exit;
+
+    }//postInstallCmd
+
+
+
+    /**
+     * Execute a class/service/facade and method.
+     *
+     * eg: `with Cache set cache-key 'Some Value' 60
+     *
+     * @param array $args The arguements.
+    */
     public function with($args){
 
         $service = array_shift($args);
@@ -46,6 +79,9 @@ class Console {
 
 
 
+    /**
+     * @ignore
+    */
     public function resolve($args){
 
         \Disco\manage\Manager::resolve($args[0],$args[1],$args[2],$args[3],$args[4]);
@@ -55,26 +91,9 @@ class Console {
 
 
 
-    public function postInstallCmd(){
-
-        \Disco\manage\Manager::install();
-        exit;
-
-    }//postInstallCmd
-
-
-
-    public function postUpdateCmd(){
-
-        echo 'Generating autoload files for Disco Addons ...';
-        \Disco\manage\Manager::addonAutoloads();
-        echo ' done.'.PHP_EOL;
-        exit;
-
-    }//postUpdateCmd
-
-
-
+    /**
+     * View the queued jobs.
+    */
     public function jobs(){
 
         \Disco\manage\Manager::jobs();
@@ -84,6 +103,13 @@ class Console {
 
 
 
+    /**
+     * Kill a queued job by passing the PID.
+     *
+     * eg: `kill-job 203949`
+     *
+     * @param array $args The arguements.
+    */
     public function killJob($args){
 
         \Queue::killJob($argv[0]);
@@ -93,6 +119,15 @@ class Console {
 
 
 
+    /**
+     * Generate a secure key for use in cryptographic methods, optionally setting it in `app/config/config.php`.
+     *
+     * eg: `gen aes set`
+     * eg: `gen sha 32 set-lead`
+     * eg: `gen sha 32 set-tail`
+     *
+     * @param array $args The arguements.
+    */
     public function gen($args){
 
             if($args[0]=='aes'){
@@ -136,22 +171,18 @@ class Console {
 
 
 
-    public function mysql(){
-
-        echo \App::with('DB')->host_info.PHP_EOL;
-        echo \App::with('DB')->server_info.PHP_EOL;
-        echo \App::with('DB')->stat.PHP_EOL.PHP_EOL;
-        exit;
-
-    }//mysql
-
-
-
+    /**
+     * Get the current dev mode, optionally setting it.
+     *
+     * eg: `dev-mode`
+     * eg: `dev-mode true`
+     * eg: `dev-mode false`
+    */
     public function devMode($args){
 
         if(empty($args[0])){
             $mode = \Disco\manage\Manager::devMode();
-            echo 'APP_MODE : ' . $mode . PHP_EOL;
+            echo 'DEV_MODE : ' . (($mode) ? 'true' : 'false') . PHP_EOL;
             exit;
         }//if
         else if($args[0] != 'true' && $args[0] != 'false'){
@@ -168,11 +199,18 @@ class Console {
 
 
 
+    /**
+     * Get the current maintenance mode, optionally setting it.
+     *
+     * eg: `maintenance-mode`
+     * eg: `maintenance-mode true`
+     * eg: `maintenance-mode false`
+    */
     public function maintenanceMode($args){
 
         if(empty($args[0])){
             $mode = \Disco\manage\Manager::maintenanceMode();
-            echo 'MAINTENANCE_MODE : ' . $mode .PHP_EOL;
+            echo 'MAINTENANCE_MODE : ' . (($mode) ? 'true' : 'false') .PHP_EOL;
             exit;
         }//if
         else if($args[0] != 'true' && $args[0] != 'false'){
@@ -192,6 +230,15 @@ class Console {
 
 
 
+    /**
+     * Create a new backup of the DB.
+     *
+     * eg: `db-backup`
+     * eg: `db-backup /app/db/`
+     * eg `db-backup /app/db/ BACKUP.sql`
+     *
+     * @param array $args The arguements.
+    */
     public function dbBackup($args){
 
         $path = '/app/db/';
@@ -233,6 +280,15 @@ class Console {
 
 
 
+    /**
+     * Restore the DB from a backup.
+     *
+     * eg: `db-restore`
+     * eg: `db-restore /app/db/`
+     * eg `db-restore /app/db/ BACKUP.sql`
+     *
+     * @param array $args The arguements.
+    */
     public function dbRestore($args){
 
         $path = '/app/db/';
@@ -271,6 +327,18 @@ class Console {
 
 
 
+    /**
+     * Create a model or a record. Use the special keyword `all` in place of a table name to generate records or 
+     * models for all tables.
+     *
+     * eg: `create model user`
+     * eg: `create model user /app/config/model.format /app/model/`
+     *
+     * eg: `create record user`
+     * eg: `create record user /app/config/record.format /app/record/`
+     *
+     * @param array $args The arguements.
+    */
     public function create($args){
 
         if($args[0] == 'model'){
@@ -347,18 +415,27 @@ class Console {
     }//create
 
 
+    /**
+     * Get the routes used by your application.
+     *
+     * eg: `routes routes.txt`
+    */
     public function routes($args){
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/1093489sdker';
         \Disco\manage\Manager::routes($args[0]);
 
-        exit;
-
     }//routes
 
 
 
+    /**
+     * Used to get the database schema for building all models and records.
+     *
+     *
+     * @return \PDOStatement
+    */
     private function getDBSchema(){
 
         return \DB::query('

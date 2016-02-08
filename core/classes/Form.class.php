@@ -392,7 +392,7 @@ Class Form {
         }//elif
         else {
             $m = $this->app->with($this->from);
-            $fields = $m->select('*')->where($this->where)->limit(1)->data()->fetch_assoc();
+            $fields = $m->select('*')->where($this->where)->limit(1)->first();
             $primaryKeys = $m->ids;
             if(!is_array($primaryKeys)){
                 $primaryKeys = Array($primaryKeys);
@@ -568,9 +568,9 @@ Class Form {
 
         $options = '';
 
-        if($data instanceof \mysqli_result){
+        if($data instanceof \PDOStatement){
 
-            while($row = $data->fetch_assoc()){
+            while($row = $data->fetch()){
                 $opts = Array('value'=>$row['option_value']);
                 if($row['option_value'] == $selectedValue){
                     $opts['selected'] = 'selected';
@@ -620,9 +620,9 @@ Class Form {
 
         $buttons = '';
 
-        if($data instanceof \mysqli_result){
+        if($data instanceof \PDOStatement){
 
-            while($row = $data->fetch_assoc()){
+            while($row = $data->fetch()){
                 $opts = Array('name'=>$name,'value'=>$row['button_value'],'type'=>'radio');
                 if($row['button_value'] == $selectedValue){
                     $opts['checked'] = 'checked';

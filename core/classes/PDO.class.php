@@ -186,7 +186,7 @@ class PDO extends \PDO {
 
             $query = parent::prepare($query);
 
-            if(is_string($data)){
+            if(!is_array($data)){
                 $data = Array($data);
             }//if
 

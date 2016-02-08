@@ -1,7 +1,7 @@
 <?php
 namespace Disco\manage;
 /**
- * This file holds the Class Manager.
+ * This file holds the Manager class.
 */
 
 

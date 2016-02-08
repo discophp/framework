@@ -72,7 +72,7 @@ Class Html {
             if(!isset($args[1]) && in_array($method,$this->noClose)){
                 $out = sprintf($this->noCloseBase,$method.' '.$props);
                 if($this->stack){
-                    \App::with('View')->html($out);
+                    \View::html($out);
                     $this->stack = false;
                 }//if
                 else {
@@ -95,7 +95,7 @@ Class Html {
         $out = sprintf($this->base,$method,$html,$ele);
 
         if($this->stack){
-            \App::with('View')->html($out);
+            \View::html($out);
             $this->stack = false;
         }//if
         else {

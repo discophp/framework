@@ -5,7 +5,12 @@ require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.ph
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpTestFactory.php');
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpUnitTestController.php');
 
-\Disco\classes\App::instance()->setUp();
-\App::instance()->config['PATH'] = dirname(dirname(__FILE__)).'/';
+$_SERVER['REQUEST_URI'] = '/';
+$_SERVER['REQUEST_METHOD'] = 'GET';
+$_SERVER['QUERY_STRING'] = null;
+$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
-Session::has('test');
+$path = dirname(dirname(dirname(dirname(__DIR__))));
+\Disco\classes\App::instance($path)->setUp();
+
+\Session::has('test');

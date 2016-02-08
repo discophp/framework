@@ -2,7 +2,7 @@
 Class FormTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
-        $this->Form = new \Disco\classes\Form();
+        $this->Form = \Form::instance();
     }//setUp
 
     public function testBasic(){
@@ -85,13 +85,13 @@ Class FormTest extends PHPUnit_Framework_TestCase {
         $_POST['age'] = 15;
         $id = $this->Form->from('PersonModelTest')->post();
         $result = $dbTest->DB->query('SELECT name,age FROM discophp_test_person WHERE person_id=?',$id);
-        $this->assertEquals(1,$result->num_rows);
+        $this->assertEquals(1,$result->rowCount());
 
         //TEST UPDATE 
         $_POST['person_id'] = $id;
         $_POST['name'] = 'Test Person1';
         $this->Form->from('PersonModelTest')->post();
-        $row = $dbTest->DB->query('SELECT name FROM discophp_test_person WHERE person_id=?',$id)->fetch_assoc();
+        $row = $dbTest->DB->query('SELECT name FROM discophp_test_person WHERE person_id=?',$id)->fetch();
         $this->assertEquals('Test Person1',$row['name']);
 
 

@@ -634,6 +634,19 @@ class Model {
 
 
     /**
+    * Alias of `$this->orWhereOr()`.
+    */
+    public final function otherwise(){
+        if($this->where){
+            $this->where = "{$this->where} OR ";
+        }//if
+        $this->where .= $this->prepareCondition(func_get_args(),'OR');
+        return $this;
+    }//otherwise
+
+
+
+    /**
      * Prepare the WHERE condition for the working query. 
      * Accepts its arguements through func_get_args(). 
      *
@@ -844,15 +857,6 @@ class Model {
         }//if
         return $this->table;
     }//tableAlias
-
-
-
-    /**
-    * Alias of `$this->orWhereOr()`.
-    */
-    public final function otherwise(){
-        return $this->orWhereOr();
-    }//otherwise
 
 
 

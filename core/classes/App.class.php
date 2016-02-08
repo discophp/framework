@@ -90,12 +90,15 @@ Class App extends \Pimple\Container {
      * Get the application instance singleton {@link \Disco\classes\App}.
      *
      *
+     * @param null|string $path Absolute path to root of the project.
+     * @param null|string $domain The domain name the app is serving.
+     *
      * @return \Disco\classes\App
     */
-    public static function instance(){
+    public static function instance($path = null,$domain = null){
 
         if(!self::$app){
-            self::$app = new \Disco\classes\App;
+            self::$app = new \Disco\classes\App($path,$domain);
         }//if
 
         return self::$app;
@@ -106,6 +109,10 @@ Class App extends \Pimple\Container {
 
     /**
      * Set up the application path, domain, configs, services, factories, 
+     *
+     *
+     * @param null|string $path Absolute path to root of the project.
+     * @param null|string $domain The domain name the app is serving.
     */
     public function __construct($path = null,$domain = null){
 
@@ -119,7 +126,9 @@ Class App extends \Pimple\Container {
 
             if($path === null){
                 $this->path = dirname(dirname(array_pop(debug_backtrace())['file']));
-            }//if
+            } else {
+                $this->path = $path;
+            }//el
 
             $this->cli = true;
 
@@ -133,15 +142,6 @@ Class App extends \Pimple\Container {
             $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
         } else {
             $this->path = $path;
-        }//el
-
-        if($domain === null){
-            $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
-        } else {
-            if(substr($domain,0,4) != 'http'){
-                $domain = 'http://' . $domain;
-            }//if
-            $this->domain = $domain;
         }//el
 
         //a little magic
@@ -167,6 +167,19 @@ Class App extends \Pimple\Container {
             return \Disco\classes\Router::factory();
         });
 
+        if($domain === null){
+            if(!$this->config('DOMAIN')){
+                $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
+            } else {
+                $this->domain = $this->config('DOMAIN');
+            }//el
+        } else {
+            if(substr($domain,0,4) != 'http'){
+                $domain = 'http://' . $domain;
+            }//if
+            $this->domain = $domain;
+        }//el
+
 
     }//__construct
 
@@ -191,7 +204,7 @@ Class App extends \Pimple\Container {
         $this->registerAlias('disco.mime',dirname(__DIR__) . '/util/mimeTypes.php');
 
         //handle console commands
-        if($this->cli){
+        if($this->cli && basename($_SERVER['PHP_SELF']) == 'index.php'){
             $console = new \Disco\classes\Console;
         }//if
 

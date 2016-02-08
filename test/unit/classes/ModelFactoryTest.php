@@ -4,7 +4,7 @@ Class ModelFactoryTest extends PHPUnit_Framework_TestCase {
 
     public function testContainer(){
 
-        $person = Model::m('PersonModelTest');
+        $person = \Model::instance()->m('PersonModelTest');
 
         $this->assertTrue($person instanceof PersonModelTest);
 
