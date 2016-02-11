@@ -96,7 +96,7 @@ class Session {
      * The total number of keys in the session.
      *
      *
-     * @return int
+     * @return int The total number of session variables.
     */
     public function total(){
         return count($_SESSION);
@@ -105,11 +105,23 @@ class Session {
 
 
     /**
+     * Get all keys being used to store session variables.
+     *
+     *
+     * @return array The keys.
+    */
+    public function keys(){
+        return array_keys($_SESSION);
+    }//keys
+
+
+
+    /**
      * Set a SESSION variable.
      *
      *
-     * @param string $k The key to set the SESSION with.
-     * @param mixed $v The value of the $k.
+     * @param string $k The key to set the SESSION variable with.
+     * @param numeric|string $v The value of the $k.
      *
      * @return void
     */
@@ -120,10 +132,26 @@ class Session {
 
 
     /**
+     * Set a complex SESSION variable, performing serialize on the value passed, allowing for arrays, objects, and 
+     * any complex data type to be stored in the session.
+     *
+     *
+     * @param string $k The key to set the SESSION variable with.
+     * @param mixed $v The complex data type to store.
+     *
+     * @return void
+    */
+    public function setComplex($k,$v){
+        $_SESSION[$k] = serialize($v);
+    }//setComplex
+
+
+
+    /**
      * Get a SESSION variable.
      *
      *
-     * @param string $k The SESSION to get.
+     * @param string $k The SESSION variable to get.
      *
      * @return false|mixed
     */
@@ -136,6 +164,27 @@ class Session {
         return $_SESSION[$k];
 
     }//get
+
+
+
+    /**
+     * Get a complex SESSION variable, deserializing it before it is returned.
+     *
+     *
+     * @param string $k The complex SESSION variable to get.
+     *
+     * @return mixed
+    */
+    public function getComplex($k){
+
+        if(!isset($_SESSION[$k])){
+            return false;
+        }//if
+
+        return unserialize($_SESSION[$k]);
+
+    }//getComplex
+
 
 
 
@@ -230,6 +279,20 @@ class Session {
         return $this->flash[$key];
 
     }//getFlash
+
+
+
+    /**
+     * Whether a flash session variable is set.
+     *
+     *
+     * @param string $key The flash data key.
+     *
+     * @return boolean
+    */
+    public function hasFlash($key){
+        return isset($this->flash[$key]);
+    }//hasFlash
 
 
 
