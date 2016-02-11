@@ -49,7 +49,11 @@ class Email {
             $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php'));
         }//if
 
-        $charset = $this->getSetting('CHARSET') || 'iso-8859-2';
+        $charset = $this->getSetting('CHARSET');
+
+        if(!$charset){
+            $charset = 'iso-8859-2'; 
+        }//if
 
         \Swift_Preferences::getInstance()->setCharset($charset);
 
