@@ -428,7 +428,7 @@ return %1\$s
 
         if(is_file($modelOutputPath)){
             echo "Model already exists at `{$modelOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!disco_console_question()){
+            if(!\Disco\classes\Console::yesOrNo()){
                 return false;
             }//if
         }//if
@@ -820,7 +820,7 @@ return %1\$s
 
         if(is_file($recordOutputPath)){
             echo "Record already exists at `{$recordOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!disco_console_question()){
+            if(!\Disco\classes\Console::yesOrNo()){
                 return false;
             }//if
         }//if
