@@ -36,7 +36,7 @@ class Session {
         session_start();
 
         if($this->has(self::FLASH_KEY)){
-            $this->flash = json_decode($this->get(self::FLASH_KEY));
+            $this->flash = json_decode($this->get(self::FLASH_KEY),true);
         }//if
 
     }//__construct
