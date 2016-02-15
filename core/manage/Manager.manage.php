@@ -41,42 +41,58 @@ class Manager {
      *
      * @return void
     */
-    public static function resolve($delay=null,$obj,$method,$vars,$d){
+    public static function resolve($delay=null,$obj,$method,$vars,$domain){
 
         if($delay!=0){
             sleep($delay);
         }//if
 
+        \App::instance()->domain = $domain;
+
         $d = unserialize(base64_decode($d));
         $obj = unserialize(base64_decode($obj));
 
         if($vars=='disco-no-variable'){
+
             $vars=null;
+
         }//if
         else {
+
             $vars = unserialize(base64_decode($vars));
+
             if(!is_array($vars)){
+
                 if(is_string($vars)){
                     $vars = html_entity_decode($vars);
                 }//if
+
                 $vars = Array($vars);
+
             }//if
             else {
+
                 foreach($vars as $k=>$v){
                     if(is_string($v)){
                         $vars[$k] = html_entity_decode($v);
                     }//if
                 }//foreach
+
             }//el
         }//el
 
         if($obj instanceof \Jeremeamia\SuperClosure\SerializableClosure){
-            if($vars)
+
+            if($vars) {
                 return call_user_func_array($obj,$vars);
+            }//if
+
             return call_user_func($obj,$vars);
+
         }//if
 
         $app = \App::instance();
+
         return $app->handle($obj,$method,$vars);
 
     }//resolve
@@ -93,7 +109,15 @@ class Manager {
 
         $j = \Queue::jobs();
 
+        if(!count($j)){
+            echo 'No Jobs running' . PHP_EOL;
+            return;
+        }//if
+
         foreach($j as $job){
+
+            $object = ($job->object instanceof \Jeremeamia\SuperClosure\SerializableClosure) ? 'closure function' : $job->object;
+
             echo sprintf("
                 ----------- JOB # %1\$s --------------
                 Time entered: %2\$s
@@ -103,7 +127,7 @@ class Manager {
                 Vars: %6\$s
 
                 Kill this job by running: php disco kill-job %1\$s
-            ".PHP_EOL.PHP_EOL,$job->pId,$job->time,$job->delay,$job->object,$job->method,$job->vars);
+            ".PHP_EOL.PHP_EOL,$job->pId,$job->time,$job->delay,$object,$job->method,$job->vars);
 
         }//foreach
 
@@ -428,7 +452,7 @@ return %1\$s
 
         if(is_file($modelOutputPath)){
             echo "Model already exists at `{$modelOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!\Disco\classes\Console::yesOrNo()){
+            if(!disco_console_question()){
                 return false;
             }//if
         }//if
@@ -820,7 +844,7 @@ return %1\$s
 
         if(is_file($recordOutputPath)){
             echo "Record already exists at `{$recordOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!\Disco\classes\Console::yesOrNo()){
+            if(!disco_console_question()){
                 return false;
             }//if
         }//if

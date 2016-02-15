@@ -452,7 +452,7 @@ abstract class Record implements \ArrayAccess {
 
         if(!count($ids) || in_array(null,array_values($ids))){
             $ai = $this->autoIncrementField();
-            if(!$ai || !$this->validate($ai,$this->fields[$ai])){
+            if(!$ai || !isset($this->fields[$ai]) || !$this->validate($ai,$this->fields[$ai])){
                 throw new \Disco\exceptions\RecordId("Record use/modification attempted with null id(s)!");
             }//if
 

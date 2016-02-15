@@ -50,9 +50,8 @@ class Email {
         }//if
 
         $charset = $this->getSetting('CHARSET');
-
         if(!$charset){
-            $charset = 'iso-8859-2'; 
+            $charset = 'iso-8859-2';
         }//if
 
         \Swift_Preferences::getInstance()->setCharset($charset);
@@ -342,11 +341,11 @@ class Email {
 
         }//try
         catch(\Swift_TransportException $e){
-            TRIGGER_ERROR('Email::Error Caught Swift_TransportException '.$e->getMessage(),E_USER_WARNING);
+            error_log('Email::Error Swift_TransportException '.$e->getMessage());
             throw $e;
         }//catch
         catch(\Exception $e){
-            TRIGGER_ERROR('Email::Error send failed '.$e->getMessage(),E_USER_WARNING);
+            error_log('Email::Error send failed '.$e->getMessage());
             throw $e;
         }//catch
 
