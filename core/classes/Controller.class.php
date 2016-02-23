@@ -25,7 +25,7 @@ class Controller {
     /**
      * Return a JSON response.
      *
-     * @param array|stdClass $data An array or stdClass to encode and return.
+     * @param array|\stdClass $data An array or stdClass to encode and return.
     */
     public function json($data){
         \View::json($data);

@@ -46,7 +46,10 @@ class Email {
         }//if
 
         if(\App::devMode()){
-            $this->settings = array_merge($this->settings,require(\App::path() . '/app/config/dev.email.php'));
+            $devSettings = \App::path() . '/app/config/dev.email.php';
+            if(is_file($devSettings)){
+                $this->settings = array_merge($this->settings,require $devSettings);
+            }//if
         }//if
 
         $charset = $this->getSetting('CHARSET');

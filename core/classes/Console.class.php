@@ -231,6 +231,23 @@ class Console {
 
 
     /**
+     * Create a new backup of the DB structure.
+     *
+     * eg: `db-backup`
+     * eg: `db-backup /app/db/`
+     * eg `db-backup /app/db/ BACKUP.sql`
+     *
+     * @param array $args The arguements.
+    */
+    public function dbBackupStructure($args){
+
+        $this->dbBackup($args, true);
+
+    }//dbBackupStructure
+
+
+
+    /**
      * Create a new backup of the DB.
      *
      * eg: `db-backup`
@@ -239,14 +256,20 @@ class Console {
      *
      * @param array $args The arguements.
     */
-    public function dbBackup($args){
+    public function dbBackup($args, $structureOnly = false){
 
         $path = '/app/db/';
         if(isset($args[0])){
             $path = $args[0];
         }//if
 
-        $fileName = \App::config('DB_DB') . '.sql';
+        if($structureOnly == true){
+            $fileName = \App::config('DB_DB') . '_STRUCTURE.sql';
+        }//if
+        else {
+            $fileName = \App::config('DB_DB') . '.sql';
+        }//el
+
         if(isset($args[1])){
             $fileName = $args[1];
         }//if
@@ -270,7 +293,15 @@ class Console {
                 \App::config('DB_DB')
             );
 
-        $dump = new \Ifsnop\Mysqldump\Mysqldump($connect, enact()->config('DB_USER'), enact()->config('DB_PASSWORD'));
+        $settings = Array();
+
+        if($structureOnly == true){
+            $settings['no-data'] = true;
+        }//if
+
+        $dump = new \Ifsnop\Mysqldump\Mysqldump($connect, enact()->config('DB_USER'), enact()->config('DB_PASSWORD'),$settings);
+
+
         $dump->start($fileName);
 
         echo "Backup successfully created at `{$fileName}`" . PHP_EOL;
