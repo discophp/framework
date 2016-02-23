@@ -38,8 +38,8 @@ class Controller {
      *
      * @param string $template The template name to load into the view.
     */
-    public function template($template){
-        \Template::with($template);
+    public function template($template,$data = Array()){
+        \Template::with($template,$data);
         \View::serve();
     }//template
 
