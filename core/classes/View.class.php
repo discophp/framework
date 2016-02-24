@@ -793,6 +793,19 @@ class View {
 
 
     /**
+     * Add a HTTP header to the response.
+     *
+     *
+     * @param string $h The HTTP header to add.
+     * @return void
+    */
+    public function httpHeader($h){
+        header($h);
+    }//httpHeader
+
+
+
+    /**
      * Serve a specified http response code page by either executing a template or the passed \Closure $fun function, 
      * or loading the \Closure function from the file $this->errorDir . $code.php and executing it or by 
      * a default message set by the function.
