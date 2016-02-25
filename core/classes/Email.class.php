@@ -305,7 +305,7 @@ class Email {
      * @throws \Swift_TransportException
      * @throws \Exception
     */
-    public function sendMessage(\Swift_Message $message){
+    public function sendMessage(\Swift_Message &$message){
 
         try {
 
