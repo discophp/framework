@@ -452,7 +452,7 @@ return %1\$s
 
         if(is_file($modelOutputPath)){
             echo "Model already exists at `{$modelOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!disco_console_question()){
+            if(!\Disco\classes\Console::yesOrNo()){
                 return false;
             }//if
         }//if
@@ -611,16 +611,115 @@ return %1\$s
         $validators = '';
 
         $map = Array(
-            'int'   => function($type){
-
+            'tinyint' => function($type){
                 $rule = 'intType()';
-                $length = \Disco\manage\Manager::getLengthBetweenParanthesis($type); 
-                if($length){
-                    $length = str_repeat('9',$length);
-                    $rule .= "->between(0,{$length})";
+                $min = -128;
+                $max = 127;
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                    $max = 255;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+            },
+            'smallint' => function($type){
+                $rule = 'intType()';
+                $min = -32768;
+                $max = 32767;
+
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                    $max = 65535;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+            },
+            'mediumint' => function($type){
+                $rule = 'intType()';
+                $min = -8388608;
+                $max = 8388607;
+
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                    $max = 16777215;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+            },
+            'int' => function($type){
+                $rule = 'intType()';
+                $min = -2147483648;
+                $max = -2147483647;
+
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                    $max = 4294967295;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+            },
+            'bigint' => function($type){
+                $rule = 'intType()';
+                $min = -9223372036854775808;
+                $max = -9223372036854775807;
+
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                    $max = 18446744073709551615;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+
+            },
+            'decimal' => function($type){
+                $rule = 'numeric()';
+                $parts = explode(',',$type);
+                $dec_length = array_shift(explode(')',$parts[1]));
+                $whole_length = array_pop(explode('(',$parts[0])) - $dec_length;
+
+                $max = str_repeat('9',$whole_length) . '.' . str_repeat('9',$dec_length);
+                $min = '-' . $max;
+
+                if(stripos($type,'unsigned') !== false){
+                    $min = 0;
+                }//if
+
+                $rule .= "->between({$min},{$max})";
+
+                return $rule;
+
+            },
+            'float' => function($type){
+
+                $rule = 'numeric()';
+
+                if(stripos($type,'unsigned') !== false){
+                    $rule .= '->positive()';
                 }//if
 
                 return $rule;
+
+            },
+            'double' => function($type){
+
+                $rule = 'numeric()';
+
+                if(stripos($type,'unsigned') !== false){
+                    $rule .= '->positive()';
+                }//if
+
+                return $rule;
+
             },
             'char' => function($type){
                 $rule = 'stringType()';
@@ -656,8 +755,10 @@ return %1\$s
             },
             'binary' => function($type){
                 return 'alwaysValid()';
+            },
+            'varbinary' => function($type){
+                return 'alwaysValid()';
             }
-
 
         );
 
@@ -844,7 +945,7 @@ return %1\$s
 
         if(is_file($recordOutputPath)){
             echo "Record already exists at `{$recordOutputPath}` do you want to overwrite it?" . PHP_EOL;
-            if(!disco_console_question()){
+            if(!\Disco\classes\Console::yesOrNo()){
                 return false;
             }//if
         }//if

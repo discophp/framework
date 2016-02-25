@@ -652,19 +652,19 @@ class Router {
         }//if
 
         if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
-            require($path);
+            require $path;
             return;
         } else {
 
-            $routerPath = \App::path() . "/app/router/{$path}.router.php";
+            $routerPath = \App::path() . "/app/router/{$routerPath}.router.php";
             if(file_exists($routerPath)){
-                require($routerPath);
+                require $routerPath;
                 return;
             }//if
 
         }//el
 
-        $message = "Router $router.router.php not found";
+        $message = "Router {$routerPath}.router.php not found";
 
         \App::error($message,Array('unknown','useRouter'),debug_backtrace(TRUE,4));
         throw new \Disco\exceptions\Exception($message);
