@@ -655,7 +655,7 @@ return %1\$s
             'int' => function($type){
                 $rule = 'intType()';
                 $min = -2147483648;
-                $max = -2147483647;
+                $max = 2147483647;
 
                 if(stripos($type,'unsigned') !== false){
                     $min = 0;
@@ -669,7 +669,7 @@ return %1\$s
             'bigint' => function($type){
                 $rule = 'intType()';
                 $min = -9223372036854775808;
-                $max = -9223372036854775807;
+                $max = 9223372036854775807;
 
                 if(stripos($type,'unsigned') !== false){
                     $min = 0;
