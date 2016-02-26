@@ -836,7 +836,7 @@ class View {
 
         //Print out the Current View.
         if(!\App::instance()->cli){
-            View::printPage();
+            \View::printPage();
         }//if
 
         exit;
