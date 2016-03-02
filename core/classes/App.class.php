@@ -258,17 +258,23 @@ Class App extends \Pimple\Container {
      * Merge a configuration file with the current app configuration.
      *
      *
-     * @param string $configFilePath The path to the config file.
+     * @param array|string $config Either an array of configs, or a path to a config definition file that 
+     * returns an array.
      *
      * @return boolean Was it registered.
     */
-    public final function registerConfig($configFilePath){
+    public final function registerConfig($config){
 
-        if(!is_file($configFilePath)){
-            return false;
+        if(is_string($config)){
+            if(!is_file($config)){
+                return false;
+            }//if
+            $config = require $config;
         }//if
 
-        $config = require $configFilePath;
+        if(!is_array($config)){
+            return false;
+        }//if
 
         $this->config = array_merge($this->config,$config);
 
@@ -454,17 +460,23 @@ Class App extends \Pimple\Container {
      * Register services into the application container. If the service already exists, it will be extended.
      *
      *
-     * @param string $servicesFilePath The path to the services file.
+     * @param array|string $services Either an array of services, or a path to a services definition file that 
+     * returns an array.
      * 
      * @return boolean Were the services registered.
     */
-    public function registerServices($servicesFilePath){
+    public function registerServices($services){
 
-        if(!is_file($servicesFilePath)){
-            return false;
+        if(is_string($services))
+            if(!is_file($services)){
+                return false;
+            }//if
+            $services = require $services;
         }//if
 
-        $services = require $servicesFilePath;
+        if(!is_array($services)){
+            return false;
+        }//if
 
         foreach($services as $k => $v){
 
@@ -487,17 +499,23 @@ Class App extends \Pimple\Container {
      * Register services as factories into the application container.
      *
      *
-     * @param string $factoriesFilePath The path to the services factory file.
-     * 
+     * @param array|string $factories Either an array of factories, or a path to a factories definition file that 
+     * returns an array.
+     *
      * @return boolean Were the factories registered.
     */
-    public function registerFactories($factoriesFilePath){
+    public function registerFactories($factories){
 
-        if(!is_file($factoriesFilePath)){
-            return false;
+        if(is_string($factories))
+            if(!is_file($factories)){
+                return false;
+            }//if
+            $factories = require $factories;
         }//if
 
-        $factories = require $factoriesFilePath;
+        if(!is_array($factories)){
+            return false;
+        }//if
 
         foreach($factories as $k => $v){
 
