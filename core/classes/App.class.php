@@ -85,6 +85,13 @@ Class App extends \Pimple\Container {
     public $domain;
 
 
+    /**
+     * @var string $maintenance The PHP file path relative to the root of the app that should be executed when in 
+     * maintenance mode.
+    */
+    public $maintenance = '/app/maintenance.php';
+
+
 
     /**
      * Get the application instance singleton {@link \Disco\classes\App}.
@@ -731,25 +738,20 @@ Class App extends \Pimple\Container {
     */
     public final function handleMaintenance(){
 
-        if(!$this->config('MAINTENANCE_MODE')){
+        if(!$this->config('MAINTENANCE_MODE') || $this->cli){
             return;
         }//if
 
-        global $argv;
-        if(!empty($argv[2])){
-            return;
-        }//if
-        $file = $this->path.'/app/maintenance.php';
+        http_response_code(503);
+
+        $file = $this->path . $this->maintenance;
         if(is_file($file)){
-            $action = require($file);
+            require $file;
         }//if
         else {
-            $action = function(){ \View::html('<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>');};
+            echo '<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>';
         }//el
 
-        call_user_func($action);
-
-        \View::printPage();
         exit;
 
     }//handleMaintenance

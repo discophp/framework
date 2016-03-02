@@ -95,6 +95,139 @@ class FileHelper {
 
 
     /**
+     * Empty a directory.
+     *
+     *
+     * @param string $path The direcotry to empty.
+     * @return boolean
+    */
+    public function emptyDir($path){
+
+        try {
+
+            $iterator = new \DirectoryIterator($path);
+
+            foreach ($iterator as $file){
+
+                if($file->isDot()){
+                    continue;
+                }//if
+
+                if($file->isDir() && (!$this->emptyDir($file->getPathname()) || !rmdir($file->getPathname()))){
+                    return false;
+                }//if
+
+                if($file->isFile() && !unlink($file->getPathname())){
+                    return false;
+                }//if
+
+            }//foreach
+
+        } catch (\Exception $e){
+            error_log($e->getMessage());
+            return false;
+        }//catch
+
+        return true;
+
+    }//emptyDir
+
+
+
+    /**
+     * Remove a directory.
+     *
+     *
+     * @param string $path The directory to remove.
+     * @return boolean
+    */
+    public function removeDir($path){
+
+        if(!$this->emptyDir($path)){
+            return false;
+        }//if 
+
+        return rmdir($path);
+
+    }//removeDir
+
+
+    private $copyDirBasePathLen = 0;
+
+    /**
+     * Copy a directory.
+     *
+     *
+     * @param string $path The direcotry to copy.
+     * @return boolean
+    */
+    public function copyDir($path,$toPath, $nested = false){
+
+        $path = rtrim($path,'/') . '/';
+        $toPath = rtrim($toPath,'/') . '/';
+        $pathLen = strlen($path);
+
+        if(!$nested){
+            if(!is_dir($toPath) && !mkdir($toPath)){
+                return false;
+            }//if
+            $this->copyDirBasePathLen = strlen($path);
+        }//if
+
+
+        try {
+
+            $iterator = new \DirectoryIterator($path);
+
+            foreach ($iterator as $file) {
+
+                if($file->isDot()){
+                    continue;
+                }//if
+
+                $newDirPath = $toPath . substr($file->getPathname(),$this->copyDirBasePathLen);
+
+                if($file->isDir() && (!mkdir($newDirPath) || !$this->copyDir($file->getPathname(),$toPath, true))){
+                    return false;
+                }//if
+
+                if($file->isFile() && !copy($file->getPathname(),$newDirPath)){
+                    return false;
+                }//if
+
+            }//foreach
+
+        } catch (\Exception $e){
+            error_log($e->getMessage());
+            return false;
+        }//catch
+
+        return true;
+
+    }//copyDir
+
+
+
+    /**
+     * Change file mode for directory and all contents.
+     *
+     *
+     * @param string $path The directory to chmod recursivly.
+     * @param int $mode The file mode to apply.
+    */
+    public function chmodRecursive($path, $mode){
+
+        $items = $this->recursiveIterate($path);
+
+        foreach($items as $item){
+            chmod($item,$mode);
+        }//foreach
+
+    }//chmodRecursive
+
+
+
+    /**
      * Serve a file with the proper `Content-type` header value set for use in a browser context. The content type 
      * is determined by calling `$this->getMimeTypeByExtension($path)`. If the file doesn't exist then it will 
      * serve a 404.

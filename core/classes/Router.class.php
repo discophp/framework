@@ -200,6 +200,9 @@ class Router {
      * @return self
     */
     public function allowURLParameters($params = Array()){
+        if(is_string($params)){
+            $params = Array($params);
+        }//if
         $this->allowURLParameters = $params;
         return $this;
     }//allowUrlParamaters
@@ -421,7 +424,7 @@ class Router {
         }//if
         else if($allowParams !== false && $_SERVER['QUERY_STRING']){
             $url = explode('?' . $_SERVER['QUERY_STRING'],$url)[0]; 
-            if(count($allowParams)){
+            if(is_array($allowParams) && count($allowParams)){
                 parse_str($_SERVER['QUERY_STRING'],$params);
                 if(count(array_diff_key($params,array_flip($allowParams)))){
                     return false;
