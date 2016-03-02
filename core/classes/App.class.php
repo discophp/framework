@@ -467,7 +467,7 @@ Class App extends \Pimple\Container {
     */
     public function registerServices($services){
 
-        if(is_string($services))
+        if(is_string($services)){
             if(!is_file($services)){
                 return false;
             }//if
@@ -506,7 +506,7 @@ Class App extends \Pimple\Container {
     */
     public function registerFactories($factories){
 
-        if(is_string($factories))
+        if(is_string($factories)){
             if(!is_file($factories)){
                 return false;
             }//if
