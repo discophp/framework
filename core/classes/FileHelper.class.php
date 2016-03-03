@@ -99,9 +99,11 @@ class FileHelper {
      *
      *
      * @param string $path The direcotry to empty.
+     * @param array $except Dont remove paths included in this array.
+     *
      * @return boolean
     */
-    public function emptyDir($path){
+    public function emptyDir($path,$except = Array()){
 
         try {
 
@@ -109,7 +111,7 @@ class FileHelper {
 
             foreach ($iterator as $file){
 
-                if($file->isDot()){
+                if($file->isDot() || in_array($this->getPathname(),$except)){
                     continue;
                 }//if
 
