@@ -196,7 +196,7 @@ class PDO extends \PDO {
 
         } catch(\PDOException $e){
             TRIGGER_ERROR('DB:: Query Error | '.$e->getMessage() . ' | ' . $e->getTraceAsString(),E_USER_WARNING);
-            throw new \Disco\exceptions\DBQuery($e->getMessage(),$e->getCode());
+            throw new \Disco\exceptions\DBQuery($e->getMessage(), (int)$e->getCode());
         }//catch
 
     }//query
