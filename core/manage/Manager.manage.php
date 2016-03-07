@@ -473,6 +473,8 @@ return %1\$s
             return false;
         }//if
 
+        echo "Model for table `{$table}` created @ `{$modelOutputPath}`" . PHP_EOL;
+
         return true;
         
     }//writeModel
@@ -965,6 +967,8 @@ return %1\$s
             echo "Could not write to {$recordOutputPath}, change the permissions or use sudo and try again." . PHP_EOL;
             return false;
         }//if
+
+        echo "Record for table `{$table}` created @ `{$recordOutputPath}`" . PHP_EOL;
         
         return true;
 

@@ -299,7 +299,7 @@ class Console {
             $settings['no-data'] = true;
         }//if
 
-        $dump = new \Ifsnop\Mysqldump\Mysqldump($connect, enact()->config('DB_USER'), enact()->config('DB_PASSWORD'),$settings);
+        $dump = new \Ifsnop\Mysqldump\Mysqldump($connect, \App::config('DB_USER'), \App::config('DB_PASSWORD'),$settings);
 
 
         $dump->start($fileName);
@@ -390,7 +390,7 @@ class Console {
                     if($output_path && $template_path){
                         \Disco\manage\Manager::writeModel($row['table_name'],$model,$template_path,$output_path);
                     } else {
-                        var_dump($record);
+                        echo $model . PHP_EOL;
                     }//el
                 }//while
 
@@ -400,7 +400,7 @@ class Console {
                 if($output_path && $template_path){
                     \Disco\manage\Manager::writeModel($table,$model,$template_path,$output_path);
                 } else {
-                    var_dump($model);
+                    echo $model . PHP_EOL;
                 }//el
             }//el
 
@@ -424,7 +424,7 @@ class Console {
                     if($output_path && $template_path){
                         \Disco\manage\Manager::writeRecord($row['table_name'],$record,$template_path,$output_path);
                     } else {
-                        var_dump($record);
+                        echo $record . PHP_EOL;
                     }//el
 
                 }//while
@@ -435,7 +435,7 @@ class Console {
                 if($output_path && $template_path){
                     \Disco\manage\Manager::writeRecord($table,$record,$template_path,$output_path);
                 } else {
-                    var_dump($record);
+                    echo $record . PHP_EOL;
                 }//el
             }//el
 
