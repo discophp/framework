@@ -259,7 +259,7 @@ class Console {
     public function dbBackup($args, $structureOnly = false){
 
         $path = '/app/db/';
-        if(isset($args[0])){
+        if(isset($args[0]) && $args[0]){
             $path = $args[0];
         }//if
 
@@ -286,6 +286,7 @@ class Console {
             exit;
         }//if
 
+        $fileName = $path . $fileName;
 
         $connect = sprintf("%1\$s:host=%2\$s;dbname=%3\$s",
                 \App::config('DB_ENGINE'),
