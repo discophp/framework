@@ -274,7 +274,7 @@ class Console {
             $fileName = $args[1];
         }//if
 
-        $path = \App::path() . $path;
+        $path = \App::path() . '/' . trim($path,'/') . '/';
 
         if(!is_dir($path)){
             echo 'Directory ' . $path . ' does not exsist, exiting.' . PHP_EOL;
@@ -328,21 +328,21 @@ class Console {
             $path = $args[0];
         }//if
 
-        $path = \App::path().$path;
+        $path = \App::path() . '/' . trim($path,'/') . '/';
 
         $fileName = \App::config('DB_DB');
         if(isset($args[1])){
             $fileName = $args[1];
         }//if
 
-        $fileName = $path . $fileName;
+        $fileName = $path . $fileName . '.sql';
 
         if(!is_file($fileName)){
             echo "Backup `{$fileName}` does not exist, exiting." . PHP_EOL;
             exit;
         }//if
 
-        $e = "mysql -u %1\$s -p'%2\$s' -h %3\$s %4\$s < %5\$s.sql;";
+        $e = "mysql -u %1\$s -p'%2\$s' -h %3\$s %4\$s < %5\$s;";
         $e = sprintf($e,
             \App::config('DB_USER'),
             \App::config('DB_PASSWORD'),
@@ -351,8 +351,16 @@ class Console {
             $fileName
         );
 
-        echo exec($e);
+        $error = exec($e);
+
+        if(!$error){
+            echo 'DB `' . \App::config('DB_DB') . "` successfully restored from `{$fileName}`";
+        } else {
+            echo 'Unable to restore! : ' . $error;
+        }//el
+
         echo PHP_EOL;
+
         exit;
 
     }//dbRestore
@@ -374,35 +382,27 @@ class Console {
     public function create($args){
 
         if($args[0] == 'model'){
+
             if(!isset($args[1])){
                 echo 'You must specify a table to build the model from' . PHP_EOL;
                 exit;
             }//if
+
             $table = $args[1];
-            $template_path = isset($args[2]) ? $args[2] : null;
-            $output_path = isset($args[3]) ? $args[3] : null;
+
+            $templatePath = isset($args[2]) ? $args[2] : 'app/config/model.format';
+            $outputPath = isset($args[3]) ? $args[3] : 'app/model';
 
             if($table=='all'){
-
                 $result = $this->getDBSchema();
-
                 while($row = $result->fetch()){
                     $model = \Disco\manage\Manager::buildModel($row['table_name']);
-                    if($output_path && $template_path){
-                        \Disco\manage\Manager::writeModel($row['table_name'],$model,$template_path,$output_path);
-                    } else {
-                        echo $model . PHP_EOL;
-                    }//el
+                    \Disco\manage\Manager::writeModel($row['table_name'],$model,$templatePath,$outputPath);
                 }//while
-
             }//if
             else {
                 $model = \Disco\manage\Manager::buildModel($table);
-                if($output_path && $template_path){
-                    \Disco\manage\Manager::writeModel($table,$model,$template_path,$output_path);
-                } else {
-                    echo $model . PHP_EOL;
-                }//el
+                \Disco\manage\Manager::writeModel($table,$model,$templatePath,$outputPath);
             }//el
 
         }//if
@@ -415,29 +415,19 @@ class Console {
 
             $table = $args[1];
 
-            $template_path = isset($args[2]) ? $args[2] : null;
-            $output_path = isset($args[3]) ? $args[3] : null;
+            $templatePath = isset($args[2]) ? $args[2] : 'app/config/record.format';
+            $outputPath = isset($args[3]) ? $args[3] : 'app/record';
 
             if($table=='all'){
                 $result = $this->getDBSchema();
                 while($row = $result->fetch()){
                     $record = \Disco\manage\Manager::buildRecord($row['table_name']);
-                    if($output_path && $template_path){
-                        \Disco\manage\Manager::writeRecord($row['table_name'],$record,$template_path,$output_path);
-                    } else {
-                        echo $record . PHP_EOL;
-                    }//el
-
+                    \Disco\manage\Manager::writeRecord($row['table_name'],$record,$templatePath,$outputPath);
                 }//while
-
             }//if
             else {
                 $record = \Disco\manage\Manager::buildRecord($table);
-                if($output_path && $template_path){
-                    \Disco\manage\Manager::writeRecord($table,$record,$template_path,$output_path);
-                } else {
-                    echo $record . PHP_EOL;
-                }//el
+                \Disco\manage\Manager::writeRecord($table,$record,$templatePath,$outputPath);
             }//el
 
         }//elif

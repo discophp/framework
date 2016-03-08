@@ -448,7 +448,7 @@ return %1\$s
             'model'         => $model
         );
 
-        $modelOutputPath = $outputPath . $format['camelTable'] . '.php';
+        $modelOutputPath = \App::path() . '/' . trim($outputPath,'/') . '/' . $format['camelTable'] . '.php';
 
         if(is_file($modelOutputPath)){
             echo "Model already exists at `{$modelOutputPath}` do you want to overwrite it?" . PHP_EOL;
@@ -457,12 +457,14 @@ return %1\$s
             }//if
         }//if
 
-        $template = file_get_contents(\App::path() . '/' . $templatePath);
+        $templatePath = \App::path() . '/' . ltrim($templatePath,'/');
 
-        if(!$template){
+        if(!is_file($templatePath)){
             echo "Model template file {$templatePath} doesn't exist." . PHP_EOL;
             return false;
         }//if
+
+        $template = file_get_contents($templatePath);
 
         foreach($format as $k=>$v){
             $template = str_replace("{{$k}}",$v,$template);
@@ -943,7 +945,7 @@ return %1\$s
             'record'        => $record
         );
 
-        $recordOutputPath = $outputPath . $format['camelTable'] . '.php';
+        $recordOutputPath = \App::path() . '/' . trim($outputPath,'/') . '/' . $format['camelTable'] . '.php';
 
         if(is_file($recordOutputPath)){
             echo "Record already exists at `{$recordOutputPath}` do you want to overwrite it?" . PHP_EOL;
@@ -952,12 +954,14 @@ return %1\$s
             }//if
         }//if
 
-        $template = file_get_contents(\App::path() . '/' . $templatePath);
+        $templatePath = \App::path() . '/' . ltrim($templatePath,'/');
 
-        if(!$template){
+        if(!is_file($templatePath)){
             echo "Record template file {$templatePath} doesn't exist." . PHP_EOL;
             return false;
         }//if
+
+        $template = file_get_contents($templatePath);
 
         foreach($format as $k=>$v){
             $template = str_replace("{{$k}}",$v,$template);
