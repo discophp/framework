@@ -644,7 +644,7 @@ abstract class Record implements \ArrayAccess {
             throw new \InvalidArguementException('Paramater 1 `$where` must be an array');
         }//if
 
-        $class = static::class;
+        $class = get_called_class();
 
         $record = new $class;
 
