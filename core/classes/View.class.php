@@ -832,7 +832,7 @@ class View {
                 call_user_func($action);
             }//if
             else {
-                $file = \App::path() . trim($this->errorDir,'/') . '/' . $code . '.php';
+                $file = \App::path() . '/' . trim($this->errorDir,'/') . '/' . $code . '.php';
                 if(is_file($file)){
                     $action = require($file);
                     call_user_func($action,\App::instance());
