@@ -246,6 +246,9 @@ Class App extends \Pimple\Container {
         if(!\Disco\classes\Router::$routeMatch){
             \View::serve(404);
         }//if
+        elseif(http_response_code() != 200){
+            \View::serve(http_response_code());
+        }//elif
         else {
             \View::serve();
         }//el

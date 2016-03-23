@@ -818,7 +818,13 @@ class View {
     public final function serve($code = 200, $action = false){
 
         if($code!=200){
+
+            //set the response code
             http_response_code($code);
+
+            //clear the body of the view
+            \View::body('');
+
             if(is_string($action)){
                 \Template::with($action);
             }//if
