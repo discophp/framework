@@ -44,6 +44,9 @@ class Console {
 
         call_user_func(Array($this,$method), $args);
 
+        echo PHP_EOL;
+        exit;
+
     }//__construct
 
 
@@ -54,7 +57,6 @@ class Console {
     public function postInstallCmd(){
 
         \Disco\manage\Manager::install();
-        exit;
 
     }//postInstallCmd
 
@@ -85,7 +87,6 @@ class Console {
     public function resolve($args){
 
         \Disco\manage\Manager::resolve($args[0],$args[1],$args[2],$args[3],$args[4]);
-        exit;
 
     }//resolve
 
@@ -97,7 +98,6 @@ class Console {
     public function jobs(){
 
         \Disco\manage\Manager::jobs();
-        exit;
 
     }//jobs
 
@@ -113,7 +113,6 @@ class Console {
     public function killJob($args){
 
         \Queue::killJob($argv[0]);
-        exit;
 
     }//killJob
 
@@ -165,7 +164,6 @@ class Console {
                 echo 'You must specify what to gen, either `aes` or `sha`' . PHP_EOL;
             }//el
 
-        exit;
 
     }//gen
 
@@ -192,8 +190,6 @@ class Console {
 
         \Disco\manage\Manager::devMode(($args[0] == 'true') ? true : false);
         echo 'DEV_MODE now set to: ' . $args[0] . PHP_EOL;
-
-        exit;
 
     }//devMode
 
@@ -223,8 +219,6 @@ class Console {
         if($args[0] == 'true'){
             echo 'Users will being seeing the result of the file' . PHP_EOL . ' -  app/maintenance.php' . PHP_EOL;
         }//if
-
-        exit;
 
     }//maintenanceMode
 
@@ -306,7 +300,6 @@ class Console {
         $dump->start($fileName);
 
         echo "Backup successfully created at `{$fileName}`" . PHP_EOL;
-        exit;
 
     }//dbBackup
 
@@ -360,8 +353,6 @@ class Console {
         }//el
 
         echo PHP_EOL;
-
-        exit;
 
     }//dbRestore
 
@@ -431,8 +422,6 @@ class Console {
             }//el
 
         }//elif
-
-        exit;
 
     }//create
 

@@ -15,16 +15,6 @@ namespace Disco\manage;
 class Manager {
 
 
-    /**
-     * @var array $routes User defined routes.
-    */
-    public static $routes = Array();
-
-    /**
-     * @var string $routerInFile What file is the router being called in?.
-    */
-    public static $routerInFile;
-
 
     /**
      * This function is very important to the functioning of the Queue class.
@@ -308,50 +298,6 @@ return %1\$s
 
 
     /**
-     * Get all the files of a specified extension in a directory and all its sub-directories.
-     *
-     *
-     * @param string $ext The type of file extensions to look for.
-     * @param string $startDir The directory to start the search in.
-     * @param Array $initFiles A group of files that has already been found from parent directories.
-     *
-     * @return Array The files from the directory.
-    */
-    private static function getFilesRec($ext,$startDir,$initFiles){
-        if(($scan = scandir($startDir)) == false){
-            return $initFiles; 
-        }//if
-        unset($scan[0]);unset($scan[1]);
-
-        $files = Array();
-        $dirs = Array();
-        foreach($scan as $s){
-            $testDir = $startDir.'/'.$s;
-            if(is_dir($testDir)){
-                $dirs[]=$testDir;
-            }//if
-            else {
-                $tExt = substr($s,-strlen($ext));
-                if($tExt==$ext){
-                    $files[]= $testDir;
-                }//elif
-            }//if
-        }//foreach
-
-        foreach($dirs as $dir){
-            $initFiles = array_merge($initFiles,self::getFilesRec($ext,$dir,$files));
-        }//foreach
-
-        if(count($dirs)==0){
-            $initFiles = array_merge($initFiles,$files);
-        }//if
-
-        return $initFiles;
-
-    }//getFilesRev
-
-
-    /**
      * This function generates and sets the AES256 and SHA512 keys for .config.php after the composer install.
      *
      *
@@ -481,119 +427,6 @@ return %1\$s
         
     }//writeModel
 
-
-
-    /**
-     * Mock a request to the application and swap the \Disco\classes\Router with a \Disco\manage\Router
-     * in order to profile all router requests. Also include all defined router files for processing.
-     *
-     *
-     * @param string|null $outputType The type of output the user desires (html,csv)
-     * 
-     * @return void
-    */
-    public static function routes($outputType=null){
-
-        self::$routerInFile = 'index.php';
-
-        require('public/index.php');
-
-        $routers = self::getFilesRec('.router.php','app/router',Array());
-        foreach($routers as $k=>$v){
-            self::$routerInFile = $v;
-            $v = basename($v);
-            $v = explode('.',$v)[0];
-            \Router::useRouter($v);
-        }//foreach
-
-        if($outputType == 'csv'){
-            self::csv_routes(self::$routes);
-        }//if
-        else if($outputType == 'html'){
-            self::html_routes(self::$routes);
-
-        }//el
-        else {
-            print_r(self::$routes);
-        }//el
-
-    }//routes
-
-
-    /**
-     * Format the provided routes as a csv file.
-     *
-     *
-     * @param Array $routes The found routes
-     *
-     * @return void
-    */
-    private static function csv_routes($routes){
-
-        $keys = array_keys($routes[0]);
-        $out = implode(',',$keys)."\n";
-        foreach($routes as $rowK=>$row){
-            if(is_array($row['variables'])){
-                $temp = '';
-                foreach($row['variables'] as $vk=>$vv){
-                    $temp .= $vk.' => '.$vv.' , ';
-                }//foreach
-                $row['variables'] = rtrim($temp,', ');
-            }//if
-            $out .= implode(',',$row)."\n";
-        }//foreach
-        if(file_put_contents('routes.csv',$out)){
-            echo 'Routes stored in routes.csv'.PHP_EOL;
-        }//if
-        else {
-            echo 'Could not write routes.csv (use sudo)'.PHP_EOL;
-        }//el
-
-    }//csv_routes
-
-
-
-    /**
-     * Format the provided routes as a html file.
-     *
-     *
-     * @param Array $routes The found routes
-     *
-     * @return void
-    */
-    private static function html_routes($routes){
-
-        $keys = array_keys($routes[0]);
-        $out = "<table style='width:80%%;margin:0 auto;'><thead style='background-color:#DDD;'><tr>%1\$s</tr></thead><tbody>%2\$s</tbody></table>";
-        $head = '';
-        $body = '';
-        foreach($keys as $k){
-            $head .= "<td>$k</td>";
-        }//foreach
-        foreach($routes as $rowK=>$row){
-            if(is_array($row['variables'])){
-                $temp = '';
-                foreach($row['variables'] as $vk=>$vv){
-                    $temp .= $vk.' => '.$vv.' , ';
-                }//foreach
-                $row['variables'] = rtrim($temp,', ');
-            }//if
-            $body .= '<tr>';
-            foreach($row as $k=>$v){
-                $v = ($v!='' && $v!=' ') ? $v : '&nbsp;';
-                $body .= "<td style='padding-top:4px;padding-bottom:4px;border-bottom:1px solid #DDD;'>{$v}</td>";        
-            }//foreach
-            $body .= '</tr>';
-        }//foreach
-        $out = sprintf($out,$head,$body);
-        if(file_put_contents('routes.html',$out)){
-            echo 'Routes stored in routes.html'.PHP_EOL;
-        }//if
-        else {
-            echo 'Could not write routes.html (use sudo)'.PHP_EOL;
-        }//el
-
-    }//html_routes
 
 
 
