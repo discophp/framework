@@ -92,6 +92,12 @@ Class App extends \Pimple\Container {
     public $maintenance = '/app/maintenance.php';
 
 
+    /**
+     * @var string $log The log file the `log()` function writes to.
+    */
+    public $log = '/log/log.log';
+
+
 
     /**
      * Get the application instance singleton {@link \Disco\classes\App}.
@@ -294,13 +300,15 @@ Class App extends \Pimple\Container {
      * @param mixed $value The value to set.
      *
      * @return false|mixed False if not set, the value otherwise.
+     *
+     * @throws \Exception If the config key doesn't exist.
     */
     public function config($name,$value=null){
 
         if($value === null){
 
-            if(!isset($this->config[$name])){
-                return false;
+            if(!array_key_exists($name,$this->config)){
+                throw new \Exception("Config key `{$name}` does not exist!");
             }//if
 
             return $this->config[$name];
@@ -784,12 +792,16 @@ Class App extends \Pimple\Container {
      *
      *
      * @param string $msg The error message to log.
-     * @param Array $methods The method call names that could have generated the error.
+     * @param string|Array $methods The method call names that could have generated the error.
      * @param Array $e The debug_stacktrace call.
      *
      * @return void
     */
     public function error($msg,$methods,$e){
+
+        if(!is_array($methods)){
+            $methods = Array($methods);
+        }//if
 
         $trace = Array();
         $e = array_reverse($e);
@@ -804,6 +816,25 @@ Class App extends \Pimple\Container {
         error_log($msg,0);
 
     }//error
+
+
+
+    /**
+     * Log an error in the log file defined by `$this->log`.
+     *
+     * @param mixed $msg The error to log, if not a string or numeric will be var exported.
+     *
+     * @return void
+    */
+    public function log($msg){
+
+        if(!is_string($msg) || !is_numeric($msg)){
+            $msg = var_export($msg,true);
+        }//if
+
+        file_put_contents($this->path . $this->log,'[ '. date('m-d-Y H:i:s') .' - ' . $_SERVER['REQUEST_URI'] . '] ' . $msg . "\n", FILE_APPEND);
+
+    }//log
 
 
 

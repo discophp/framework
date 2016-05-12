@@ -160,6 +160,7 @@ class Email {
     */
     public function plainText($bool=true){
         $this->plainTextOnly=$bool;
+        return $this;
     }//plainText
 
 
@@ -258,7 +259,7 @@ class Email {
         $message->setSubject($subject);
 
         if(isset($account['ALIAS']) && $account['ALIAS']){
-            $message->setFrom($account['ALIAS']);
+            $message->setFrom(Array($account['EMAIL'] => $account['ALIAS']));
         }//if
         else {
             $message->setFrom($account['EMAIL']);
