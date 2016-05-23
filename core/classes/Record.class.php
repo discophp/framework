@@ -270,7 +270,8 @@ abstract class Record implements \ArrayAccess {
         $missing = array_diff($this->getRequiredFieldNames(), array_keys($this->fields));
         if(count($missing)){
             $missing = implode(', ',$missing);
-            throw new \Disco\exceptions\Record("Record insert error: fields `{$missing}` cannot be null");
+            $class = get_called_class();
+            throw new \Disco\exceptions\Record("Record `{$class}` insert error: fields `{$missing}` cannot be null");
         }//if
 
         $id = \App::with($this->model)->insert($this->fields);
@@ -453,7 +454,8 @@ abstract class Record implements \ArrayAccess {
         if(!count($ids) || in_array(null,array_values($ids))){
             $ai = $this->autoIncrementField();
             if(!$ai || !isset($this->fields[$ai]) || !$this->validate($ai,$this->fields[$ai])){
-                throw new \Disco\exceptions\RecordId("Record use/modification attempted with null id(s)!");
+                $class = get_called_class();
+                throw new \Disco\exceptions\RecordId("Record `{$class}` use/modification attempted with null id(s)!");
             }//if
 
             return Array($ai => $this->fields[$ai]);
@@ -479,14 +481,27 @@ abstract class Record implements \ArrayAccess {
 
         if(count($diff)){
             $fields = implode(', ',$diff);
-            throw new \Disco\exceptions\RecordValidation("Record field(s) `{$fields}` do not exist!");
+            $class = get_called_class();
+            throw new \Disco\exceptions\RecordValidation("Record `{$class}` field(s) `{$fields}` do not exist!");
         }//if
+
+        $errors = Array();
 
         foreach($this->fields as $field => $value){
             if(!$this->validate($field,$value)){
-                throw new \Disco\exceptions\RecordValidation("Record validation error - Field : `{$field}` Value : `{$value}`");
+                $errors[$field] = $value;
             }//if
         }//foreach
+
+        if(count($errors)){
+            $errorMsg = '';
+            foreach($errors as $k => $v){
+                $errorMsg .= "`{$k}` : `{$v}` | ";
+            }//foreach
+            $errorMsg = rtrim($errorMsg,' | ');
+            $class = get_called_class();
+            throw (new \Disco\exceptions\RecordValidation("Record validation error - {$class} - {$errorMsg}"))->setData($errors);
+        }//if
 
     }//validateFields
 
@@ -580,7 +595,8 @@ abstract class Record implements \ArrayAccess {
         foreach($fields as $key => $value){
 
             if(!isset($this->fields[$key])){
-                throw new \Disco\exceptions\RecordValidation("Record field `{$key}` does not exist!");
+                $class = get_called_class();
+                throw new \Disco\exceptions\RecordValidation("{$class}::convertEmptyStringsToNull() - Record field `{$key}` does not exist!");
             }//if
 
             if($value === ''){
@@ -640,11 +656,11 @@ abstract class Record implements \ArrayAccess {
     */
     public static function find($where, $select = null){
 
-        if(!is_array($where)){
-            throw new \InvalidArguementException('Paramater 1 `$where` must be an array');
-        }//if
-
         $class = get_called_class();
+
+        if(!is_array($where)){
+            throw new \InvalidArguementException("{$class}::find() Paramater 1 `\$where` must be an array");
+        }//if
 
         $record = new $class;
 

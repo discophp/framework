@@ -73,7 +73,7 @@ class Email {
     */
     public function getSetting($key){
 
-        if(!isset($this->settings[$key])){
+        if(!array_key_exists($key,$this->settings)){
             return false;
         }//if
 

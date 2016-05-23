@@ -111,7 +111,7 @@ class FileHelper {
 
             foreach ($iterator as $file){
 
-                if($file->isDot() || in_array($this->getPathname(),$except)){
+                if($file->isDot() || in_array($file->getPathname(),$except)){
                     continue;
                 }//if
 
@@ -161,6 +161,9 @@ class FileHelper {
      *
      *
      * @param string $path The direcotry to copy.
+     * @param string $toPath The directory to copy to.
+     * @param boolean $nested Whether to create the $path directory in $toPath or not.
+     *
      * @return boolean
     */
     public function copyDir($path,$toPath, $nested = false){
@@ -189,7 +192,7 @@ class FileHelper {
 
                 $newDirPath = $toPath . substr($file->getPathname(),$this->copyDirBasePathLen);
 
-                if($file->isDir() && (!mkdir($newDirPath) || !$this->copyDir($file->getPathname(),$toPath, true))){
+                if($file->isDir() && ((!is_dir($newDirPath) && !mkdir($newDirPath)) || !$this->copyDir($file->getPathname(),$toPath, true))){
                     return false;
                 }//if
 

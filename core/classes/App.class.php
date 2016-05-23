@@ -307,7 +307,7 @@ Class App extends \Pimple\Container {
 
         if($value === null){
 
-            if(!array_key_exists($name,$this->config)){
+            if(!$this->configKeyExists($name)){
                 throw new \Exception("Config key `{$name}` does not exist!");
             }//if
 
@@ -318,6 +318,21 @@ Class App extends \Pimple\Container {
         $this->config[$name] = $value;
 
     }//config
+
+
+
+    /**
+     * Whether a configuration key exists. Use this if you dont want to catch an Exception thrown by 
+     * `$this->config()` when a passed configuration key doesn't exist.
+     *
+     *
+     * @param string $name Configuration key.
+     * 
+     * @return boolean
+    */
+    public function configKeyExists($name){
+        return array_key_exists($name,$this->config);
+    }//configKeyExists
 
 
 
