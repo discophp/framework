@@ -38,6 +38,16 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
+     * @var boolean|array $cache The primary keys that were present when the record was constructed. Only used when 
+     * allowKeyUpdates is set to true and a record is updated and some of the records primary keys have changed. 
+     * This prevents the record from attempting to update its self with the new primary key values, which will 
+     * result in the updates where statement using conditions pointing to a record that doesn't exist, or is wrong 
+     * all togethor.
+    */
+    private $initial_primary_keys = false;
+
+
+    /**
      * @var boolean $allowKeyUpdates Allow primary keys of the record to be updated?
     */
     private $allowKeyUpdates = false;
@@ -68,9 +78,16 @@ abstract class Record implements \ArrayAccess {
 
         $this->fields = array_intersect_key($fields,array_flip($this->getFieldNames()));
 
+        try {
+            $this->initial_primary_keys = $this->primaryKeysWithValidation();
+        } catch(\Disco\exceptions\RecordId $e){
+            $this->initial_primary_keys = false;
+        }//catch
+
         if($cache === true){
             $this->cache = $this->fields;
         }//if
+
     }//__construct
 
 
@@ -203,11 +220,14 @@ abstract class Record implements \ArrayAccess {
      * Update the changed fields in the record.
      *
      *
+     * @param boolean $using_only_auto_increment_key Perform the update using only the auto-increment key, 
+     * regardless of other primary keys specified by the record.
+     *
      * @return boolean
      *
      * @throws \Disco\exceptions\RecordId When primary keys are null.
     */
-    public function update(){
+    public function update($using_only_auto_increment_key = false){
 
         $this->validateFields();
         $update = $this->diff();
@@ -221,7 +241,20 @@ abstract class Record implements \ArrayAccess {
         //without ids
         if(!$this->allowKeyUpdates){
             $update = array_diff_key($update,$ids);
+        }//if
+        else {
+            $initial_keys = $this->initial_primary_keys;
+            if($initial_keys === false){
+                $class = get_called_class();
+                throw new \Disco\exceptions\RecordId("Record `{$class}` cannot update with `allowKeyUpdates` due to initial primary keys missing/not validating during record instantiation");
+            }//if
+            $this->initial_primary_keys = $ids;
+            $ids = $initial_keys;
             $this->allowKeyUpdates(false);
+        }//el
+
+        if($using_only_auto_increment_key === true){
+            $ids = Array($this->autoIncrementField() => $ids[$this->autoIncrementField()]);
         }//if
 
         $res = \App::with($this->model)->update($update)->where($ids)->finalize();
