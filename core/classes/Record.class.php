@@ -254,7 +254,12 @@ abstract class Record implements \ArrayAccess {
         }//el
 
         if($using_only_auto_increment_key === true){
-            $ids = Array($this->autoIncrementField() => $ids[$this->autoIncrementField()]);
+            $ai = $this->autoIncrementField();
+            if(!$ai){
+                $class = get_called_class();
+                throw new \Disco\exceptions\RecordId("Record `{$class}` cannot update using only auto increment key as none are defined");
+            }//if
+            $ids = Array($ai => $ids[$ai]);
         }//if
 
         $res = \App::with($this->model)->update($update)->where($ids)->finalize();
@@ -324,6 +329,25 @@ abstract class Record implements \ArrayAccess {
         return $id;
 
     }//insert
+
+
+
+    /**
+     * INSERT or UPDATE the record based on the presense or lack there of the records primary keys.
+     *
+     * @return boolean|int
+     *
+     * @throws \Disco\exceptions\Record When required fields are null.
+    */
+    public function upsert(){
+
+        try {
+            return $this->update();
+        } catch(\Disco\exceptions\RecordId $e){
+            return $this->insert();
+        }//catch
+
+    }//upsert
 
 
 
