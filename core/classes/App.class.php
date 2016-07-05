@@ -59,11 +59,20 @@ Class App extends \Pimple\Container {
      * @var array Default regex matching conditions.
     */
     public $defaultMatchCondition = Array(
-        'alpha'         => '^[a-zA-Z\s\-]+$',
-        'alpha_numeric' => '^[a-zA-Z\s\-0-9]+$',
-        'integer'       => '^[\-0-9]+$',
-        'numeric'       => '^[\-0-9\.]+$',
-        'all'           => '[.]*'
+        'alpha'                 => '^[a-zA-Z\s\-]+$',
+        'alpha_nospace'         => '^[a-zA-Z\-]+$',
+        'alpha_numeric'         => '^[a-zA-Z\s\-0-9]+$',
+        'alpha_numeric_nospace' => '^[a-zA-Z\-0-9]+$',
+        'integer'               => '^-?\d+$',
+        'integer_positive'      => '^\d+$',
+        'numeric'               => '^-?\d+(\.\d+)?$',
+        'numeric_positive'      => '^\d+(\.\d+)?$',
+        'all'                   => '[.]*',
+        'datetime'              => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
+        'date'                  => '^\d{4}-\d{2}-\d{2}$',
+        'time'                  => '^\d{2}:\d{2}:\d{2}$',
+        'boolean'               => '^(true|false)$',
+        'one_or_zero'           => '^(1|0)$',
     );
 
 
@@ -848,6 +857,7 @@ Class App extends \Pimple\Container {
         }//if
 
         file_put_contents($this->path . $this->log,'[ '. date('m-d-Y H:i:s') .' - ' . $_SERVER['REQUEST_URI'] . '] ' . $msg . "\n", FILE_APPEND);
+        error_log($msg);
 
     }//log
 

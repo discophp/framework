@@ -2,8 +2,10 @@
 require('vendor/autoload.php');
 require_once('vendor/discophp/framework/test/asset/class/PersonModelTest.php');
 require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.php');
+require_once('vendor/discophp/framework/test/asset/class/PersonRecordTest.php');
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpTestFactory.php');
 require_once('vendor/discophp/framework/test/asset/class/DiscoPhpUnitTestController.php');
+require_once('vendor/discophp/framework/test/asset/class/DITest.php');
 
 $_SERVER['REQUEST_URI'] = '/';
 $_SERVER['REQUEST_METHOD'] = 'GET';

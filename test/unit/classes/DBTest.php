@@ -52,6 +52,20 @@ INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,
 
         $this->assertEquals("200 'Test' NOW() 'Whats up?' 40",$q);
 
+        $q = $this->DB->set('?',Array('raw' => 'NOW()'));
+
+        $this->assertEquals('NOW()',$q);
+
+        $q = $this->DB->set('SELECT name FROM TEST WHERE id=:id: AND date=:now: AND value=:value: AND other=:value:',
+            Array(
+                'id' => 1,
+                'now' => Array('raw' => 'NOW()'),
+                'value' => 'Hey a :value: cool!',
+            )
+        );
+
+        $this->assertEquals('SELECT name FROM TEST WHERE id=1 AND date=NOW() AND value=\'Hey a :value: cool!\' AND other=\'Hey a :value: cool!\'',$q);
+
     }//testSet
 
     /*

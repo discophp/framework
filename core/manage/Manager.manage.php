@@ -444,313 +444,60 @@ return %1\$s
 
         $result = \DB::query('SHOW COLUMNS FROM ' . $table);
 
-        $rules = '';
-        $validators = '';
-
-        $map = Array(
-            'tinyint' => function($type){
-                $rule = 'intType()';
-                $min = -128;
-                $max = 127;
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                    $max = 255;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-            },
-            'smallint' => function($type){
-                $rule = 'intType()';
-                $min = -32768;
-                $max = 32767;
-
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                    $max = 65535;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-            },
-            'mediumint' => function($type){
-                $rule = 'intType()';
-                $min = -8388608;
-                $max = 8388607;
-
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                    $max = 16777215;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-            },
-            'int' => function($type){
-                $rule = 'intType()';
-                $min = -2147483648;
-                $max = 2147483647;
-
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                    $max = 4294967295;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-            },
-            'bigint' => function($type){
-                $rule = 'intType()';
-                $min = -9223372036854775808;
-                $max = 9223372036854775807;
-
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                    $max = 18446744073709551615;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-
-            },
-            'decimal' => function($type){
-                $rule = 'numeric()';
-                $parts = explode(',',$type);
-                $dec_length = array_shift(explode(')',$parts[1]));
-                $whole_length = array_pop(explode('(',$parts[0])) - $dec_length;
-
-                $max = str_repeat('9',$whole_length) . '.' . str_repeat('9',$dec_length);
-                $min = '-' . $max;
-
-                if(stripos($type,'unsigned') !== false){
-                    $min = 0;
-                }//if
-
-                $rule .= "->between({$min},{$max})";
-
-                return $rule;
-
-            },
-            'float' => function($type){
-
-                $rule = 'numeric()';
-
-                if(stripos($type,'unsigned') !== false){
-                    $rule .= '->positive()';
-                }//if
-
-                return $rule;
-
-            },
-            'double' => function($type){
-
-                $rule = 'numeric()';
-
-                if(stripos($type,'unsigned') !== false){
-                    $rule .= '->positive()';
-                }//if
-
-                return $rule;
-
-            },
-            'char' => function($type){
-                $rule = 'stringType()';
-                $length = \Disco\manage\Manager::getLengthBetweenParanthesis($type); 
-                if($length){
-                    $rule .= "->length(0,{$length})";
-                }//if
-
-                return $rule;
-
-            },
-            'datetime' => function($type){
-                return 'date()';
-            },
-            'date' => function($type){
-                return 'date()';
-            },
-            'time' => function($type){
-                return 'date()';
-            },
-            'year' => function($type){
-                $length = \Disco\manage\Manager::getLengthBetweenParanthesis($type); 
-                if(!$length){
-                    $length = 4;
-                }//if
-                return "stringType()->length({$length})";
-            },
-            'text' => function($type){
-                return 'alwaysValid()';
-            },
-            'blob' => function($type){
-                return 'alwaysValid()';
-            },
-            'binary' => function($type){
-                return 'alwaysValid()';
-            },
-            'varbinary' => function($type){
-                return 'alwaysValid()';
-            }
-
-        );
-
-
-        $fields = '';
-        $required = '';
+        $fields = Array();
         $autoIncrement = 'false';
 
         while($row = $result->fetch()){
 
-            $fields .= "
-                '{$row['Field']}',";
+            $rule = Array();
 
-            $rule = '';
+            $rule['null'] = ($row['Null'] == 'YES') ? true : false;
 
-            foreach($map as $type=>$closure){
-                if(stripos($row['Type'],$type) !== false){
-                    $rule = $closure($row['Type']);
-                    break;
-                }//if
-            }//foreach
+            $type = explode('(',$row['Type'])[0];
+            $type = explode(' ',$type)[0];
 
-            $orNull = '';
-            if($row['Null'] == 'YES' || stripos($row['Extra'],'auto_increment') !== false){
-                $orNull = ' || parent::nullType($v)';
-            } else {
-                $required .= "
-                    '{$row['Field']}',";
-            }//el
+            $rule['type'] = $type;
+
+            if(stripos($row['Type'],'unsigned') !== false){
+                $rule['unsigned'] = true;
+            }//if
+
+            $length = explode('(',$row['Type']);
+
+            if(isset($length[1])){
+                $length = explode(')',$length[1])[0];
+                if(stripos($length,',') === false){
+                    $rule['length'] = $length;
+                } else {
+                    $length = explode(',',$length);
+                    $rule['decimalLength'] = $length[1];
+                    $rule['wholeLength'] = $length[0] - $length[1];
+                }//el
+            }//if
 
             if(stripos($row['Extra'],'auto_increment') !== false){
                 $autoIncrement = "'{$row['Field']}'";
             }//if
 
-            $validators .= "
-                '{$row['Field']}' => \Respect\Validation\Validator::{$rule},
-            "; 
-
-            $rules .= "
-                case '{$row['Field']}' : 
-                    return self::\$validators['{$row['Field']}']->validate(\$v){$orNull} || parent::rawType(\$v);
-            "; 
+            $fields[$row['Field']] = $rule;
 
         }//while
 
-        $fields     = rtrim($fields,',');
-        $required   = rtrim($required,',');
-        $rules      = rtrim($rules,',');
+        $fields = var_export($fields,true);
 
         $rules = "
+
     /**
-    * @var Array \$validators The validation rules for the fields.
+     * @var null|string \$autoIncrementField The autoincrement field name.
     */
-    public static \$validators = null;
-
-
-    public static function autoIncrementField(){
-        return {$autoIncrement};
-    }//autoIncrementField
-
+    protected \$fieldDefinitions = {$fields};
 
     /**
-     * Get the fields of the record.
-     *
-     *
-     * @return array The fields.
-     */
-    public static function fieldNames(){
-        return Array(
-    {$fields}
-        );
-    }//fields
-
-
-
-    /**
-     * Get the fields of the record. (Wrapper for `self::fields()`).
-     *
-     *
-     * @return array The fields.
-     */
-    public function getFieldNames(){
-        return self::fieldNames();
-    }//getFields
-
-
-
-    /**
-     * Get the required fields of the record (cannot be NULL).
-     *
-     *
-     * @return array The fields.
-     */
-    public static function requiredFieldNames(){
-        return Array(
-    {$required}
-        );
-    }//requiredFields
-
-
-
-    /**
-     * Get the required fields of the record. (Wrapper for `self::requiredFields()`).
-     *
-     *
-     * @return array The fields.
-     */
-    public function getRequiredFieldNames(){
-        return self::requiredFieldNames();
-    }//getRequiredFields
-
-
-
-    /**
-    * Register the records validators into `self::\$validators`.
-    *
-    *
-    * @return void
+     * @var null|string \$autoIncrementField The autoincrement field name.
     */
-    public static function registerValidators(){
-        if(!self::\$validators){
-            self::\$validators = Array(
-    {$validators}
-            );
-        }//if
-    }//__registerValidators
+    protected \$autoIncrementField = {$autoIncrement};
 
 
-
-    /**
-    * Determine if a value is valid for a records particular field.
-    *
-    *
-    * @param string \$field The field of the record.
-    * @param string \$v The value to test against the field.
-    *
-    * @return boolean Did it validate?
-    */
-    public static function validate(\$field, \$v){
-        self::registerValidators();
-
-        if(is_numeric(\$v)){
-            if(stripos(\$v,'.') !== false){
-                \$v = (float)\$v;
-            } else {
-                \$v = (int)\$v;
-            }//el
-        }//if
-
-        switch(\$field){
-{$rules}
-                default:
-                    throw new \Disco\\exceptions\Record(\"Record validation exception, record does not have a field `{\$field}` to validate against\");
-        }//switch
-    }//validate
 ";
 
         return $rules;

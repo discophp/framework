@@ -259,35 +259,13 @@ class PDO extends \PDO {
         }//if
         else if(is_array($args)){
 
-            foreach($args as $k=>$a){
-                if(is_array($a) && isset($a['raw'])){
-                    $args[$k] = $a['raw'];
-                }//if
-                else {
-                    $args[$k] = $this->prepareType($a);
-                }//el
-            }//foreach
+            $first = array_shift(array_keys($args));
 
-
-            $positions = Array();
-            $p = -1;
-            while(($p = strpos($q,'?',$p + 1)) !== false){
-                $positions[] = $p;
-            }//while
-
-            if(count($args) != count($positions)){
-                throw new \Disco\exceptions\DBQuery('Number of passed arguements does not match the number of `?` placeholders');
+            if(!is_numeric($first)){
+                return $this->setAssocativeArrayPlaceHolders($q,$args);
             }//if
 
-
-            //reverse em so when we do replacements we dont have 
-            //to keep track of the change in length to positions
-            $args = array_reverse($args);
-            $positions = array_reverse($positions);
-
-            foreach($positions as $k=>$pos){
-                $q = substr_replace($q,$args[$k],$pos,1);
-            }//foreach
+            return $this->setQuestionMarkPlaceHolders($q,$args);
 
         }//if
         else {
@@ -298,6 +276,102 @@ class PDO extends \PDO {
 
     }//set
 
+
+
+    /**
+     * Set assocative array place holders in the query like `:id:` with the corresponding value in the args.
+     *
+     *
+     * @param string        $q      The query string.
+     * @param string|array  $args   The variables to bind to the $q.
+     *
+     * @return string               The $q with $args bound into it.
+    */
+    private function setAssocativeArrayPlaceHolders($q,$args){
+
+        foreach($args as $key => $value){
+
+            if(is_array($value) && isset($value['raw'])){
+                $value = $value['raw'];
+            }//if
+            else {
+                $value = $this->prepareType($value);
+            }//el
+
+            $positions = Array();
+            $p = -1;
+            $offset = 1;
+            $keyPlaceHolder = ":{$key}:";
+            $keyLength = strlen($keyPlaceHolder);
+
+            while(($p = strpos($q,$keyPlaceHolder,$p + $offset)) !== false){
+                $positions[] = $p;
+                $offset = $keyLength;
+            }//while
+
+            //reverse the positions so we dont have to keep track in the changes in str length affected by replacing 
+            //the placeholders
+            $positions = array_reverse($positions);
+
+            foreach($positions as $p){
+                $q = substr_replace($q,$value,$p,$keyLength);
+            }//foreach
+
+        }//foreach
+
+        return $q;
+
+    }//setAssocativeArrayPlaceHolders
+
+
+
+    /**
+     * Set `?` mark value placeholders with the values passed in args in the order they are set in the query and 
+     * the args.
+     *
+     * @param string        $q      The query string.
+     * @param string|array  $args   The variables to bind to the $q.
+     *
+     * @return string               The $q with $args bound into it.
+     *
+     * @throws \Disco\exceptions\DBQuery When the number of arguements doesn't match the numebr of `?` 
+     * placeholders.
+    */
+    private function setQuestionMarkPlaceHolders($q,$args){
+
+        foreach($args as $k=>$a){
+            if(is_array($a) && isset($a['raw'])){
+                $args[$k] = $a['raw'];
+            }//if
+            else {
+                $args[$k] = $this->prepareType($a);
+            }//el
+        }//foreach
+
+
+        $positions = Array();
+        $p = -1;
+        while(($p = strpos($q,'?',$p + 1)) !== false){
+            $positions[] = $p;
+        }//while
+
+        if(count($args) != count($positions)){
+            throw new \Disco\exceptions\DBQuery('Number of passed arguements does not match the number of `?` placeholders');
+        }//if
+
+
+        //reverse em so when we do replacements we dont have 
+        //to keep track of the change in length to positions
+        $args = array_reverse($args);
+        $positions = array_reverse($positions);
+
+        foreach($positions as $k=>$pos){
+            $q = substr_replace($q,$args[$k],$pos,1);
+        }//foreach
+
+        return $q;
+       
+    }//setQuestionMarkPlaceHolders
 
 
     /**

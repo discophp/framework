@@ -40,13 +40,13 @@ class Router {
     /**
      * @var string URI path to match.
     */
-    public $param;
+    public $uri;
 
 
     /**
      * @var \Closure|string Action to take if matched.
     */
-    public $function;
+    public $action;
 
 
     /**
@@ -80,9 +80,15 @@ class Router {
 
 
     /**
-     * @var null|string|\Closure Send a filtered route to Router file, or Closure.
+     * @var null|string|array|\Closure Send a filtered route to Router file,an array of routes, or Closure.
     */
     private $useRouter=null;
+
+
+    /**
+     * @var null|array Children of a route.
+    */
+    private $children=null;
 
 
     /**
@@ -108,9 +114,9 @@ class Router {
     */
     public static function factory(){
 
-        self::processAvailableRoutes();
-        $r = new self::$base;
-        self::$routers[] = $r;
+        static::processAvailableRoutes();
+        $r = new static::$base;
+        static::$routers[] = &$r;
         return $r;
 
     }//factory
@@ -121,9 +127,8 @@ class Router {
      * Process the last created router in the stack.
     */
     public static function processLastCreatedRoute(){
-        if(isset(self::$routers[self::$numberOfProcessedRoutes])){
-            self::$numberOfProcessedRoutes++;
-            self::$routers[self::$numberOfProcessedRoutes-1]->process();
+        if(isset(static::$routers[static::$numberOfProcessedRoutes])){
+            static::$routers[static::$numberOfProcessedRoutes]->process();
         }//if
     }//processLastCreatedRoute
 
@@ -133,8 +138,8 @@ class Router {
      * Process all routers in the stack that haven't been processed yet.
     */
     public static function processAvailableRoutes(){
-        while(!self::routeMatch() && self::$numberOfProcessedRoutes < count(self::$routers)){
-            self::processLastCreatedRoute();
+        while(!static::routeMatch() && static::$numberOfProcessedRoutes < count(static::$routers)){
+            static::processLastCreatedRoute();
         }//while
     }//processAvailableRoutes
 
@@ -154,7 +159,9 @@ class Router {
     */
     public function process(){
 
-        if(!$this->param){ 
+        static::$numberOfProcessedRoutes++;
+
+        if(!$this->uri){ 
             return;
         }//if
 
@@ -162,23 +169,57 @@ class Router {
             return;
         }//if
 
-        //no route match and this Router is a Filter and its Filter matches?
-        if(!self::routeMatch() && $this->isFilter && $this->filterMatch($this->param,$this->auth)){
+        //no route match yet?
+        if(!static::routeMatch()){ 
 
-            if($this->useRouter instanceof \Closure){
-                call_user_func_array($this->useRouter,Array($this->filterBase,$this->filteredOn));
+            //this Router is a Filter?
+            if($this->isFilter){
+
+                //Filter matches?
+                if($this->filterMatch($this->uri,$this->auth)){
+
+                    if($this->useRouter instanceof \Closure){
+                        call_user_func_array($this->useRouter,Array($this->filterBase,$this->filteredOn));
+                    }//if
+                    else {
+                        static::useRouter($this->useRouter);
+                    }//el
+
+                    //process the Routers that became available from calling the filter
+                    static::processAvailableRoutes();
+
+                }//if
+
             }//if
             else {
-                self::useRouter($this->useRouter);
+
+                $this->variables = $this->match($this->uri,$this->variableRestrictions,$this->auth,$this->allowURLParameters);
+
+                if($this->variables){
+                    static::executeRoute($this->action,$this->variables);
+                }//if
+                else if($this->children){
+
+                    $children = Array();
+
+                    foreach($this->children as $uri => $route){
+                        if(count($this->variableRestrictions)){
+                            if(!array_key_exists('where',$route)){
+                                $route['where'] = $this->variableRestrictions;
+                            }//if
+                            else {
+                                $route['where'] = array_merge($route['where'],$this->variableRestrictions);
+                            }//el
+                        }//if
+                        $children[$this->uri . $uri] = $route;
+                    }//foreach
+
+                    static::processRouterArray($children);
+
+                }//elif
+
             }//el
 
-            //process the Routers that became available from calling the filter
-            self::processAvailableRoutes();
-
-        }//if
-        //have no match already and this matches?
-        else if(!self::routeMatch() && ($this->variables = $this->match($this->param,$this->variableRestrictions,$this->auth,$this->allowURLParameters))){
-            self::executeRoute($this->function,$this->variables);
         }//if
 
     }//process
@@ -189,13 +230,13 @@ class Router {
      * Allow URL parameters/variables to be present in the URL of the route.
      *
      *
-     * @param array $params The paramaters that are allowed to be present.
+     * @param array $uris The paramaters that are allowed to be present.
      *
      * @return self
     */
     public function allowURLParameters($params = Array()){
         if(is_string($params)){
-            $params = Array($params);
+            $uris = Array($params);
         }//if
         $this->allowURLParameters = $params;
         return $this;
@@ -239,8 +280,8 @@ class Router {
      * @return self 
     */
     private function whiteOutRoute(){
-        $this->function=null;
-        $this->param=null;
+        $this->action=null;
+        $this->uri=null;
         return $this;
     }//whiteOutRoute
 
@@ -250,12 +291,13 @@ class Router {
      * Filter a url route using {*} notation.
      *
      *
-     * @param  string  $param the URI filter
+     * @param  string  $uri the URI filter
      * @return self 
     */
-    public function filter($param){
+    public function filter($uri,$action = null){
         $this->isFilter=true;
-        $this->param = $param;
+        $this->useRouter = $action;
+        $this->uri = $uri;
         return $this;
     }//filter
 
@@ -266,7 +308,7 @@ class Router {
      * there needs to be either a Router File or a Closure passed to handle the filtering.
      *
      *
-     * @param  string|\Closure $r     A string representing a Router File, or a Closure
+     * @param  string|array|\Closure $r     A string representing a Router File, an array of routes, or a Closure.
      *
      * @return self 
     */
@@ -281,18 +323,18 @@ class Router {
      * Match a GET URI route.
      *
      *
-     * @param  string           $param    The URI to match.
-     * @param  string|\Closure  $function The action to take if there is a match.
+     * @param  string           $uri    The URI to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
      *
      * @return self 
      */
-    public function get($param,$function){
+    public function get($uri,$action){
         if($_SERVER['REQUEST_METHOD']!='GET'){
             return $this->whiteOutRoute();
         }//if
 
-        $this->function=$function;
-        $this->param=$param;
+        $this->action=$action;
+        $this->uri=$uri;
         return $this;
     }//get
 
@@ -302,14 +344,14 @@ class Router {
      * Match any URI route.
      *
      *
-     * @param  string           $param    The URI to match.
-     * @param  string|\Closure  $function The action to take if there is a match.
+     * @param  string           $uri    The URI to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
      *
      * @return self 
      */
-    public function any($param,$function){
-        $this->param=$param;
-        $this->function=$function;
+    public function any($uri,$action){
+        $this->uri=$uri;
+        $this->action=$action;
         return $this;
     }//any
 
@@ -319,18 +361,18 @@ class Router {
      * Match a POST URI route.
      *
      *
-     * @param  string           $param    The URI to match.
-     * @param  string|\Closure  $function The action to take if there is a match.
+     * @param  string           $uri    The URI to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
      *
      * @return self 
      */
-    public function post($param,$function){
+    public function post($uri,$action){
         if($_SERVER['REQUEST_METHOD']!='POST'){
             return $this->whiteOutRoute();
         }//if
 
-        $this->param=$param;
-        $this->function=$function;
+        $this->uri=$uri;
+        $this->action=$action;
         return $this;
     }//post
 
@@ -340,18 +382,18 @@ class Router {
      * Match a PUT URI route.
      *
      *
-     * @param  string           $param    The URI to match.
-     * @param  string|\Closure  $function The action to take if there is a match.
+     * @param  string           $uri    The URI to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
      *
      * @return self 
      */
-    public function put($param,$function){
+    public function put($uri,$action){
         if($_SERVER['REQUEST_METHOD']!='PUT'){
             return $this->whiteOutRoute();
         }//if
 
-        $this->param=$param;
-        $this->function=$function;
+        $this->uri=$uri;
+        $this->action=$action;
         return $this;
     }//put
 
@@ -361,20 +403,44 @@ class Router {
      * Match a DELETE URI route
      *
      *
-     * @param  string           $param    The url to match.
-     * @param  string|\Closure  $function The action to take if there is a match.
+     * @param  string           $uri    The url to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
      *
      * @return self 
      */
-    public function delete($param,$function){
+    public function delete($uri,$action){
         if($_SERVER['REQUEST_METHOD']!='DELETE'){
             return $this->whiteOutRoute();
         }//if
 
-        $this->param=$param;
-        $this->function=$function;
+        $this->uri=$uri;
+        $this->action=$action;
         return $this;
-    }//put
+    }//delete
+
+
+
+    /**
+     * Match a URI to multiple actions based on the request type.
+     *
+     *
+     * @param  string $uri The url to match.
+     * @param  array $actions The possible actions for the match based on the current request type. For example if 
+     * the request is a GET the actions array should contain a key `get` that points to a string (controller) or 
+     * a Closure function..
+     *
+     * @return self 
+     */
+    public function multi($uri,$actions){
+        $key = strtolower($_SERVER['REQUEST_METHOD']);
+        if(!array_key_exists($key,$actions)){
+            return $this->whiteOutRoute();
+        }//if
+
+        $this->uri=$uri;
+        $this->action=$actions[$key];
+        return $this;
+    }//multi
 
 
 
@@ -399,17 +465,33 @@ class Router {
 
 
     /**
-     * Match a URI route against the $param.
+     * Routes that are children to the parent. The keys of the array (the URIs) are relative to the parent URI and 
+     * will automatically have the parent URI prepended to them.
      *
      *
-     * @param  string  $param The URI to match the route against.  
+     * @param array $children The child routes (take the same form as children passed to `self::processRouterArray`).
+     *
+     * @return self;
+    */
+    public function children($children){
+        $this->children = $children;
+        return $this;
+    }//children
+
+
+
+    /**
+     * Match a URI route against the $uri.
+     *
+     *
+     * @param  string  $uri The URI to match the route against.  
      * @param array $restrict The variables that must exist in the URI.
      * @param null|string|array The authentication for the route.
      * @param null|array The GET URI paramaters allowed.
      *
-     * @return boolean Was this $param a match to the REQUEST_URI?
+     * @return boolean Was this $uri a match to the REQUEST_URI?
      */
-    public static function match($param,$restrict,$auth,$allowParams){
+    public static function match($uri,$restrict,$auth,$allowParams){
 
         $url = $_SERVER['REQUEST_URI'];
 
@@ -419,17 +501,22 @@ class Router {
         else if($allowParams !== false && $_SERVER['QUERY_STRING']){
             $url = explode('?' . $_SERVER['QUERY_STRING'],$url)[0]; 
             if(is_array($allowParams) && count($allowParams)){
-                parse_str($_SERVER['QUERY_STRING'],$params);
-                if(count(array_diff_key($params,array_flip($allowParams)))){
+                parse_str($_SERVER['QUERY_STRING'],$uris);
+                if(count(array_diff_key($uris,array_flip($allowParams)))){
                     return false;
                 }//if
             }//if
         }//if
 
         //direct match?
-        if($param==$url){
-            if(!self::authenticated($auth)) return false;
+        if($uri==$url){
+
+            if(!static::authenticated($auth)){ 
+                return false;
+            }//if
+
             return true;
+
         }//if
 
 
@@ -438,25 +525,28 @@ class Router {
             return false;
         }//elif
 
-        $paramPieces = explode('/',$param);
+        $uriPieces = explode('/',$uri);
         $urlPieces = explode('/',$url);
 
         //if the url and the param are not the same depth, no match
-        if(count($paramPieces) != count($urlPieces)){
+        if(count($uriPieces) != count($urlPieces)){
             return false;
         }//if
 
-        if(!self::authenticated($auth)) return false;
+        //if there is authentication and it doesn't pass, no match
+        if(!static::authenticated($auth)){
+            return false;
+        }//if
 
         $return = Array();
         foreach($urlPieces as $k=>$urlPiece){
-            $paramPiece = $paramPieces[$k];
+            $uriPiece = $uriPieces[$k];
 
             //not a variable place holder?
-            if(substr($paramPiece,0,1)!='{'){
+            if(substr($uriPiece,0,1)!='{'){
 
                 //pieces do not match?
-                if($paramPiece!=$urlPiece){
+                if($uriPiece!=$urlPiece){
                     return false;
                 }//if
 
@@ -464,16 +554,15 @@ class Router {
             else {
 
                 //get the variable
-                $paramKey = trim($paramPiece,'{}'); 
-
+                $uriKey = trim($uriPiece,'{}'); 
 
                 //the variable isn't part of the restrictions on this route?
-                if(!isset($restrict[$paramKey])){
+                if(!array_key_exists($uriKey,$restrict)){
                     return false;
                 }//if
 
                 //condition to match variable with url piece
-                $condition = $restrict[$paramKey];
+                $condition = $restrict[$uriKey];
 
                 //is the condition using one of the default reserved words?
                 if(\App::getCondition($condition)){
@@ -487,7 +576,7 @@ class Router {
                 }//if
 
                 //store the variable to pass into the Closure or Controller
-                $return[$paramKey]=$urlPiece;
+                $return[$uriKey]=$urlPiece;
 
             }//el
 
@@ -500,34 +589,34 @@ class Router {
 
 
     /**
-     * Filter a URI route against the $param.
+     * Filter a URI route against the $uri.
      *
      *
-     * @param  string  $param The URI to filter. 
+     * @param  string  $uri The URI to filter. 
      * @param null|string|array The authentication on the route.
      *
      * @return boolean
      */
-    private function filterMatch($param,$auth){
+    private function filterMatch($uri,$auth){
 
         $url = $_SERVER['REQUEST_URI'];
 
         //where to being filtering
-        $i = stripos($param,'{*}');
+        $i = stripos($uri,'{*}');
 
         //if no filter or the url couldn't match the filter due to size
         if($i===false || $i>strlen($url)){
             return false;
         }//if
 
-        $filter = substr($param,0,$i);
+        $filter = substr($uri,0,$i);
 
         //filter route does not match url?
         if($filter  != substr($url,0,$i)){
             return false;
         }//if
 
-        if(!self::authenticated($auth)) return false;
+        if(!static::authenticated($auth)) return false;
 
         $this->filterBase = $filter;
         $this->filteredOn = substr($url,$i,strlen($url));
@@ -543,34 +632,35 @@ class Router {
      * from the URI appropriatly.
      *
      *
-     * @param \Closure|string $function The action to be taken.
+     * @param \Closure|string $action The action to be taken.
      * @param Array $variables The variables to be passed to the action.
      *
      *
      * @return bool 
     */
-    public static function executeRoute($function,$variables=Array()){
+    public static function executeRoute($action,$variables=Array()){
 
-        if(!$function instanceof \Closure){
+        if(!$action instanceof \Closure){
 
             //is a controller being requested?
-            if(stripos($function,'@')!==false){
-                $ctrl = explode('@',$function);
+            if(stripos($action,'@')!==false){
+                $ctrl = explode('@',$action);
                 $res = \App::handle($ctrl[0],$ctrl[1],$variables);
             }//if
         }//if
         else if(is_array($variables)){
-            $res = call_user_func_array($function,$variables);
+            $res = call_user_func_array($action,$variables);
         }//el
         else {
-            $res = call_user_func($function);
+            $res = $action();
         }//el
 
+
         if($res === false){
-            self::routeMatch(false);
+            static::routeMatch(false);
         }//if
         else {
-            self::routeMatch(true);
+            static::routeMatch(true);
         }//el
 
         return $res;
@@ -614,22 +704,24 @@ class Router {
      */
     public static function routeMatch($m=null){
 
+
         if($m !== null){
 
-            if($m == true){
+
+            if(static::$routeMatch === false && $m === true){
                 \App::make('Router','\Disco\classes\MockBox');
             }//if
-            else if(self::$routeMatch==true && $m==false){
-                \App::as_factory('Router',function(){
+            else if(static::$routeMatch === true && $m === false){
+                \App::makeFactory('Router',function(){
                     return \Disco\classes\Router::factory();
                 });
             }//el
 
-            self::$routeMatch=$m;
+            static::$routeMatch = $m;
 
         }//if
 
-        return self::$routeMatch;
+        return static::$routeMatch;
 
     }//routerMatch
 
@@ -639,27 +731,44 @@ class Router {
     * Load a Router File for processing.
     *
     *
-    * @param string $router
+    * @param string|array $router Path to a router file that contains Router definitions, or returns an array of 
+    * routes. Or an array of routes to process.
+    *
     * @return void
     */
     public static function useRouter($routerPath){
 
-        if(self::$routeMatch){
+        if(static::routeMatch()){
             return;
         }//if
 
-        if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
-            require $path;
+        if(is_array($routerPath)){
+            static::processRouterArray($routerPath);
             return;
+        }//if
+
+        $router = null;
+
+        if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
+            $router = require $path;
         } else {
 
             $routerPath = \App::path() . "/app/router/{$routerPath}.router.php";
             if(file_exists($routerPath)){
-                require $routerPath;
-                return;
+                $router = require $routerPath;
             }//if
 
         }//el
+
+        if($router){
+
+            if(is_array($router)){
+                static::processRouterArray($router);
+            }//if
+
+            return;
+
+        }//if
 
         $message = "Router {$routerPath}.router.php not found";
 
@@ -668,6 +777,73 @@ class Router {
 
     }//useRouter
 
+
+
+    /**
+     * Process an array of routes.
+     *
+     * A standard route is defined like so:
+     *
+     * ```
+     * Array(
+     *  '/uri/path/{var}' => Array(
+     *      'type' (required) => string ('get','post','put','delete','multi','filter'),
+     *      'action' (required) => string|\Closure|array,
+     *      'where' (optional) => array,
+     *      'auth' (optional) => Array(
+     *          'session' (required) => string,
+     *          'redirect' (optional) => string
+     *      ),
+     *      'secure' (optional) => boolean,
+     *  )
+     * )
+     * ```
+     *
+     * @param array $routes The array of routes to process.
+     *
+     * @return void
+     */
+    public static function processRouterArray($routes){
+
+        if(static::routeMatch()){
+            return;
+        }//if
+
+        foreach($routes as $uri => $props){
+
+            $router = static::factory();
+
+            $router->{$props['type']}($uri,$props['action']);
+
+            if(array_key_exists('children',$props)){
+                $router->children($props['children']);
+            }//if
+
+            if(array_key_exists('where',$props)){
+                $router->where($props['where']);
+            }//if
+
+            if(array_key_exists('auth',$props)){
+                $redirect = null;
+                if(array_key_exists('redirect',$props['auth'])){
+                    $redirect = $props['auth']['redirect'];
+                }//if
+                $router->auth($props['auth']['session'],$redirect);
+            }//if
+
+            if(array_key_exists('secure',$props)){
+                $router->secure();
+            }//if
+
+            static::processLastCreatedRoute();
+
+            if(static::routeMatch()){
+                break;
+            }//if
+
+        }//foreach
+
+    }//processRouterArray
 
 
 }//Router

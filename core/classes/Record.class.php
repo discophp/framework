@@ -20,9 +20,47 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
+     * @var int VALIDATION_STRICT Field types must be supplied in a way that would not cause loss of data when 
+     * being inserted.
+    */
+    const VALIDATION_STRICT = 2;
+
+
+    /**
+     * @var int VALIDATION_EMIT Error will be emiited if inserting will cause data loss.
+    */
+    const VALIDATION_EMIT = 1;
+
+
+    /**
+     * @var int VALIDATION_LOOSE Columns must only adhere to base type with no regard for whether inserting would 
+     * cause data loss.
+    */
+    const VALIDATION_LOOSE = 0;
+
+
+    /**
+     * @var int $validationLevel The level of validation to apply to columns when perfomring data manipulation.
+    */
+    private static $validationLevel = 0;
+
+
+    /**
      * @var string $model The model that owns the record.
     */
     protected $model;
+
+
+    /**
+     * @var array $fieldDefintions The fields defintions for the record.
+    */
+    protected $fieldDefinitions = Array();
+
+
+    /**
+     * @var boolean|string $autoIncrementField The autoincrement field name.
+    */
+    protected $autoIncrementField = false;
 
 
     /**
@@ -53,12 +91,73 @@ abstract class Record implements \ArrayAccess {
     private $allowKeyUpdates = false;
 
 
-    /**
-     * @var \Respect\Validation\Validator $nullTypeValidator An instance of a nullType validator.
-    */
-    private static $nullTypeValidator;
+    private static $numericalRanges = Array(
+        'tinyint' => Array(
+            'signed' => Array(
+                'min' => -128,
+                'max' => 127,
+            ),
+            'unsigned' => Array(
+                'min' => 0,
+                'max' => 255,
+            ),
+        ),
+        'smallint' => Array(
+            'signed' => Array(
+                'min' => -32768,
+                'max' => 32767,
+            ),
+            'unsigned' => Array(
+                'min' => 0,
+                'max' => 65535,
+            ),
+        ),
+        'mediumint' => Array(
+            'signed' => Array(
+                'min' => -8388608,
+                'max' => 8388607,
+            ),
+            'unsigned' => Array(
+                'min' => 0,
+                'max' => 16777215,
+            ),
+        ),
+        'int' => Array(
+            'signed' => Array(
+                'min' => -2147483648,
+                'max' => 2147483647,
+            ),
+            'unsigned' => Array(
+                'min' => 0,
+                'max' => 4294967295,
+            ),
+        ),
+        'bigint' => Array(
+            'signed' => Array(
+                'min' => -9223372036854775808,
+                'max' => 9223372036854775807,
+            ),
+            'unsigned' => Array(
+                'min' => 0,
+                'max' => 18446744073709551615,
+            ),
+        ),
+        'tinytext'      => 255,
+        'text'          => 65535,
+        'mediumtext'    => 16777215,
+        'longtext'      => 4294967295,
+        'tinyblob'      => 255,
+        'blob'          => 65535,
+        'mediumblob'    => 16777215,
+        'longblob'      => 4294967295,
+
+    );
 
 
+    private $regexHelpers = Array(
+        'date' => '\d{4}-\d{2}-\d{2}',
+        'time' => '\d{2}:\d{2}:\d{2}',
+    );
 
     /**
      * Set the intital fields of the record. Performs an array intersection to only take fields that exist on the 
@@ -89,6 +188,26 @@ abstract class Record implements \ArrayAccess {
         }//if
 
     }//__construct
+
+
+
+    /**
+     * Set the level of validation applied to record columns, based on one of the class constants:
+     * - VALIDATION_LOOSE
+     * - VALIDATION_EMIT
+     * - VALIDATION_STRICT
+     *
+     * @param int $lvl The validation level.
+    */
+    public static function setValidationLevel($lvl){
+        if($lvl === self::VALIDATION_LOOSE){
+            self::$validationLevel = self::VALIDATION_LOOSE;
+        } else if($lvl === self::VALIDATION_EMIT){
+            self::$validationLevel = self::VALIDATION_EMIT;
+        } else if($lvl === self::VALIDATION_STRICT){
+            self::$validationLevel = self::VALIDATION_STRICT;
+        }//elif
+    }//setValidationLevel
 
 
 
@@ -226,6 +345,7 @@ abstract class Record implements \ArrayAccess {
      * @return boolean
      *
      * @throws \Disco\exceptions\RecordId When primary keys are null.
+     * @throws \Disco\exceptions\RecordValidation When a field fails validation.
     */
     public function update($using_only_auto_increment_key = false){
 
@@ -299,9 +419,15 @@ abstract class Record implements \ArrayAccess {
      *
      * @return int
      *
-     * @throws \Disco\exceptions\Record When required fields are null.
+     * @throws \Disco\exceptions\RecordValidation When a field fails validation or is required and missing.
     */
     public function insert(){
+
+        $ai = $this->autoIncrementField();
+
+        if($ai && array_key_exists($ai,$this->fields) && $this->fields[$ai] === null){
+            unset($this->fields[$ai]);
+        }//if
 
         $this->validateFields();
 
@@ -309,14 +435,12 @@ abstract class Record implements \ArrayAccess {
         if(count($missing)){
             $missing = implode(', ',$missing);
             $class = get_called_class();
-            throw new \Disco\exceptions\Record("Record `{$class}` insert error: fields `{$missing}` cannot be null");
+            throw new \Disco\exceptions\RecordValidation("Record `{$class}` insert error: fields `{$missing}` cannot be null");
         }//if
 
         $id = \App::with($this->model)->insert($this->fields);
 
         if($id){
-
-            $ai = $this->autoIncrementField();
 
             if($ai){
                 $this->fields[$ai] = $id;
@@ -503,6 +627,8 @@ abstract class Record implements \ArrayAccess {
      *
      *
      * @return array The primary keys.
+     *
+     * @throws \Disco\exceptions\RecordId When any of the primary keys are null.
     */
     public function primaryKeysWithValidation(){
 
@@ -667,42 +793,6 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * Check to see if a value is null.
-     *
-     *
-     * @param mixed $v The value.
-     *
-     * @return boolean
-    */
-    public static function nullType($v){
-
-        if(!self::$nullTypeValidator){
-            self::$nullTypeValidator = \Respect\Validation\Validator::nullType();
-        }//if
-
-        return self::$nullTypeValidator->validate($v);
-
-    }//nullType
-
-
-
-    /**
-     * Check to see if a value is a raw query array.
-     *
-     * ex: `Array('raw' => 'NOW()')`.
-     *
-     *
-     * @param mixed $v The value.
-     *
-     * @return boolean
-    */
-    public static function rawType($v){
-        return is_array($v) && count($v) == 1 && isset($v['raw']);
-    }//rawType
-
-
-
-    /**
      * Find the first record that matches the where condition.
      *
      *
@@ -741,6 +831,289 @@ abstract class Record implements \ArrayAccess {
         return new $class($result->fetch());
 
     }//find
+
+
+
+    /**
+    * Determine if a value is valid for a records particular field.
+    *
+    *
+    * @param string \$field The field of the record.
+    * @param string \$v The value to test against the field.
+    *
+    * @return boolean Did it validate?
+    */
+    public function validate($field, $v){
+
+        if(!array_key_exists($field,$this->fieldDefinitions)){
+            throw new \Disco\exceptions\Record("Record validation exception, record does not have a field `{$field}` to validate against");
+        }//if
+
+        $definition = $this->fieldDefinitions[$field];
+
+        if($v === null){
+            if(!$definition['null']){
+                return false;
+            }//if
+            return true;
+        }//if
+
+        //raw type?
+        if(is_array($v) && count($v) == 1 && isset($v['raw'])){
+            return true;
+        }//if
+
+        if(stripos($definition['type'],'int') !== false){
+
+            if(!is_numeric($v)){
+                return false;
+            }//if
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                if(array_key_exists('unsigned',$definition) && $definition['unsigned'] === true){
+                    $min = self::$numericalRanges[$definition['type']]['unsigned']['min'];
+                    $max = self::$numericalRanges[$definition['type']]['unsigned']['max'];
+                } else {
+                    $min = self::$numericalRanges[$definition['type']]['signed']['min'];
+                    $max = self::$numericalRanges[$definition['type']]['signed']['max'];
+                }//el
+
+                if($v < $min || $v > $max){
+
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']}) with value `{$v}` should be between `{$min}` and `{$max}`, data will be truncated upon insert/update to conform");
+                    }//el
+
+                }//if
+
+            }//if
+
+            return true;
+
+        }//if
+        else if($definition['type'] === 'float' || $definition['type'] === 'double'){
+
+            if(!is_numeric($v)){
+                return false;
+            }//if
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                //unsigned must be positive!
+                if(array_key_exists('unsigned',$definition) && $definition['unsigned'] === true && $v > 0){
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']} unsigned) with value `{$v}` should be a positive number, data will be truncated upon insert/update to conform");
+                    }//el
+                }//if
+
+            }//if
+
+            return true;
+           
+        }//elif
+        else if($definition['type'] === 'decimal'){
+
+            if(!is_numeric($v)){
+                return false;
+            }//if
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                $max = str_repeat('9',$definition['wholeLength']) . '.' . str_repeat('9',$definition['decimalLength']);
+                $min = '-' . $max;
+
+                if(array_key_exists('unsigned',$definition) && $definition['unsigned'] === true){
+                    $min = 0;
+                }//if
+
+                if($v < $min || $v > $max){
+
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']}) with value `{$v}` should be between `{$min}` and `{$max}`, data will be truncated upon insert/update to conform");
+                    }//el
+
+                }//if
+
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'varchar' || $definition['type'] === 'char'){
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                if(strlen($v) > $definition['length']){
+
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']}) value should not be longer than `{$definition['length']}`, data will be truncated upon insert/update to conform");
+                    }//el
+
+                }//if
+
+            }//if
+
+            return true;
+
+        }//if
+        else if(stripos($definition['type'],'text') !== false || stripos($definition['type'],'blob') !== false){
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                $max = self::$numericalRanges[$definition['type']];
+
+                if(strlen($v) > $max){
+
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']}) value should not be longer than {$max} bytes, data will be truncated upon insert/update to conform");
+                    }//el
+
+                }//if
+
+            }//if
+
+            return true;
+
+        }//elif
+        else if(stripos($definition['type'],'binary') !== false){
+
+            if(self::$validationLevel !== self::VALIDATION_LOOSE){
+
+                if(strlen($v) > $definition['length']){
+
+                    if(self::$validationLevel === self::VALIDATION_STRICT){
+                        return false;
+                    } else {
+                        \App::log("Record VALIDATION_EMIT message : field `{$field}` ({$definition['type']}) value should not be longer than {$definition['length']} bytes, data will be truncated upon insert/update to conform");
+                    }//el
+
+                }//if
+
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'datetime'){
+
+            if($v instanceof \DateTime){
+                $v = $v->format('Y-m-d H:i:s');
+            }//if
+
+            if(!preg_match('/^' . $this->regexHelpers['date'] . ' ' . $this->regexHelpers['time'] . '$/',$v)){
+                return false;
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'date'){
+
+            if($v instanceof \DateTime){
+                $v = $v->format('Y-m-d');
+            }//if
+
+            if(!preg_match('/^' . $this->regexHelpers['date'] . '$/',$v)){
+                return false;
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'time'){
+
+            if($v instanceof \DateTime){
+                $v = $v->format('H:i:s');
+            }//if
+
+            if(!preg_match('/^' . $this->regexHelpers['time'] . '$/',$v)){
+                return false;
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'year'){
+
+            if($v instanceof \DateTime){
+                $v = $v->format('Y');
+            }//if
+
+            if(!is_numeric($v) || strlen($v) !== 4){
+                return false;
+            }//if
+
+            return true;
+
+        }//elif
+        else if($definition['type'] === 'timestamp'){
+
+            if($v instanceof \DateTime){
+                $v = $v->getTimestamp();
+            }//if
+
+            if(!is_numeric($v)){
+                return false;
+            }//if
+
+            return true;
+
+        }//elif
+
+
+        return true;
+
+    }//validate
+
+
+
+    /**
+     * Get the name of the autoincrement field.
+    */
+    public function autoIncrementField(){
+        return $this->autoIncrementField;
+    }//autoIncrementField
+
+
+
+    /**
+     * Get the fields of the record.
+     *
+     *
+     * @return array The fields.
+     */
+    public function getFieldNames(){
+        return array_keys($this->fieldDefinitions);
+    }//getFields
+
+
+
+    /**
+     * Get the required fields of the record (cannot be null) with the exception of the autoincrement field.
+     *
+     *
+     * @return array The fields.
+     */
+    public function getRequiredFieldNames(){
+        $required = Array();
+        foreach($this->fieldDefinitions as $field => $definition){
+            if(!$definition['null'] && $this->autoIncrementField() != $field){
+                $required[] = $field;
+            }//if
+        }//foreach
+        return $required;
+    }//getRequiredFieldNames
 
 
 

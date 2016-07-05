@@ -22,6 +22,16 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
         $result = $this->Person->select('name')->data();
         $this->assertEquals(6,$result->rowCount());
 
+        $row = $this->Person->select('name')->where('person_id=:id:',Array('id' => 1))->first();
+        $this->assertEquals('Person One',$row['name']);
+
+        $row = $this->Person->select('name')->where('person_id=?',Array(2))->first();
+        $this->assertEquals('Person Two',$row['name']);
+
+        $row = $this->Person->select('name')->where('person_id=?',3)->first();
+        $this->assertEquals('Person Three',$row['name']);
+
+
     }//testSelect
 
 

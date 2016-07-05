@@ -10,10 +10,25 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
         Router::get('/test',function() use(&$t) {
             $t = true;
+        })->process();
+
+        $this->assertTrue($t);
+        $this->assertTrue(Router::routeMatch());
+
+        Router::routeMatch(false);
+        $this->assertFalse(Router::routeMatch());
+
+        $t = false;
+
+        $_SERVER['REQUEST_URI'] = '/bobby';
+
+        Router::get('/bobby',function() use(&$t) {
+            $t = true;
             return false;
         })->process();
 
         $this->assertTrue($t);
+        $this->assertFalse(Router::routeMatch());
 
     }//testGet
 
@@ -47,7 +62,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
         $this->assertTrue($t);
 
-    }//testPost
+    }//testPut
 
 
     public function testDelete(){
@@ -63,7 +78,40 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
         $this->assertTrue($t);
 
-    }//testPost
+    }//testDelete
+
+
+    public function testMulti(){
+
+        $_SERVER['REQUEST_URI'] = '/test';
+
+        $methods = Array('GET','PUT','DELETE','POST');
+        $t = false;
+
+        $action = function() use(&$t){
+            $t = true;
+            return false;
+        };//action
+
+        foreach($methods as $method){
+
+            $_SERVER['REQUEST_METHOD'] = $method;
+
+            $t = false;
+
+            Router::multi('/test',Array(
+                'get'   => $action,
+                'post'  => $action,
+                'put'   => $action,
+                'delete'=> $action,
+            ))->process();
+
+            $this->assertTrue($t);
+
+        }//foreach
+
+
+    }//testMulti
 
 
     public function testWithVars(){
@@ -80,13 +128,13 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($t);
 
 
-        $_SERVER['REQUEST_URI'] = '/test/random/test/509';
+        $_SERVER['REQUEST_URI'] = '/test/random/test/509/true';
         $t = false;
 
-        Router::get('/test/{str}/test/{int}',function($str,$int) use(&$t) {
-            $t = ($str=='random') && ($int==509);
+        Router::get('/test/{str}/test/{int}/{boolean}',function($str,$int,$boolean) use(&$t) {
+            $t = ($str=='random') && ($int==509) && ($boolean=='true');
             return false;
-        })->where(Array('str'=>'alpha','int'=>'integer'))->process();
+        })->where(Array('str'=>'alpha','int'=>'integer','boolean'=>'boolean'))->process();
 
         $this->assertTrue($t);
 
@@ -115,7 +163,7 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
         $this->assertEquals('random',$output);
 
-    }//testGet
+    }//testController
 
 
     public function testFilter(){
@@ -127,6 +175,140 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         Router::filter('/test/{*}')->to(function() use(&$t){
             $t = true;
         })->process();
+
+        $this->assertTrue($t);
+        $this->assertFalse(Router::routeMatch());
+
+        $t = false;
+        Router::filter('/test/{*}',function() use(&$t){
+            $t = true;
+        })->process();
+
+        $this->assertTrue($t);
+        $this->assertFalse(Router::routeMatch());
+
+    }//testFilter
+
+
+    public function testChildren(){
+
+        $_SERVER['REQUEST_URI'] = '/user/34093/create/post';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $parent = false;
+        $child = false;
+        $vars = Array();
+
+        Router::get('/user/{id}',function($id) use(&$parent){
+            $parent = true;
+        })
+        ->where(Array('id'=>'integer'))
+        ->children(Array(
+            '/create/{type}' => Array(
+                'type' => 'get',
+                'action' => function($id,$type) use(&$child,&$vars){
+                    $child = true;
+                    $vars['id'] = $id;
+                    $vars['type'] = $type;
+                    return false;
+                },
+                'where' => Array(
+                    'type' => 'alpha'
+                )
+            )
+        ))->process();
+
+        $this->assertFalse($parent);
+        $this->assertTrue($child);
+        $this->assertEquals(34093,$vars['id']);
+        $this->assertEquals('post',$vars['type']);
+
+
+        $_SERVER['REQUEST_URI'] = '/user/34093/create/post/delete/55';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $parent = false;
+        $child = false;
+        $nestedChild = false;
+        $vars = Array();
+
+        Router::get('/user/{id}',function($id) use(&$parent){
+            $parent = true;
+            return false;
+        })
+        ->where(Array('id'=>'integer'))
+        ->children(Array(
+            '/create/{type}' => Array(
+                'type' => 'get',
+                'action' => function($id,$type) use(&$child){
+                    $child = true;
+                    return false;
+                },
+                'where' => Array(
+                    'type' => 'alpha'
+                ),
+                'children' => Array(
+                    '/delete/{post_id}' => Array(
+                        'type' => 'get',
+                        'action' => function($id,$type,$postId) use(&$nestedChild,&$vars){
+                            $nestedChild = true;
+                            $vars['id'] = $id;
+                            $vars['type'] = $type;
+                            $vars['post_id'] = $postId;
+                            return false;
+                        },
+                        'where' => Array(
+                            'post_id' => 'integer_positive'
+                        )
+                    )
+                )
+            )
+        ))->process();
+
+        $this->assertFalse($parent);
+        $this->assertFalse($child);
+        $this->assertTrue($nestedChild);
+        $this->assertEquals(34093,$vars['id']);
+        $this->assertEquals('post',$vars['type']);
+        $this->assertEquals(55,$vars['post_id']);
+
+
+    }//testChildren
+
+
+    public function testProcessRouterArray(){
+
+        $_SERVER['REQUEST_URI'] = '/test/55';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $t = false;
+
+        $routes = Array(
+            '/test/{id}' => Array(
+                'type' => 'get',
+                'action' => function() use(&$t){
+                                $t = true;
+                                return false;
+                            },
+                'where' => Array(
+                    'id' => 'integer_positive',
+                )
+            )
+        );
+
+        Router::filter('/test/{*}')->to($routes)->process();
+
+        $this->assertTrue($t);
+
+        $t = false;
+
+        $routes = Array(
+            '/test/{*}' => Array(
+                'type' => 'filter',
+                'action' => $routes
+            )
+        );
+
+        Router::processRouterArray($routes);
 
         $this->assertTrue($t);
 
