@@ -26,7 +26,7 @@ class Router {
 
 
     /**
-     * @var boolean Has a Disco\classesself matched a request?
+     * @var boolean Has a router matched a request?
     */
     private static $routeMatch=false;
 

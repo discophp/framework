@@ -252,13 +252,10 @@ Class App extends \Pimple\Container {
     */
     public final function tearDown(){
 
-        \Disco\classes\Router::processLastCreatedRoute();
-
-
         /**
          * did this requested URI not find a match? If so thats a 404.
         */
-        if(!\Disco\classes\Router::$routeMatch){
+        if(!\Disco\classes\Router::routeMatch()){
             \View::serve(404);
         }//if
         elseif(http_response_code() != 200){
