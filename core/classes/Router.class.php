@@ -16,7 +16,7 @@ class Router {
     /**
      * @var array $routes Collection of all instances of Routers we make.
     */
-    public static $routers = Array();
+    private static $routers = Array();
 
 
     /**
@@ -28,7 +28,7 @@ class Router {
     /**
      * @var boolean Has a Disco\classesself matched a request?
     */
-    public static $routeMatch=false;
+    private static $routeMatch=false;
 
 
     /**
@@ -40,19 +40,19 @@ class Router {
     /**
      * @var string URI path to match.
     */
-    public $uri;
+    private $uri;
 
 
     /**
      * @var \Closure|string Action to take if matched.
     */
-    public $action;
+    private $action;
 
 
     /**
      * @var array The routers where restrictions.
     */
-    public $variableRestrictions = Array();
+    private $variableRestrictions = Array();
 
 
     /**
@@ -94,13 +94,13 @@ class Router {
     /**
      * @var null|string|array Store authentication requirements on route.
     */
-    public $auth=null;
+    private $auth=null;
 
 
     /**
      * @var boolean $allowURLParameters Allow GET variables to be contained in the route.
     */
-    public $allowURLParameters=false;
+    private $allowURLParameters=false;
 
 
 
@@ -138,7 +138,7 @@ class Router {
      * Process all routers in the stack that haven't been processed yet.
     */
     public static function processAvailableRoutes(){
-        while(!static::routeMatch() && static::$numberOfProcessedRoutes < count(static::$routers)){
+        while(!static::$routeMatch && static::$numberOfProcessedRoutes < count(static::$routers)){
             static::processLastCreatedRoute();
         }//while
     }//processAvailableRoutes
@@ -170,7 +170,7 @@ class Router {
         }//if
 
         //no route match yet?
-        if(!static::routeMatch()){ 
+        if(!static::$routeMatch){ 
 
             //this Router is a Filter?
             if($this->isFilter){
@@ -657,10 +657,10 @@ class Router {
 
 
         if($res === false){
-            static::routeMatch(false);
+            static::__routeMatch(false);
         }//if
         else {
-            static::routeMatch(true);
+            static::__routeMatch(true);
         }//el
 
         return $res;
@@ -694,19 +694,21 @@ class Router {
 
 
     /**
-     * Once a router has found a match we dont perform more match attempts. 
-     * This function is both a setter and a getter.
-     *
+     * Private method for setting and getting whether we have a route match yet. Big difference is that this method 
+     * does not call `static::procesAvailableRoutes()` unlike its public counter part `routeMatch()`. The reason 
+     * the public method calls `static::processAvailableRoutes()` is so that say a Router was created, and 
+     * immeditatly after the a call is made to `Router::routeMatch()` to check if the last route satisifed the 
+     * request, well if the `process()` method wasn't called on it directly, it wont be processed until another 
+     * Router is created or the end of the application method `tearDown()` is called. So to make sure we respond 
+     * with the correct anwser we need to make sure any un-processed routes are processed first.
      *
      * @param  boolean $m
      *
      * @return boolean
      */
-    public static function routeMatch($m=null){
-
+    private static function __routeMatch($m=null){
 
         if($m !== null){
-
 
             if(static::$routeMatch === false && $m === true){
                 \App::make('Router','\Disco\classes\MockBox');
@@ -728,6 +730,25 @@ class Router {
 
 
     /**
+     * Once a router has found a match we dont perform more match attempts. 
+     * This function is both a setter and a getter.
+     *
+     *
+     * @param  boolean $m
+     *
+     * @return boolean
+     */
+    public static function routeMatch($m=null){
+
+        static::processAvailableRoutes();
+
+        return static::__routeMatch($m);
+
+    }//routerMatch
+
+
+
+    /**
     * Load a Router File for processing.
     *
     *
@@ -738,7 +759,7 @@ class Router {
     */
     public static function useRouter($routerPath){
 
-        if(static::routeMatch()){
+        if(static::$routeMatch){
             return;
         }//if
 
@@ -805,7 +826,7 @@ class Router {
      */
     public static function processRouterArray($routes){
 
-        if(static::routeMatch()){
+        if(static::$routeMatch){
             return;
         }//if
 
@@ -837,7 +858,7 @@ class Router {
 
             static::processLastCreatedRoute();
 
-            if(static::routeMatch()){
+            if(static::$routeMatch){
                 break;
             }//if
 
