@@ -259,7 +259,8 @@ class PDO extends \PDO {
         }//if
         else if(is_array($args)){
 
-            $first = array_shift(array_keys($args));
+            $first = array_keys($args);
+            $first = array_shift($first);
 
             if(!is_numeric($first)){
                 return $this->setAssocativeArrayPlaceHolders($q,$args);

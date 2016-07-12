@@ -179,15 +179,63 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($t);
         $this->assertFalse(Router::routeMatch());
 
+    }//testFilter
+
+
+    public function testFilterWithChildren(){
+
+        $_SERVER['REQUEST_URI'] = '/test/area/55';
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
         $t = false;
-        Router::filter('/test/{*}',function() use(&$t){
+        $child = false;
+        $id = 0;
+        Router::filter('/test/{*}')->to(function() use(&$t){
             $t = true;
-        })->process();
+        })
+        ->children(Array(
+            'area/{id}' => Array(
+                'type' => 'get',
+                'action' => function($param) use(&$child,&$id){
+                    $id = $param;
+                    $child = true;
+                    return false;
+                },
+                'where' => Array('id' => 'integer_positive')
+            )
+        ))
+        ->process();
 
         $this->assertTrue($t);
+        $this->assertTrue($child);
+        $this->assertEquals(55,$id);
         $this->assertFalse(Router::routeMatch());
 
-    }//testFilter
+        $_SERVER['REQUEST_URI'] = '/double/testing/create';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $child = false;
+        $action = '';
+        Router::filter('/double/testing/{*}')
+        ->children(Array(
+            '{action}' => Array(
+                'type' => 'post',
+                'action' => function($param) use(&$child,&$action){
+                    $action = $param;
+                    $child = true;
+                    return false;
+                },
+                'where' => Array('action' => 'alpha_numeric')
+            )
+        ))
+        ->process();
+
+        $this->assertTrue($child);
+        $this->assertEquals('create',$action);
+        $this->assertFalse(Router::routeMatch());
+
+       
+    }//testFilterWithChildren
 
 
     public function testChildren(){

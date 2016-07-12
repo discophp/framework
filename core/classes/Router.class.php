@@ -181,12 +181,24 @@ class Router {
                     if($this->useRouter instanceof \Closure){
                         call_user_func_array($this->useRouter,Array($this->filterBase,$this->filteredOn));
                     }//if
-                    else {
+                    else if($this->useRouter){
                         static::useRouter($this->useRouter);
                     }//el
 
                     //process the Routers that became available from calling the filter
                     static::processAvailableRoutes();
+
+                    if(!static::$routeMatch && $this->children){
+
+                        $children = Array();
+
+                        foreach($this->children as $uri => $route){
+                            $children[$this->filterBase . $uri] = $route;
+                        }//foreach
+
+                        static::processRouterArray($children);
+
+                    }//if
 
                 }//if
 
@@ -493,6 +505,11 @@ class Router {
      */
     public static function match($uri,$restrict,$auth,$allowParams){
 
+        //if there is authentication and it doesn't pass, no match
+        if(!static::authenticated($auth)){
+            return false;
+        }//if
+
         $url = $_SERVER['REQUEST_URI'];
 
         if($allowParams === false && $_SERVER['QUERY_STRING']){
@@ -533,10 +550,6 @@ class Router {
             return false;
         }//if
 
-        //if there is authentication and it doesn't pass, no match
-        if(!static::authenticated($auth)){
-            return false;
-        }//if
 
         $return = Array();
         foreach($urlPieces as $k=>$urlPiece){
@@ -811,11 +824,13 @@ class Router {
      *      'type' (required) => string ('get','post','put','delete','multi','filter'),
      *      'action' (required) => string|\Closure|array,
      *      'where' (optional) => array,
+     *      'allowURLParameters' (optional) => string|array,
      *      'auth' (optional) => Array(
      *          'session' (required) => string,
      *          'redirect' (optional) => string
      *      ),
      *      'secure' (optional) => boolean,
+     *      'children' (optional) => array,
      *  )
      * )
      * ```
@@ -842,6 +857,10 @@ class Router {
 
             if(array_key_exists('where',$props)){
                 $router->where($props['where']);
+            }//if
+
+            if(array_key_exists('allowURLParameters',$props)){
+                $router->allowURLParameters($props['allowURLParameters']);
             }//if
 
             if(array_key_exists('auth',$props)){

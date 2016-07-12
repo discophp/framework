@@ -15,7 +15,7 @@ class Email {
 
 
     /**
-     * @var array Holds config data from config/mail.config.php .
+     * @var array Holds config data from `app/config/email.php`.
     */
     private $settings = Array();
 
@@ -34,7 +34,8 @@ class Email {
 
 
     /**
-     * Load our Email setting from config/mail.config.php . 
+     * Load our Email setting from `app/config/email.php` over riding any values set in `app/config/dev.email.php` if the 
+     * application is in `DEV_MODE`. 
      *
      *
      * @return void
