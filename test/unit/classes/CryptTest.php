@@ -6,8 +6,8 @@ Class CryptTest extends PHPUnit_Framework_TestCase {
         $this->Crypt = \Crypt::instance();
     }//setup
 
-    public function testSha(){
-        $org = 'String to test sha on 52309';
+    public function testCrypt(){
+        $org = 'String to test crypt on 52309';
         $sha = $this->Crypt->encrypt($org);
         $plain = $this->Crypt->decrypt($sha);
         $this->assertEquals($org,$plain);

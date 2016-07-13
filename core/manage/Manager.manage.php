@@ -238,7 +238,7 @@ return %1\$s
      *  @return string 
     */
     public static function genAES256Key(){
-        return self::genRand(32);
+        return \Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString();
     }//genAES256Key
 
 
@@ -258,7 +258,7 @@ return %1\$s
 
 
     /**
-     *  Generate a random string of length $l .
+     *  Generate a random string of length `$l`.
      *
      *
      *  @param integer $l The length of the string to generate.
@@ -267,54 +267,37 @@ return %1\$s
     */
     public static function genSalt($l){
         return self::genRand($l);
-    }//genAES256Key
+    }//genSalt
 
 
     /**
-     *  Set the SHA512_SALT_LEAD Key in .config.php .
+     *  Set the `SHA512_SALT` Key in `app/config/.config.php`.
      *
      *
      *  @param string $s The salt.
      *
      *  @return void 
     */
-    public static function setSaltLead($s){
-        self::setConfig('SHA512_SALT_LEAD',$s);
-    }//genAES256Key
-
-
-    /**
-     *  Set the SHA512_SALT_TAIL Key in .config.php .
-     *
-     *
-     *  @param string $s The salt.
-     *
-     *  @return void 
-    */
-    public static function setSaltTail($s){
-        self::setConfig('SHA512_SALT_TAIL',$s);
-    }//genAES256Key
+    public static function setSalt($s){
+        self::setConfig('SHA512_SALT',$s);
+    }//setSalt
 
 
 
     /**
-     * This function generates and sets the AES256 and SHA512 keys for .config.php after the composer install.
+     * This function generates and sets the `AES_KEY256` and `SHA512_SALT` keys in `app/config/.config.php` after the composer install.
      *
      *
      * @return void
     */
     public static function install(){
 
-        echo 'Setting AES_KEY256...';
+        echo 'Setting `AES_KEY256`...';
         self::setAES256Key(self::genAES256Key());
         echo ' done.'.PHP_EOL;
 
-        echo 'Setting SHA512_SALT_LEAD with key size 12 ...';
-        self::setSaltLead(self::genSalt(12));
-        echo ' done.'.PHP_EOL;
-
-        echo 'Setting SHA512_SALT_TAIL with key size 12 ...';
-        self::setSaltTail(self::genSalt(12));
+        echo 'Setting `SHA512_SALT` with key size 128...';
+        self::setSaltLead(self::genSalt(128));
         echo ' done.'.PHP_EOL;
 
         echo 'Creating app/template/.cache for Twig cached templates ...';

@@ -13,6 +13,21 @@ namespace Disco\classes;
 class Crypt {
 
 
+
+    /**
+     * Generate a new key that can be used with the `crypt` and `decrypt` methods of this class.
+     *
+     * Uses `\Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString()` to generate the key.
+     *
+     *
+     * @return string The key.
+    */
+    public function generateNewCryptKey(){
+        return \Defuse\Crypto\Key::createNewRandomKey()->saveToAsciiSafeString();
+    }//generateNewCryptKey
+
+
+
     /**
      * Encrypt with AES256.
      * This method relies on the settings in application config `AES_KEY256` which is generated at install to 
@@ -30,14 +45,9 @@ class Crypt {
             $key256 = \App::config('AES_KEY256');
         }//if
 
-        $key256 = pack('H*', $key256);
+        $key256 = \Defuse\Crypto\Key::loadFromAsciiSafeString($key256);
 
-        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
-        $iv = mcrypt_create_iv($iv_size,MCRYPT_DEV_URANDOM);
-
-        $cipherText = mcrypt_encrypt(MCRYPT_RIJNDAEL_128,$key256,$input,MCRYPT_MODE_CBC,$iv);
-
-        return trim(base64_encode($iv.$cipherText));
+        return \Defuse\Crypto\Crypto::encrypt($input,$key256);
 
     }//encrypt
 
@@ -60,17 +70,9 @@ class Crypt {
             $key256 = \App::config('AES_KEY256');
         }//if
 
-        $key256 = pack('H*',$key256);
+        $key256 = \Defuse\Crypto\Key::loadFromAsciiSafeString($key256);
 
-        $cipherText = base64_decode($crypt);
-
-        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128,MCRYPT_MODE_CBC);
-        $iv = substr($cipherText,0,$iv_size);
-
-        $cipherText = substr($cipherText,$iv_size);
-
-        return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_128,$key256,$cipherText,MCRYPT_MODE_CBC,$iv));
-
+        return \Defuse\Crypto\Crypto::decrypt($crypt,$key256);
 
     }//decrypt
 
@@ -78,29 +80,45 @@ class Crypt {
 
     /**
      * Hash with sha512.
-     * This method relies on the application configuration values `SHA512_SALT_LEAD` and `SHA512_SALT_TAIL` which 
-     * are generated at install to unique values. 
-     *
-     * You can use your own if you pass them in manually in `$sha512SaltLead` and `$sha512SaltTail`. 
+     * If no salt is provided the salt stored in `app/config/config.php` with key `SHA512_SALT` will be used as the 
+     * salt value.
      *
      *
-     * @param  string $s Value to hash using SHA512.
-     * @param null|string $sha512SaltLead The lead salt to use in the hash.
-     * @param null|string $sha512SaltTail The tail salt to use in the hash.
+     * @param  string $value Value to hash using SHA512.
+     * @param null|string $salt The salt to use in the hash.
      *
      * @return string The hashed value of $s.
      */
-    public function hash($s,$sha512SaltLead = null,$sha512SaltTail = null){
+    public function hash($value,$salt = ''){
 
-        if($sha512SaltLead === null){
-            $sha512SaltLead = \App::config('SHA512_SALT_LEAD');
-            $sha512SaltTail = \App::config('SHA512_SALT_TAIL');
+        if($salt === ''){
+            $salt = \App::config('SHA512_SALT');
         }//if
 
-        return hash('sha512', $sha512SaltLead . $s . $sha512SaltTail);
+        return hash('sha512', $salt . $value);
 
     }//hash
 
+
+
+    /**
+     * Hash with sha512.
+     * Generate a new salt and hash the value with it, returning both the salt and hash.
+     *
+     * 
+     * @param string $value The value to hash using sha512. 
+     * @param int $saltLength The length of the salt to generate, defaults to 128.
+     *
+     * @return array An array with two keys, `salt` and `hash`, containing the salt and hash value respectivly.
+     *
+    */
+    public function hashAndGenerateNewSalt($value, $saltLength = 128){
+        $salt = \Disco\manage\Manager::genRand($saltLength);
+        return Array(
+            'salt' => $salt,
+            'hash' => $this->hash($value,$salt),
+        );
+    }//hashAndGenerateNewSalt
 
 
 

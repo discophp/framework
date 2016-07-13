@@ -6,12 +6,34 @@ namespace Disco\classes;
 
 
 /**
- * Bridge between {@link \Disco\manager\Manager} and CLI requests.
+ * Bridge for executing CLI requests.
  *
  * Its used by calling `public/index.php` via the CLI and passing an arguement(s). Each method is actually 
  * a command eg `php public/index.php with Crypt hash 'kitty kat'`.
+ *
+ * Extend it by calling `\Disco\classes\Console::extendConsoleWithClass(new \YourClassName)` prior to setting up 
+ * the framework in `public/index.php`. Each class that extends this class (the Console) will have its public 
+ * methods made available for execution directly from the CLI. For example if you extended this class with a class 
+ * that had a public method `doOurReallyBigJob` that method can be executed by calling 
+ * `php public/index.php doOurReallyBigJob` or even `php public/index.php do-our-really-big-job`. Any arguements 
+ * that come after the first paramater will be passed to the method in an indexed array. So for example you call
+ * `php public/index.php doOurReallyBigJob 1552 test` the method `doOurReallyBigJob` will be passed an array as the 
+ * first arguement that will contain these values `Array(1552,'test')`.
 */
 class Console {
+
+
+    private static $extendedCommands = Array();
+
+
+    /**
+     * Extend the default console commands with other classes.
+     *
+     * @param \StdClass $class The class to extend the console functionality with.
+    */
+    public static function extendConsoleWithClass($class){
+        static::$extendedCommands[] = $class;
+    }//extendConsoleWithClass
 
 
     /**
@@ -42,7 +64,25 @@ class Console {
 
         $method = implode('',$method);
 
-        call_user_func(Array($this,$method), $args);
+        $resolved = false;
+
+        if(method_exists($this,$method)){
+            call_user_func(Array($this,$method), $args);
+            $resolved = true;
+        }//if
+        else {
+            foreach(static::$extendedCommands as $commandClass){
+                if(method_exists($commandClass,$method)){
+                    call_user_func(Array($commandClass,$method), $args);
+                    $resolved = true;
+                    break;
+                }//if
+            }//foreach
+        }//el
+
+        if(!$resolved){
+            echo "`{$method}` is not a valid CLI command!";
+        }//if
 
         echo PHP_EOL;
         exit;
@@ -133,7 +173,7 @@ class Console {
                 $r = \Disco\manage\Manager::genAES256Key();
                 if(isset($args[1]) && $args[1]=='set'){
                     \Disco\manage\Manager::setAES256Key($r);
-                    echo 'AES_KEY256 now set to : ' . $r . PHP_EOL;
+                    echo '`AES_KEY256` now set to : ' . $r . PHP_EOL;
                 }//if
                 else {
                     echo $r . PHP_EOL;
@@ -148,13 +188,9 @@ class Console {
 
                 $s = \Disco\manage\Manager::genSalt($args[1]);
 
-                if(!empty($args[2]) && $args[2]=='set-lead'){
-                    \Disco\manage\Manager::setSaltLead($s);
-                    echo 'SHA512_SALT_LEAD now set to : ' . $s . PHP_EOL;
-                }//if
-                else if(!empty($args[2]) && $args[2]=='set-tail'){
-                    \Disco\manage\Manager::setSaltTail($s);
-                    echo 'SHA512_SALT_TAIL now set to : ' . $s . PHP_EOL;
+                if(!empty($args[2]) && $args[2]=='set'){
+                    \Disco\manage\Manager::setSalt($s);
+                    echo '`SHA512_SALT` now set to : ' . $s . PHP_EOL;
                 }//if
                 else {
                     echo $s . PHP_EOL;
@@ -486,6 +522,76 @@ class Console {
         return false;
 
     }//yesOrNo
+
+
+
+    /**
+     * Prompt the user at the console with a question and the valid options that serve as an answer to that 
+     * question.
+     *
+     * @param string $question The question being asked.
+     * @param array $options The possible answers to the question being asked, where the keys are the anwsers and 
+     * the values are the description of the answer.
+     *
+     * @return mixed The selected key from $options param.
+    */
+    public static function consoleQuestion($question,$options){
+
+        $orgQuestion = $question;
+
+        $opts = '';
+
+        foreach($options as $value => $statement){
+            $opts .= "'{$value}') echo '{$value}'; break;;";
+            $question .= PHP_EOL . "($value) - {$statement}";
+        }//foreach
+
+        $question .= PHP_EOL . 'Your answer? : ';
+
+        exec("
+        while true; do
+            read -p '{$question}' answer 
+            case \$answer in
+                {$opts}
+                *) echo ''; break;;
+            esac
+        done
+            ",
+            $answer
+        );
+
+        if(!array_key_exists($answer[0],$options)){
+            echo PHP_EOL . 'Please enter a valid option and try again!' . PHP_EOL . PHP_EOL;
+            return self::consoleQuestion($orgQuestion,$options);
+        }//if
+    
+        return $answer[0];
+
+    }//ConsoleQuestion
+
+
+
+    /**
+     * Prompt the user at the console to enter a free form text response to a question.
+     *
+     * @param string $question The question that needs a response.
+     * @param boolean $cannotBeBlank The response to the question cannot be blank.
+     *
+     * @return string The response to the question.
+    */
+    public function consolePrompt($question,$cannotBeBlank = false){
+
+        exec("read -p '{$question} ' answer; echo \$answer;",$answer);
+
+        if(!$answer[0] && $cannotBeBlank === true){
+            echo PHP_EOL . 'Answer cannot be blank! Try again...' . PHP_EOL . PHP_EOL; 
+            return self::consolePrompt($question,$cannotBeBlank);
+        }//if
+
+        return $answer[0];
+
+    }//consolePrompt
+
 
 
 }//Console
