@@ -15,6 +15,46 @@ class FileHelper {
 
 
     /**
+     * Format a number of bytes as human friendly text.
+     *
+     * @param int $bytes    The number of bytes to format
+     * @param int $decimals The number of decimal places for the returned format.
+     *
+     * @return string
+     */
+    public function humanFileSize($bytes, $decimals = 2) {
+        $size = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
+        $factor = floor((strlen($bytes) - 1) / 3);
+        return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
+    }//humanFileSize
+
+
+
+    /**
+     * Human friendly file size of a value using a convention supported in php ini values.
+     *
+     * @param string $size The ini size.
+     *
+     * @return string
+    */
+    public function iniHumanFriendlySize($size){
+
+        switch( substr($size,-1) ) {
+            case 'G':
+                $size = $size * 1024;
+            case 'M':
+                $size = $size * 1024;
+            case 'K':
+                $size = $size * 1024;
+        }//switch
+
+        return $this->humanFileSize($size);
+
+    }//iniHumanFriendlySize
+
+
+
+    /**
      * Get the file extension type from a path.
      *
      *

@@ -860,7 +860,7 @@ Class App extends \Pimple\Container {
 
 
 
-}//Disco
+}//App
 
 
 

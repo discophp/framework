@@ -308,5 +308,137 @@ class Data {
 
 
 
+    /**
+     * Determine if posted data size exceeds the `max_post_size` ini limit.
+     *
+     * @return boolean
+    */
+    public function isPostedDataSizeOverLimit(){
+        return $_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0;
+    }//isPostedDataOverLimit
+
+
+
+    /**
+     * Determine if posted files data size exceeds the `max_post_size` ini limit.
+     *
+     * @return boolean
+    */
+    public function isPostedFileSizeOverLimit(){
+        return $this->isPostedDataSizeOverLimit() && empty($_FILES);
+    }//isPostedFileSizeOverLimit
+
+
+
+    /**
+     * Human friendly file size of `post_max_size` ini value.
+     *
+     * @return string
+    */
+    public function iniMaxPostSize(){
+        return \FileHelper::iniHumanFriendlySize(ini_get('post_max_size'));
+    }//iniMaxPostSize
+
+
+
+    /**
+     * Human friendly file size of `upload_max_filesize` ini value.
+     *
+     * @return string
+    */
+    public function iniMaxFileSize(){
+        return \FileHelper::iniHumanFriendlySize(ini_get('upload_max_filesize'));
+    }//iniMaxFileSize
+
+
+
+    /**
+     * Get the value of the current CSRF token, if a token doesn't exist, it will be created. When the token is 
+     * created it is stored in in the session variable identified by the key `CSRF_TOKEN_NAME` specified in `app/config/config.php`. 
+     *
+     * @param boolean $reseed Whether to regenerate a new CSRF Token even if one already exists in the session.
+     *
+     * @return string The CSRF token.
+    */
+    public function getCSRFToken($reseed = false){
+
+        $token_name = \App::config('CSRF_TOKEN_NAME');
+
+        if(!\Session::has($token_name) || $reseed === true){
+            $token = base64_encode( openssl_random_pseudo_bytes(32));
+            \Session::set($token_name, $token);
+            return $token;
+        }//if
+
+        return \Session::get($token_name);
+
+    }//getCSRFToken
+
+
+
+    /**
+     * Get a hidden input that contains the name and value of the CSRF Token.
+     *
+     * @return string The input.
+    */
+    public function getCSRFTokenInput(){
+        return \Html::input(Array(
+            'value' => $this->getCSRFToken(),
+            'type'  => 'hidden',
+            'name'  => \App::config('CSRF_TOKEN_NAME')
+        ));
+    }//getCSRFTokenInput
+
+
+
+    /**
+     * Validate the CSRF token passed with the request, either via HTTP Headers (where it should be identified 
+     * by the header key `HTTP_X_CSRF_TOKEN`) or in the POST, PUT, or DELETE data (where it should be identified by the 
+     * key `CSRF_TOKEN_NAME` specified in `app/config/config.php`). 
+     *
+     * @return boolean Whether the token validated.
+    */
+    public function validateCSRFToken(){
+
+        if($_SERVER['REQUEST_METHOD'] == 'GET'){
+            return true;
+        }//if
+
+        $tokenName = \App::config('CSRF_TOKEN_NAME');
+
+        if(!\Session::has($tokenName)){
+            return false;
+        }//if
+
+        $tokenValue = \Session::get($tokenName);
+
+        switch($_SERVER['REQUEST_METHOD']) {
+            case 'POST':
+                if($this->post($tokenName) === $tokenValue){
+                    $this->post()->remove($tokenName);
+                    return true;
+                }//if
+            case 'PUT':
+                if($this->put($tokenName) === $tokenValue){
+                    $this->put()->remove($tokenName);
+                    return true;
+                }//if
+            case 'DELETE':
+                if($this->delete($tokenName) === $tokenValue){
+                    $this->delete()->remove($tokenName);
+                    return true;
+                }//if
+        }//switch
+
+        if(isset($_SERVER['HTTP_X_CSRF_TOKEN']) && $tokenValue === $_SERVER['HTTP_X_CSRF_TOKEN']){
+            return true;
+        }//if
+
+        return false;
+
+    }//validateCSRFToken
+
+
+
 }//Data
 ?>
