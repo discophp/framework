@@ -292,21 +292,25 @@ return %1\$s
     */
     public static function install(){
 
-        echo 'Setting `AES_KEY256`...';
-        self::setAES256Key(self::genAES256Key());
-        echo ' done.'.PHP_EOL;
+        if(!\App::config('AES_KEY256')){
+            echo 'Setting `AES_KEY256`...';
+            self::setAES256Key(self::genAES256Key());
+            echo ' done.'.PHP_EOL;
+        }//if
 
-        echo 'Setting `SHA512_SALT` with key size 128...';
-        self::setSalt(self::genSalt(128));
-        echo ' done.'.PHP_EOL;
+        if(!\App::config('SHA512_SALT')){
+            echo 'Setting `SHA512_SALT` with key size 128...';
+            self::setSalt(self::genSalt(128));
+            echo ' done.'.PHP_EOL;
+        }//if
 
-        echo 'Creating app/template/.cache for Twig cached templates ...';
         $dir = \App::path().'/app/template/.cache/';
         if(!file_exists($dir)){
+            echo 'Creating app/template/.cache for Twig cached templates ...';
             mkdir($dir);
+            echo ' done.'.PHP_EOL;
         }//if
         chmod($dir,0777);
-        echo ' done.'.PHP_EOL;
 
         echo 'Changing permissions on cache folder for phpfastcache';
         chmod(\App::path() . '/cache/',0777);
