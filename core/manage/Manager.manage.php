@@ -297,7 +297,7 @@ return %1\$s
         echo ' done.'.PHP_EOL;
 
         echo 'Setting `SHA512_SALT` with key size 128...';
-        self::setSaltLead(self::genSalt(128));
+        self::setSalt(self::genSalt(128));
         echo ' done.'.PHP_EOL;
 
         echo 'Creating app/template/.cache for Twig cached templates ...';
