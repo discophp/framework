@@ -38,6 +38,12 @@ class Router {
 
 
     /**
+     * @var string The request method the router servers ie : `get`,`post`,`put`,`delete`.
+    */
+    private $requestMethod = null;
+
+
+    /**
      * @var string URI path to match.
     */
     private $uri;
@@ -161,6 +167,13 @@ class Router {
 
         static::$numberOfProcessedRoutes++;
 
+        if($this->requestMethod && $this->requestMethod != $_SERVER['REQUEST_METHOD']){
+            if($this->children){
+                $this->buildRelativeChildren();
+            }//if
+            return;
+        }//if
+
         if(!$this->uri){ 
             return;
         }//if
@@ -211,23 +224,7 @@ class Router {
                     static::executeRoute($this->action,$this->variables);
                 }//if
                 else if($this->children){
-
-                    $children = Array();
-
-                    foreach($this->children as $uri => $route){
-                        if(count($this->variableRestrictions)){
-                            if(!array_key_exists('where',$route)){
-                                $route['where'] = $this->variableRestrictions;
-                            }//if
-                            else {
-                                $route['where'] = array_merge($route['where'],$this->variableRestrictions);
-                            }//el
-                        }//if
-                        $children[$this->uri . $uri] = $route;
-                    }//foreach
-
-                    static::processRouterArray($children);
-
+                    $this->buildRelativeChildren();
                 }//elif
 
             }//el
@@ -235,6 +232,33 @@ class Router {
         }//if
 
     }//process
+
+
+
+    /**
+     * Convert a children array of routes to use the parent routes information by prepending the parent URI to the 
+     * childrens URIs and merge the childrens where variable restrictions with the parents where variable 
+     * restrictions.
+    */
+    private function buildRelativeChildren(){
+
+        $children = Array();
+
+        foreach($this->children as $uri => $route){
+            if(count($this->variableRestrictions)){
+                if(!array_key_exists('where',$route)){
+                    $route['where'] = $this->variableRestrictions;
+                }//if
+                else {
+                    $route['where'] = array_merge($route['where'],$this->variableRestrictions);
+                }//el
+            }//if
+            $children[$this->uri . $uri] = $route;
+        }//foreach
+
+        static::processRouterArray($children);
+
+    }//buildRelativeChildren
 
 
 
@@ -286,20 +310,6 @@ class Router {
 
 
     /**
-     * When a route is not a match this function essentially destroys it.
-     *
-     *
-     * @return self 
-    */
-    private function whiteOutRoute(){
-        $this->action=null;
-        $this->uri=null;
-        return $this;
-    }//whiteOutRoute
-
-
-
-    /**
      * Filter a url route using {*} notation.
      *
      *
@@ -341,10 +351,7 @@ class Router {
      * @return self 
      */
     public function get($uri,$action){
-        if($_SERVER['REQUEST_METHOD']!='GET'){
-            return $this->whiteOutRoute();
-        }//if
-
+        $this->requestMethod = 'GET';
         $this->action=$action;
         $this->uri=$uri;
         return $this;
@@ -379,10 +386,7 @@ class Router {
      * @return self 
      */
     public function post($uri,$action){
-        if($_SERVER['REQUEST_METHOD']!='POST'){
-            return $this->whiteOutRoute();
-        }//if
-
+        $this->requestMethod = 'POST';
         $this->uri=$uri;
         $this->action=$action;
         return $this;
@@ -400,10 +404,7 @@ class Router {
      * @return self 
      */
     public function put($uri,$action){
-        if($_SERVER['REQUEST_METHOD']!='PUT'){
-            return $this->whiteOutRoute();
-        }//if
-
+        $this->requestMethod = 'PUT';
         $this->uri=$uri;
         $this->action=$action;
         return $this;
@@ -421,10 +422,7 @@ class Router {
      * @return self 
      */
     public function delete($uri,$action){
-        if($_SERVER['REQUEST_METHOD']!='DELETE'){
-            return $this->whiteOutRoute();
-        }//if
-
+        $this->requestMethod = 'DELETE';
         $this->uri=$uri;
         $this->action=$action;
         return $this;
@@ -444,11 +442,11 @@ class Router {
      * @return self 
      */
     public function multi($uri,$actions){
+        $this->requestMethod = $_SERVER['REQUEST_METHOD'];
         $key = strtolower($_SERVER['REQUEST_METHOD']);
         if(!array_key_exists($key,$actions)){
-            return $this->whiteOutRoute();
+            return $this;
         }//if
-
         $this->uri=$uri;
         $this->action=$actions[$key];
         return $this;
@@ -527,13 +525,7 @@ class Router {
 
         //direct match?
         if($uri==$url){
-
-            if(!static::authenticated($auth)){ 
-                return false;
-            }//if
-
             return true;
-
         }//if
 
 
@@ -555,16 +547,19 @@ class Router {
         foreach($urlPieces as $k=>$urlPiece){
             $uriPiece = $uriPieces[$k];
 
+            $variableCount = substr_count($uriPiece,'{');
+
             //not a variable place holder?
-            if(substr($uriPiece,0,1)!='{'){
+            if(!$variableCount){
 
                 //pieces do not match?
-                if($uriPiece!=$urlPiece){
+                if($uriPiece != $urlPiece){
                     return false;
                 }//if
 
             }//if
-            else {
+            //only 1 variable in the URI piece
+            else if($variableCount === 1){
 
                 //get the variable
                 $uriKey = trim($uriPiece,'{}'); 
@@ -577,11 +572,11 @@ class Router {
                 //condition to match variable with url piece
                 $condition = $restrict[$uriKey];
 
+                $reserved = \App::getCondition($condition);
                 //is the condition using one of the default reserved words?
-                if(\App::getCondition($condition)){
-                    $condition = \App::getCondition($condition);
+                if($reserved){
+                    $condition = $reserved;
                 }//if
-
 
                 //does the variable not match its corresponding url piece?
                 if(!preg_match("/{$condition}/",$urlPiece)){
@@ -590,6 +585,50 @@ class Router {
 
                 //store the variable to pass into the Closure or Controller
                 $return[$uriKey]=$urlPiece;
+
+            }//elif
+            //more than 1 variable in the URI piece
+            else {
+
+                $restrictOn = Array();
+
+                $uriRegex = $uriPiece;
+
+                //use the restriction on the route to convert the URI piece into a regexp
+                foreach($restrict as $variableKey => $condition){
+
+                    //does this restriction key exist in the URI piece
+                    if(strpos($uriPiece,"{{$variableKey}}") !== false){
+
+                        $restrictOn[] = $variableKey;
+
+                        $reserved = \App::getCondition($condition);
+                        //is the condition using one of the default reserved words?
+                        if($reserved){
+                            //remove caret and dollar so string doesn't have to begin and end with individual pattern
+                            $condition = trim($reserved,'^$');
+                        }//if
+
+                        //replace the restrict variable inside the URI piece with its condition using a matching key
+                        $uriRegex = str_replace("{{$variableKey}}","(?P<{$variableKey}>$condition)",$uriRegex);
+
+                    }//if
+
+                }//foreach
+
+                //get the matches
+                preg_match_all('/^'.$uriRegex.'$/',$urlPiece,$matches);
+
+                //make sure we got matches for any restriction inside the URI piece
+                foreach($restrictOn as $variableKey){
+
+                    if(!isset($matches[$variableKey][0]) || !$matches[$variableKey][0]){
+                        return false;
+                    }//if
+
+                    $return[$variableKey] = $matches[$variableKey][0];
+
+                }//foreach
 
             }//el
 
@@ -849,6 +888,10 @@ class Router {
 
             $router = static::factory();
 
+            if($props['type'] == 'filter' && !array_key_exists('action',$props)){
+                $props['action'] = null;
+            }//if
+
             $router->{$props['type']}($uri,$props['action']);
 
             if(array_key_exists('children',$props)){
@@ -864,11 +907,19 @@ class Router {
             }//if
 
             if(array_key_exists('auth',$props)){
-                $redirect = null;
-                if(array_key_exists('redirect',$props['auth'])){
-                    $redirect = $props['auth']['redirect'];
-                }//if
-                $router->auth($props['auth']['session'],$redirect);
+
+                if(is_string($props['auth'])){
+                    $router->auth($props['auth'],null);
+                } else {
+
+                    $redirect = null;
+                    if(array_key_exists('redirect',$props['auth'])){
+                        $redirect = $props['auth']['redirect'];
+                    }//if
+                    $router->auth($props['auth']['session'],$redirect);
+
+                }//el
+
             }//if
 
             if(array_key_exists('secure',$props)){

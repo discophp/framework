@@ -503,6 +503,8 @@ class Console {
     */
     public static function yesOrNo(){
 
+        ob_flush();
+
         exec('
         while true; do
             read -p "Y/N?" yn
@@ -515,7 +517,7 @@ class Console {
             $answer
         );
     
-        if($answer[0] != 'N'){
+        if(strtoupper($answer[0]) != 'N'){
             return true;
         }//if
     
@@ -536,6 +538,8 @@ class Console {
      * @return mixed The selected key from $options param.
     */
     public static function consoleQuestion($question,$options){
+
+        ob_flush();
 
         $orgQuestion = $question;
 
@@ -580,6 +584,8 @@ class Console {
      * @return string The response to the question.
     */
     public function consolePrompt($question,$cannotBeBlank = false){
+
+        ob_flush();
 
         exec("read -p '{$question} ' answer; echo \$answer;",$answer);
 

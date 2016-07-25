@@ -36,7 +36,7 @@ class View {
     /**
      * @var array The data to be injected into the $baseTemplate template when rendered.
     */
-    private $view = Array(
+    protected $view = Array(
         'title'             => '',
         'description'       => '',
         'charset'           => 'utf-8',
@@ -54,7 +54,8 @@ class View {
         'bodyClass'        => Array(),
         'header'            => '',
         'body'              => '',
-        'footer'            => ''
+        'footer'            => '',
+        'schema'            => Array(),
     );
 
 
@@ -351,6 +352,66 @@ class View {
 
 
     /**
+     * Set information to be used in schema.org json-ld data that will be set in the header of the view.
+     *
+     *
+     * @param string|array $keyOrData Either a key to set in the schema, or an array to merge with the current schema.
+     * @param mixed|null $value A value to set in the schema or null if `$keyOrData` was an array.
+    */
+    public function schema($keyOrData, $value = null){
+        if(!is_array($keyOrData)){
+            $this->view['schema'][$keyOrData] = $value;
+        } else {
+            $this->view['schema'] = array_merge($this->view['schema'],$keyOrData);
+        }//el
+    }//schema
+
+
+
+    /**
+     * Get the current schema data.
+     *
+     * @return array The schema data.
+    */
+    public function getSchema(){
+        return $this->view['schema'];
+    }//getSchema
+
+
+
+    /**
+     * Set the schema.org markup to be set in the header, overwriting any existing data set prior.
+     *
+     * @param array $schema The schema data.
+    */
+    public function setSchema($schema){
+        $this->view['schema'] = $schema;
+    }//setSchema
+
+
+
+    /**
+     * When print page is called if there is schema information to add to the head of the page this will add it 
+     * inside a script tag with the type set to `application/ld+json`. This will also check and see if the key 
+     * `@context` has been set, if not it will be set to `http://schema.org`.
+    */
+    protected function addSchemaToHeadExtra(){
+
+        if(count($this->view['schema'])){
+
+            if(!array_key_exists('@context',$this->view['schema'])){
+                $this->view['schema']['@context'] = 'http://schema.org';
+            }//if
+
+            $this->view['headExtra'] .= '<script type="application/ld+json">' . json_encode($this->view['schema']) . '</script>';
+
+        }//if
+
+    }//addSchemaToHeadExtra
+
+
+
+    /**
      * If the view is AJAX render and echo the tempalte `$this->ajaxTemplate` otherwise render the template 
      * `$this->baseTemplate`.
      *
@@ -358,6 +419,7 @@ class View {
     */
     public function printPage(){
 
+        $this->addSchemaToHeadExtra();
 
         if(!$this->view['ajax']){
             $template = $this->baseTemplate;
