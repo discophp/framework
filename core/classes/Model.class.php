@@ -87,7 +87,7 @@ class Model {
     *
     * @return void
     */
-    private final function clearData(){
+    public final function clearData(){
         $this->where='';
         $this->joinOn=Array();
         $this->limit=Array();
