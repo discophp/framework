@@ -278,7 +278,10 @@ class Console {
 
 
     /**
-     * Create a new backup of the DB.
+     * Create a new backup of the DB. If you want to alter the default dumping behavior create a configuration file 
+     * at `app/config/db-backup-settings.php` and return an array with the settings you want to alter. The full 
+     * list of settings can be found at https://github.com/ifsnop/mysqldump-php#dump-settings . By default if you 
+     * do not specify a value for `add-drop-table` it will be set to `true`.
      *
      * eg: `db-backup`
      * eg: `db-backup /app/db/`
@@ -324,7 +327,21 @@ class Console {
                 \App::config('DB_DB')
             );
 
-        $settings = Array();
+        $config_path = \App::path() . '/app/config/db-backup-settings.php';
+
+        if(is_file($config_path)){
+            $settings = require $config_path;
+            if(!is_array($settings)){
+                $settings = Array();
+            }//if
+        }//if
+        else {
+            $settings = Array();
+        }//el
+
+        if(!array_key_exists('add-drop-table',$settings)){
+            $settings['add-drop-table'] = true;
+        }//if
 
         if($structureOnly == true){
             $settings['no-data'] = true;
