@@ -56,15 +56,15 @@ INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,
 
         $this->assertEquals('NOW()',$q);
 
-        $q = $this->DB->set('SELECT name FROM TEST WHERE id=:id: AND date=:now: AND value=:value: AND other=:value:',
+        $q = $this->DB->set('SELECT name FROM TEST WHERE id=:id AND date=:now AND value=:value AND other=:value',
             Array(
                 'id' => 1,
                 'now' => Array('raw' => 'NOW()'),
-                'value' => 'Hey a :value: cool!',
+                'value' => 'Hey a :value cool!',
             )
         );
 
-        $this->assertEquals('SELECT name FROM TEST WHERE id=1 AND date=NOW() AND value=\'Hey a :value: cool!\' AND other=\'Hey a :value: cool!\'',$q);
+        $this->assertEquals('SELECT name FROM TEST WHERE id=1 AND date=NOW() AND value=\'Hey a :value cool!\' AND other=\'Hey a :value cool!\'',$q);
 
     }//testSet
 
@@ -93,6 +93,54 @@ INSERT INTO discophp_test_person_email(email_id,person_id,email) VALUES (NULL,5,
         $this->assertEquals(7,$this->DB->lastId());
 
     }//testLastId
+
+
+    public function testSelect(){
+
+        $row = $this->DB->select('discophp_test_person','person_id,age',Array('person_id' => 1))->fetch();
+
+        $this->assertEquals(Array('person_id' => 1,'age' => 30),$row);
+
+        $row = $this->DB->select('discophp_test_person',Array('person_id','age'),Array('person_id' => 1,'age' => 30))->fetch();
+
+        $this->assertEquals(Array('person_id' => 1,'age' => 30),$row);
+
+    }//testSelect
+
+
+    public function testUpdate(){
+
+        $this->DB->update('discophp_test_person',Array('age' => 12),Array('person_id' => 1));
+
+        $row = $this->DB->select('discophp_test_person','age',Array('person_id' => 1))->fetch();
+
+        $this->assertEquals(12,$row['age']);
+        
+    }//testUpdate
+
+
+    public function testDelete(){
+
+        $this->DB->delete('discophp_test_person',Array('person_id' => 1));
+
+        $result = $this->DB->select('discophp_test_person','person_id',Array('person_id' => 1));
+
+        $this->assertEquals(0,$result->rowCount());
+
+    }//testDelete
+
+
+    public function testCreate(){
+
+        $this->DB->create('discophp_test_person',Array('name' => 'Bill'));
+
+        $id = $this->DB->lastId();
+
+        $row = $this->DB->select('discophp_test_person','person_id',Array('name' => 'Bill'))->fetch();
+
+        $this->assertEquals($id,$row['person_id']);
+        
+    }//testCreate
 
 
 }//DBTest

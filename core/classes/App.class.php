@@ -841,7 +841,8 @@ Class App extends \Pimple\Container {
 
 
     /**
-     * Log an error in the log file defined by `$this->log`.
+     * Log an error in the log file defined by `$this->log` if it exists, also log the message in the standard 
+     * log called by `error_log()`.
      *
      * @param mixed $msg The error to log, if not a string or numeric will be var exported.
      *
@@ -853,7 +854,9 @@ Class App extends \Pimple\Container {
             $msg = var_export($msg,true);
         }//if
 
-        file_put_contents($this->path . $this->log,'[ '. date('m-d-Y H:i:s') .' - ' . $_SERVER['REQUEST_URI'] . '] ' . $msg . "\n", FILE_APPEND);
+        if(is_file($this->path . $this->log)){
+            file_put_contents($this->path . $this->log,'[ '. date('m-d-Y H:i:s') .' - ' . $_SERVER['REQUEST_URI'] . '] ' . $msg . "\n", FILE_APPEND);
+        }//if
         error_log($msg);
 
     }//log

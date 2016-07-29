@@ -10,7 +10,12 @@ namespace Disco\classes;
 */
 class Session {
 
+
+    /**
+     * @var string FLASH_KEY The key used to store flash data in the session.
+    */
     const FLASH_KEY = 'disco_flash';
+
 
     /**
      * @var array $newFlash Flash data set during current request.
@@ -27,9 +32,6 @@ class Session {
 
     /**
      * Start up our session by calling `session_start()` and set the flash data if necessary.
-     *
-     *
-     * @return void
     */
     public function __construct(){
 
@@ -304,6 +306,39 @@ class Session {
     public function flash(){
         return $this->flash;
     }//flash
+
+
+
+    /**
+     * Set a piece of complex flash data.
+     *
+     * 
+     * @param string $key The flash data key.
+     * @param mixed $value The flash data value.
+    */
+    public function setComplexFlash($key, $value){
+        $this->newFlash[$key] = serialize($value);
+    }//setComplexFlash
+
+
+
+    /**
+     * Get a piece of flash data.
+     *
+     *
+     * @param string $key The flash data key.
+     * @return false|mixed False if not set.
+    */
+    public function getComplexFlash($key){
+
+        if(!isset($this->flash[$key])){
+            return false;
+        }//if
+
+        return unserialize($this->flash[$key]);
+
+    }//getComplexFlash
+
 
 
 }//Session

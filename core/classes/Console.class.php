@@ -15,10 +15,10 @@ namespace Disco\classes;
  * the framework in `public/index.php`. Each class that extends this class (the Console) will have its public 
  * methods made available for execution directly from the CLI. For example if you extended this class with a class 
  * that had a public method `doOurReallyBigJob` that method can be executed by calling 
- * `php public/index.php doOurReallyBigJob` or even `php public/index.php do-our-really-big-job`. Any arguements 
- * that come after the first paramater will be passed to the method in an indexed array. So for example you call
+ * `php public/index.php doOurReallyBigJob` or even `php public/index.php do-our-really-big-job`. Any arguments 
+ * that come after the first parameter will be passed to the method in an indexed array. So for example you call
  * `php public/index.php doOurReallyBigJob 1552 test` the method `doOurReallyBigJob` will be passed an array as the 
- * first arguement that will contain these values `Array(1552,'test')`.
+ * first argument that will contain these values `Array(1552,'test')`.
 */
 class Console {
 

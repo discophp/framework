@@ -184,18 +184,18 @@ class PDO extends \PDO {
                 return parent::query($query);
             }//if
 
-            $query = parent::prepare($query);
+            $stmt = parent::prepare($query);
 
             if(!is_array($data)){
                 $data = Array($data);
             }//if
 
-            $query->execute($data);
+            $stmt->execute($data);
 
-            return $query;
+            return $stmt;
 
         } catch(\PDOException $e){
-            TRIGGER_ERROR('DB:: Query Error | '.$e->getMessage() . ' | ' . $e->getTraceAsString(),E_USER_WARNING);
+            TRIGGER_ERROR("DB:: Query Error | {$query}\n".$e->getMessage() . "\n" . $e->getTraceAsString(),E_USER_WARNING);
             throw new \Disco\exceptions\DBQuery($e->getMessage(), (int)$e->getCode());
         }//catch
 
@@ -224,6 +224,112 @@ class PDO extends \PDO {
         return null;
 
     }//insert
+
+
+
+    /**
+     * Perform an INSERT statement.
+     *
+     * @param string $table The name of the table to insert into.
+     * @param array $data The data to insert into the table, must be an associative array.
+     *
+     * @return mixed
+     * @throws \Disco\exceptions\DBQuery
+    */
+    public function create($table,$data){
+        $keys = array_keys($data);
+        $values = ':' . implode(',:',$keys);
+        $keys = implode(',',$keys);
+        return $this->query($this->set("INSERT INTO {$table} ({$keys}) VALUES({$values})",$data));
+    }//create
+
+
+
+    /**
+     * Perform a DELETE statement.
+     *
+     * @param string $table The name of the table to delete from.
+     * @param array $data The conditions specifying what rows to delete from the table, must be an associative array.
+     * @param string $conjunction The conjunction used to form the where condition of the delete statement. Default 
+     * is `AND`.
+     *
+     * @return mixed
+     * @throws \Disco\exceptions\DBQuery
+    */
+    public function delete($table,$data, $conjunction = 'AND'){
+        $keys = array_keys($data);
+        $pairs = Array();
+        foreach($keys as $key){
+            $pairs[] = "{$key}=:{$key}";
+        }//foreach
+        $pairs = implode(" {$conjunction} ",$pairs);
+        return $this->query($this->set("DELETE FROM {$table} WHERE {$pairs}",$data));
+    }//delete
+
+
+
+    /**
+     * Perform an UPDATE statement .
+     *
+     * @param string $table The name of the table to update.
+     * @param array $data The data to update the table with, must be an associative array.
+     * @param array $where The conditions specifying what rows should be updated in the table, must be an associative array.
+     * @param string $conjunction The conjunction used to form the where condition of the update statement. Default 
+     * is `AND`.
+     *
+     * @return mixed
+     * @throws \Disco\exceptions\DBQuery
+    */
+    public function update($table,$data,$where, $conjunction = 'AND'){
+        $values = array_merge(array_values($data),array_values($where));
+        $keys = array_keys($data);
+        $pairs = Array();
+        foreach($keys as $key){
+            $pairs[] = "{$key}=?";
+        }//foreach
+        $pairs = implode(',',$pairs);
+
+        $keys = array_keys($where);
+        $condition = Array();
+        foreach($keys as $key){
+            $condition[] = "{$key}=?";
+        }//foreach
+        $condition = implode(" {$conjunction} ",$condition);
+
+        return $this->query($this->set("UPDATE {$table} SET {$pairs} WHERE {$condition}",$values));
+    }//update
+
+
+
+    /**
+     * Perform a SELECT statement .
+     *
+     * @param string $table The name of the table to select from.
+     * @param string|array $select The fields to select from the table, can be a string of field or an array of 
+     * fields.
+     * @param array $where The conditions specifying what rows should be selected from the table, must be an associative array.
+     * @param string $conjunction The conjunction used to form the where condition of the select statement. Default 
+     * is `AND`.
+     *
+     * @return mixed
+     * @throws \Disco\exceptions\DBQuery
+    */
+    public function select($table,$select,$where, $conjunction = 'AND'){
+
+        $keys = array_keys($where);
+        $pairs = Array();
+        foreach($keys as $key){
+            $pairs[] = "{$key}=:{$key}";
+        }//foreach
+        $pairs = implode(" {$conjunction} ",$pairs);
+
+        if(is_array($select)){
+            $select = implode(',',$select);
+        }//if
+
+        return $this->query($this->set("SELECT {$select} FROM {$table} WHERE {$pairs}",$where));
+
+    }//select
 
 
 
@@ -280,7 +386,7 @@ class PDO extends \PDO {
 
 
     /**
-     * Set assocative array place holders in the query like `:id:` with the corresponding value in the args.
+     * Set assocative array place holders in the query like `:id` with the corresponding value in the args.
      *
      *
      * @param string        $q      The query string.
@@ -302,7 +408,7 @@ class PDO extends \PDO {
             $positions = Array();
             $p = -1;
             $offset = 1;
-            $keyPlaceHolder = ":{$key}:";
+            $keyPlaceHolder = ":{$key}";
             $keyLength = strlen($keyPlaceHolder);
 
             while(($p = strpos($q,$keyPlaceHolder,$p + $offset)) !== false){
@@ -384,11 +490,11 @@ class PDO extends \PDO {
      * @return string|int|float The $arg prepared.
     */
     private function prepareType($arg){
-        if(($arg===null || $arg=='null') && $arg !== 0)
+        if(($arg===null || $arg=='null') && $arg !== 0){
             return 'NULL';
+        }//if
         if(!is_numeric($arg)){
-            $arg = $this->quote($arg);
-            return $arg;
+            return $this->quote($arg);
         }//if
         return $arg;
     }//prepareType

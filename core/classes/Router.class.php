@@ -242,6 +242,10 @@ class Router {
     */
     private function buildRelativeChildren(){
 
+        if(!is_array($this->children)){
+            $this->children = static::resolveRouterPath($this->children);        
+        }//if
+
         $children = Array();
 
         foreach($this->children as $uri => $route){
@@ -801,6 +805,33 @@ class Router {
 
 
     /**
+     * Resolve a string name to a router file path.
+     *
+     * @return string The path to the router file.
+     * @throws \Disco\exceptions\Exception When no router file is found given the passed router path.
+    */
+    public static function resolveRouterPath($routerPath){
+
+        if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
+            return $path;
+        } else {
+
+            $routerPath = \App::path() . "/app/router/{$routerPath}.router.php";
+            if(file_exists($routerPath)){
+                return $routerPath;
+            }//if
+
+        }//el
+
+        $message = "Router {$routerPath}.router.php not found";
+        \App::error($message,Array('unknown','useRouter'),debug_backtrace(TRUE,4));
+        throw new \Disco\exceptions\Exception($message);
+
+    }//resolveRouterPath
+
+
+
+    /**
     * Load a Router File for processing.
     *
     *
@@ -820,33 +851,11 @@ class Router {
             return;
         }//if
 
-        $router = null;
+        $router = require static::resolveRouterPath($routerPath);
 
-        if(($path = \App::resolveAlias($routerPath)) !== false && file_exists($path)){
-            $router = require $path;
-        } else {
-
-            $routerPath = \App::path() . "/app/router/{$routerPath}.router.php";
-            if(file_exists($routerPath)){
-                $router = require $routerPath;
-            }//if
-
-        }//el
-
-        if($router){
-
-            if(is_array($router)){
-                static::processRouterArray($router);
-            }//if
-
-            return;
-
+        if(is_array($router)){
+            static::processRouterArray($router);
         }//if
-
-        $message = "Router {$routerPath}.router.php not found";
-
-        \App::error($message,Array('unknown','useRouter'),debug_backtrace(TRUE,4));
-        throw new \Disco\exceptions\Exception($message);
 
     }//useRouter
 

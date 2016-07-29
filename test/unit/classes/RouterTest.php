@@ -138,6 +138,17 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
         $this->assertTrue($t);
 
+
+        $_SERVER['REQUEST_URI'] = '/product/3005-the-rig/reviews';
+        $t = false;
+
+        Router::get('/product/{id}-{name}/{type}',function($id,$name,$type) use(&$t) {
+            $t = ($id==3005) && ($name=='the-rig') && ($type=='reviews');
+            return false;
+        })->where(Array('id'=>'integer','name'=>'alpha','type'=>'(reviews|details)'))->process();
+
+        $this->assertTrue($t);
+
        
     }//testWithVars
 
