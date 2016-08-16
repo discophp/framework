@@ -112,6 +112,12 @@ Class ModelTest extends PHPUnit_Framework_TestCase {
 
         $this->assertEquals(10,$row['age']);
 
+        $this->Person->update('age=?',20)->where('person_id=?',1)->finalize();
+        $row = $this->Person->select('age')->where('person_id=?',1)->data()->fetch();
+
+        $this->assertEquals(20,$row['age']);
+
+
     }//testUpdate
 
 

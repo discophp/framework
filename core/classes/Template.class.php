@@ -54,21 +54,9 @@ Class Template extends \Twig_Environment {
 
         parent::__construct($loader, $options);
 
-        $this->registerGlobals();
+        $this->addExtension(new \Disco\twig\TwigExtension);
 
     }//construct
-
-
-
-    /**
-     * Register the default globals with the twig environment.
-    */
-    public function registerGlobals(){
-
-        $this->addGlobal('View',\App::with('View'));
-        $this->addGlobal('Request',\App::with('Request'));
-
-    }//registerGlobals
 
 
 

@@ -84,6 +84,17 @@ class View {
 
 
     /**
+     * If the view is called in a twig template we want to just return an empty string.
+     *
+     * @return string
+    */
+    public function __toString(){
+        return '';
+    }//__toString
+
+
+
+    /**
      * Get a variable in the view template variable.
      *
      * @param string $k The variable name.

@@ -520,7 +520,7 @@ class Console {
     */
     public static function yesOrNo(){
 
-        ob_flush();
+        @ob_flush();
 
         exec('
         while true; do
@@ -556,7 +556,7 @@ class Console {
     */
     public static function consoleQuestion($question,$options){
 
-        ob_flush();
+        @ob_flush();
 
         $orgQuestion = $question;
 
@@ -602,7 +602,7 @@ class Console {
     */
     public function consolePrompt($question,$cannotBeBlank = false){
 
-        ob_flush();
+        @ob_flush();
 
         exec("read -p '{$question} ' answer; echo \$answer;",$answer);
 

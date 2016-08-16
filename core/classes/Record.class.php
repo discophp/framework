@@ -91,6 +91,10 @@ abstract class Record implements \ArrayAccess {
     private $allowKeyUpdates = false;
 
 
+    /**
+     * @var array $numericalRanges Store mins and maxes for SQL column types. Used when validating fields of 
+     * records.
+    */
     private static $numericalRanges = Array(
         'tinyint' => Array(
             'signed' => Array(
@@ -154,10 +158,15 @@ abstract class Record implements \ArrayAccess {
     );
 
 
+    /**
+     * @var array $regexHelpers Helpers for validating date and time.
+    */
     private $regexHelpers = Array(
         'date' => '\d{4}-\d{2}-\d{2}',
         'time' => '\d{2}:\d{2}:\d{2}',
     );
+
+
 
     /**
      * Set the intital fields of the record. Performs an array intersection to only take fields that exist on the 
@@ -398,13 +407,25 @@ abstract class Record implements \ArrayAccess {
      * Delete the record.
      *
      *
+     * @param boolean $using_only_auto_increment_key Perform the delete using only the auto-increment key, 
+     * regardless of other primary keys specified by the record.
+     *
      * @return boolean
      *
      * @throws \Disco\exceptions\RecordId When primary keys are null.
     */
-    public function delete(){
+    public function delete($using_only_auto_increment_key = false){
 
         $ids = $this->primaryKeysWithValidation();
+
+        if($using_only_auto_increment_key === true){
+            $ai = $this->autoIncrementField();
+            if(!$ai){
+                $class = get_called_class();
+                throw new \Disco\exceptions\RecordId("Record `{$class}` cannot update using only auto increment key as none are defined");
+            }//if
+            $ids = Array($ai => $ids[$ai]);
+        }//if
 
         return \App::with($this->model)->delete($ids);
 
@@ -465,11 +486,11 @@ abstract class Record implements \ArrayAccess {
     */
     public function upsert(){
 
-        try {
-            return $this->update();
-        } catch(\Disco\exceptions\RecordId $e){
+        if(!$this->exists()){
             return $this->insert();
-        }//catch
+        }//if
+
+        return $this->update();
 
     }//upsert
 
@@ -743,9 +764,10 @@ abstract class Record implements \ArrayAccess {
         $result = \App::with($this->model)
             ->select(array_keys($ids)[0])
             ->where($ids)
+            ->limit(1)
             ->data();
 
-        if($result->rowCount() !== 1){
+        if(!$result->rowCount()){
             return false;
         }//if
 
@@ -831,6 +853,48 @@ abstract class Record implements \ArrayAccess {
         return new $class($result->fetch());
 
     }//find
+
+
+
+    /**
+     * Find the all record that match the where condition.
+     *
+     *
+     * @param array $where The conditions used to find the records.
+     * @param null|string|array $select The fields to select from the records.
+     *
+     * @return array An array of the records found.
+    */
+    public static function findAll($where, $select = null){
+
+        $class = get_called_class();
+
+        if(!is_array($where)){
+            throw new \InvalidArguementException("{$class}::findAll() Paramater 1 `\$where` must be an array");
+        }//if
+
+        $record = new $class;
+
+        if($select === null){
+            $select = $record->getFieldNames();
+        } elseif(is_string($select)){
+            $select = Array($select);
+        }//elif
+
+        $result = \App::with($record->model)
+            ->select($select)
+            ->where($where)
+            ->data();
+
+        $records = Array();
+
+        while($row = $result->fetch()){
+            $records[] = new $class($row);
+        }//while
+
+        return $records;
+
+    }//findAll
 
 
 
