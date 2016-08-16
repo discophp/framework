@@ -23,6 +23,7 @@
     "autoload": {
         "classmap":[
             "core/",
+            "core/twig/",
             "core/facades/",
             "core/manage/",
             "core/classes/"
