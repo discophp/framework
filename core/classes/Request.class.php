@@ -269,4 +269,39 @@ class Request {
 
 
 
+    /**
+     * Get an instance of the \Disco\classes\Data service.
+     *
+     * @return \Disco\classes\Data
+    */
+    public function data(){
+        return \Data::instance();
+    }//data
+
+
+
+    /**
+     * Get the `$_SERVER` superglobal. Comes in handy when you want access to the server superglobal via Twig 
+     * templates.
+     *
+     * @return array
+    */
+    public function getServerGlobal(){
+        return $_SERVER;
+    }//getServerGlobal
+
+
+
+    /**
+     * Get the `$_REQUEST` superglobal. Comes in handy when you want access to the request superglobal via Twig 
+     * templates.
+     *
+     * @return array
+    */
+    public function getRequestGlobal(){
+        return $_REQUEST;
+    }//getServerGlobal
+
+
+
 }//Request

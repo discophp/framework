@@ -309,6 +309,169 @@ class Data {
 
 
     /**
+     * Set a cookie. Parameters are identical to http://php.net/manual/en/function.setcookie.php with the exception 
+     * that time can be passed as a string or integer, strings are parsed to time using the `strtotime` function, 
+     * and integers will always be added the current timestamp like `time() + $time`.
+     *
+     * @param string $name The name of the cookie.
+     * @param mixed $value The value of the cookie. If you pass an array or an object it will be json encoded.
+     * @param int|string $time The time to live for the cookie, default is `+30 days`.
+     * @param string $path The path on the server which the cookie will be available on.
+     * @param string $domain The (sub)domain that the cookie is available to.
+     * @param boolean $secure Indicates that the cookie should only be transmitted over a secure HTTPS connection 
+     * from the client
+     * @param boolean $httponly When TRUE the cookie will be made accessible only through the HTTP protocol. This 
+     * means that the cookie won't be accessible by scripting languages, such as JavaScript
+     *
+     * @return boolean
+    */
+    public function setCookie($name,$value,$time = '+30 days',$path = '',$domain = '',$secure = false, $httponly = false){
+
+        if(is_int($time)){
+            $time = time() + $time;
+        } else if(is_string($time)){
+            $time = strtotime($time);
+        }//elif
+
+        if(is_array($value) || is_object($value)){
+            $value = json_encode($value);
+        }//if
+
+        return setcookie($name,$value,$time,$path,$domain,$secure,$httponly);
+
+    }//setCookie
+
+
+
+    /**
+     * Set a raw cookie. Parameters are identical to http://php.net/manual/en/function.setcookie.php with the exception 
+     * that time can be passed as a string or integer, strings are parsed to time using the `strtotime` function, 
+     * and integers will always be added the current timestamp like `time() + $time`.
+     *
+     * @param string $name The name of the cookie.
+     * @param mixed $value The value of the cookie. If you pass an array or an object it will be json encoded.
+     * @param int|string $time The time to live for the cookie, default is `+30 days`.
+     * @param string $path The path on the server which the cookie will be available on.
+     * @param string $domain The (sub)domain that the cookie is available to.
+     * @param boolean $secure Indicates that the cookie should only be transmitted over a secure HTTPS connection 
+     * from the client
+     * @param boolean $httponly When TRUE the cookie will be made accessible only through the HTTP protocol. This 
+     * means that the cookie won't be accessible by scripting languages, such as JavaScript
+     *
+     * @return boolean
+    */
+    public function setRawCookie($name,$value,$time = '+30 days',$path = '',$domain = '',$secure = false, $httponly = false){
+
+        if(is_int($time)){
+            $time = time() + $time;
+        } else if(is_string($time)){
+            $time = strtotime($time);
+        }//elif
+
+        if(is_array($value) || is_object($value)){
+            $value = json_encode($value);
+        }//if
+
+        return setrawcookie($name,$value,$time,$path,$domain,$secure,$httponly);
+
+    }//setCookie
+
+
+
+    /**
+     * Get a cookie value.
+     *
+     * @param string $name The name of the cookie.
+     *
+     * @return mixed The value of the cookie, or false if the cookie is not set.
+    */
+    public function getCookie($name){
+
+        if(isset($_COOKIE[$name])){
+            return $_COOKIE[$name];
+        }//if
+
+        return false;
+
+    }//getCookie
+
+
+
+    /**
+     * Get a complex cookie value (a cookie that is storing a JSON string).
+     *
+     * @param string $name The name of the cookie.
+     *
+     * @return mixed The JSON decoded (array) value of the cookie, or false if the cookie is not set.
+    */
+    public function getComplexCookie($name){
+
+        if(isset($_COOKIE[$name])){
+            return json_decode($_COOKIE[$name],true);
+        }//if
+
+        return false;
+
+    }//getCookie
+
+
+
+    /**
+     * Is a cookie set.
+     *
+     * @param string $name The name of the cookie.
+     *
+     * @return mixed The value of the cookie, or false if the cookie is not set.
+    */
+    public function hasCookie($name){
+        return isset($_COOKIE[$name]);
+    }//hasCookie
+
+
+
+    /**
+     * Delete a cookie.
+     *
+     * @param string $name The name of the cookie to delete.
+     *
+     * @return boolean
+    */
+    public function deleteCookie($name){
+        if(isset($_COOKIE[$name])){
+            return setcookie($name,$_COOKIE[$name],1);
+        }//if
+        return true;
+    }//deleteCookie
+
+
+
+    /**
+     * Delete all cookies.
+     *
+     * @param array $except Delete all cookies except cookies with keys in the array. By default the array contains 
+     * `PHPSESSID`, this avoids deleting the cookie that stores the session.
+    */
+    public function deleteAllCookies($except = Array('PHPSESSID')){
+        $keys = array_diff(array_keys($_COOKIE),$except);
+        foreach($keys as $k){
+            $this->deleteCookie($k);
+        }//foreach
+    }//deleteAllCookies
+
+
+
+    /**
+     * Get all the cookies.
+     *
+     * @return array
+    */
+    public function getAllCookies(){
+        return $_COOKIE;
+    }//allCookies
+
+
+
+    /**
      * Determine if posted data size exceeds the `max_post_size` ini limit.
      *
      * @return boolean

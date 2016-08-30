@@ -191,7 +191,8 @@ class View {
      * immeditatly and the application will exit.
      *
      *
-     * @param null|mixed $data The response to JSON encode and return to the client.
+     * @param null|mixed $data The response to JSON encode and return to the client. If `$data` is a string, it is 
+     * assumed that it has already been JSON encoded.
      * @param int $code The HTTP response code to be returned to the client.
      *
      * @return void
@@ -203,7 +204,12 @@ class View {
 
         if($data !== null){
             http_response_code($code);
-            echo json_encode($data);
+            if(!is_string($data)){
+                echo json_encode($data);
+            }//if
+            else {
+                echo $data;
+            }//el
             exit;
         }//if
 
