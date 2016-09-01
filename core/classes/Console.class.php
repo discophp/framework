@@ -23,7 +23,11 @@ namespace Disco\classes;
 class Console {
 
 
+    /**
+     * @var array $extendedCommands Holds classes that extend the functionality of the Console.
+    */
     private static $extendedCommands = Array();
+
 
 
     /**
@@ -211,6 +215,8 @@ class Console {
      * eg: `dev-mode`
      * eg: `dev-mode true`
      * eg: `dev-mode false`
+     *
+     * @param array $args The arguements.
     */
     public function devMode($args){
 
@@ -237,6 +243,8 @@ class Console {
      * eg: `maintenance-mode`
      * eg: `maintenance-mode true`
      * eg: `maintenance-mode false`
+     *
+     * @param array $args The arguements.
     */
     public function maintenanceMode($args){
 
@@ -288,6 +296,7 @@ class Console {
      * eg `db-backup /app/db/ BACKUP.sql`
      *
      * @param array $args The arguements.
+     * @param boolean $structureOnly Whether to backup only the structure.
     */
     public function dbBackup($args, $structureOnly = false){
 
@@ -477,20 +486,6 @@ class Console {
         }//elif
 
     }//create
-
-
-    /**
-     * Get the routes used by your application.
-     *
-     * eg: `routes routes.txt`
-    */
-    public function routes($args){
-
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/1093489sdker';
-        \Disco\manage\Manager::routes($args[0]);
-
-    }//routes
 
 
 
