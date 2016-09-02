@@ -91,7 +91,6 @@ Class Template extends \Twig_Environment {
      * @return string The rendered template.
     */
     public function render($name,array $data = Array()){
-        //$name = $this->buildTemplatePath($name);
         return parent::render($name,$data);
     }//render
 
@@ -124,44 +123,6 @@ Class Template extends \Twig_Environment {
     public function build($name,$data=Array()){
         return $this->render($name,$data);
     }//build
-
-
-
-    /**
-     * Build a template directly from a Model.
-     *
-     *
-     * @param string $name The name of the template.
-     * @param string $model The name of the Model.
-     * @param mixed $key The key(s) used to select data from the model.
-     *
-     * @return string The built template.
-    */
-    public function buildFrom($name,$model,$key){
-        $d = \App::with($model)->select('*')->where($key)->data();
-        $o = '';
-        while($r = $d->fetch_assoc()){
-            $o .= $this->build($name,$r);
-        }//while
-
-        return $o;
-    }//from
-
-
-
-    /**
-     * Build a template directly from a Model and push it onto the Views html stack.
-     *
-     *
-     * @param string $name The name of the tempalte.
-     * @param string $model The name of the Model.
-     * @param mixed $key The key(s) used to select data from the model.
-     *
-     * @return void
-    */
-    public function from($name,$model,$key){
-        \App::with('View')->html($this->build_from($name,$model,$key));
-    }//from
 
 
 
