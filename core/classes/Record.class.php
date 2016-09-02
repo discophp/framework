@@ -15,6 +15,7 @@ namespace Disco\classes;
  *      - {@link \Disco\exceptions\Record} All record exceptions extend this exception, general exception.
  *      - {@link \Disco\exceptions\RecordValidation} Validation failed.
  *      - {@link \Disco\exceptions\RecordId} Primary Key Ids are missing or null.
+ *      - {@link \Disco\exceptions\RecordNonExistent} When the record doesn't exist.
 */
 abstract class Record implements \ArrayAccess {
 
