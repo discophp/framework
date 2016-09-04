@@ -2,7 +2,10 @@
 
 Class TemplateTest extends PHPUnit_Framework_TestCase {
 
+
     public $Template;
+
+
 
     public function setUp(){
 
@@ -11,6 +14,8 @@ Class TemplateTest extends PHPUnit_Framework_TestCase {
 
     }//setUp
 
+
+
     public function testTemplate(){
 
         $test = $this->Template->render('template-test.html',Array('var' => 'OK'));
@@ -18,6 +23,8 @@ Class TemplateTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('<h1>Test OK</h1>', trim($test));
 
     }//testTemplate
+
+
 
 }//TemplateTest
 

@@ -43,6 +43,29 @@ class PaginateTest extends PHPUnit_Framework_TestCase {
         //next url
         $this->assertEquals('/page/4', $Paginate->nextUrl);
 
+
+        //previous urls
+        $urls = $Paginate->getPrevUrls(5);
+
+        //only 2 pages come before page 3 (the current page)
+        $this->assertEquals(2,count($urls));
+        $this->assertEquals('/page/1',$urls[0]);
+        $this->assertEquals('/page/2',$urls[1]);
+
+        //next urls
+        $urls = $Paginate->getNextUrls(5);
+
+        //only 3 pages come after page 3 (the current page)
+        $this->assertEquals(3,count($urls));
+        $this->assertEquals('/page/4',$urls[0]);
+        $this->assertEquals('/page/5',$urls[1]);
+        $this->assertEquals('/page/6',$urls[2]);
+
+        //all urls
+        $urls = $Paginate->getAllUrls();
+        $this->assertEquals(6,count($urls));
+
+
         $uriCache = $_SERVER['REQUEST_URI'];
         $qsCache = $_SERVER['QUERY_STRING'];
         $_SERVER['REQUEST_URI'] = '/test-page?foo=bar';
@@ -88,6 +111,13 @@ class PaginateTest extends PHPUnit_Framework_TestCase {
 
         $_SERVER['REQUEST_URI'] = $uriCache;
         $_SERVER['QUERY_STRING'] = $qsCache;;
+
+
+        //current page `3` doesn't exist in result set.
+        $Paginate = new \Disco\classes\Paginate(3, 5, 3);
+
+        $this->assertTrue($Paginate->pageDoesNotExist());
+
 
     }//testPaginate
 

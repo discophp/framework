@@ -9,16 +9,22 @@ namespace Disco\classes;
 class Paginate {
 
     /**
-     * @var boolean $paginateUsed Whether the template served actually used pagination or not.
+     * @var boolean $paginateUsed Whether the request served actually used pagination or not.
     */
     public static $paginateUsed = false;
 
 
     /**
-     * @var string $format The pagination format as defined in `app/config/config.php` as key `paginate`, or by 
-     * default `/page/?`. Must contain a question mark which will be replaced with the current page.
+     * @var boolean $pageDoesNotExist Whether the requested current page is out of bounds and doesn't exist.
     */
-    protected $format = '/page/?';
+    public static $pageDoesNotExist = false;
+
+
+    /**
+     * @var string $format The pagination format as defined in `app/config/config.php` as key `paginate`, or by 
+     * default `/page/{page}`. Must contain a `{page}` placeholder, which will be replaced with the current page.
+    */
+    protected $format = '/page/{page}';
 
 
     /**
@@ -131,14 +137,19 @@ class Paginate {
             $this->format = \App::config('paginate');
         }//if
 
-        $this->uri = explode('?',$_SERVER['REQUEST_URI'])[0];
-
-        if(substr($this->format,0,1) == '/' && substr($this->uri,-1) == '/'){
-            $this->uri = rtrim($this->uri,'/');
-        }//if
-
         if($currentPage == 0){
             $currentPage = 1;
+        }//if
+
+        $this->uri = explode('?',$_SERVER['REQUEST_URI'])[0];
+
+        $currentPageFormat = $this->fromFormat($currentPage);
+
+        if(strpos($this->uri, $currentPageFormat) === false){
+            if(substr($this->format,0,1) == '/' && substr($this->uri,-1) == '/'){
+                $this->uri = rtrim($this->uri,'/');
+            }//elif
+            $this->uri .= $currentPageFormat;
         }//if
 
         //public vars
@@ -149,40 +160,45 @@ class Paginate {
         $this->perPage      = $limit;
         $this->total        = $this->totalItems;
         $this->first        = ($this->currentPage - 1) * $this->limit + 1;
+
         if($this->totalPages != $this->currentPage){
             $this->totalDisplayed = $this->limit;
-        } else {
+        }//if 
+        else {
             $this->totalDisplayed = $this->totalItems % $this->limit;
             if($this->totalDisplayed == 0){
                 $this->totalDisplayed = $this->limit;
             }//if
         }//el
-        $this->last         = $this->first + $this->totalDisplayed - 1;
 
+        $this->last = $this->first + $this->totalDisplayed - 1;
 
-        if(strpos($this->uri,$this->fromFormat($this->currentPage)) === false){
-            $this->uri .= $this->fromFormat($this->currentPage);
+        if($this->totalPages < $this->currentPage){
+            self::$pageDoesNotExist = true;
         }//if
-
-        $domain = \App::domain();
-
-        if($currentPage != 1){
-            $this->prevUrl = $this->getPageUrl($currentPage - 1);
-            \View::headExtra("<link rel='prev' href='{$domain}{$this->prevUrl}'>");
-        }//if
-
-        if($this->currentPage != $this->totalPages && $this->totalPages != 0){
-            $this->nextUrl = $this->getPageUrl($currentPage + 1);
-            \View::headExtra("<link rel='next' href='{$domain}{$this->nextUrl}'>");
-        }//if
-
 
         $this->firstUrl = $this->getPageUrl(1);
         $this->currentUrl = $this->getPageUrl($this->currentPage);
         $this->lastUrl = $this->getPageUrl($this->totalPages);
 
-        if($currentPage == 1 && REQUEST_URI != $this->currentUrl){
-            \View::headExtra("<link rel='canonical' href='{$domain}{$this->currentUrl}'/>");
+        if(!self::$pageDoesNotExist){
+
+            $domain = \App::domain();
+
+            if($currentPage != 1){
+                $this->prevUrl = $this->getPageUrl($currentPage - 1);
+                \View::headExtra("<link rel='prev' href='{$domain}{$this->prevUrl}'>");
+            }//if
+
+            if($this->currentPage != $this->totalPages && $this->totalPages != 0){
+                $this->nextUrl = $this->getPageUrl($currentPage + 1);
+                \View::headExtra("<link rel='next' href='{$domain}{$this->nextUrl}'>");
+            }//if
+
+            if($currentPage == 1 && $this->uri != $this->currentUrl){
+                \View::headExtra("<link rel='canonical' href='{$domain}{$this->currentUrl}'/>");
+            }//if
+
         }//if
 
     }//__construct
@@ -198,8 +214,18 @@ class Paginate {
      * @return string
     */
     private function fromFormat($page){
-        return str_replace('?',$page,$this->format);
+        return str_replace('{page}',$page,$this->format);
     }//fromFormat
+
+
+
+    /**
+     * Whether the current page exists in the result set, aka its not out of bounds. If the page being requested is 
+     * page 3 and there are only 2 pages in the result set, then the page does not exist.
+    */
+    public function pageDoesNotExist(){
+        return self::$pageDoesNotExist;
+    }//pageDoesNotExist
 
 
 
@@ -301,7 +327,7 @@ class Paginate {
         }//if
 
         for($i = $start; $i <= $end; $i++){
-            $urls[$i] = $this->getPageUrl($i);
+            $urls[] = $this->getPageUrl($i);
         }//for
 
         return $urls;

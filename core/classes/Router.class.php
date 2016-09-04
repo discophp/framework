@@ -26,79 +26,91 @@ class Router {
 
 
     /**
-     * @var boolean Has a router matched a request?
+     * @var boolean $routeMatch Has a router matched a request?
     */
     private static $routeMatch=false;
 
 
     /**
-     * @var string The class to resolve from the container when Router is called. 
+     * @var string $base The class to resolve from the container when Router is called. 
     */
     public static $base = '\Disco\classes\Router';
 
 
     /**
-     * @var string The request method the router servers ie : `get`,`post`,`put`,`delete`.
+     * @var int $paginateCurrentPage The current page being requested for a paginated route.
+    */
+    public static $paginateCurrentPage = 1;
+
+
+    /**
+     * @var string $requestMethod The request method the router servers ie : `get`,`post`,`put`,`delete`.
     */
     private $requestMethod = null;
 
 
     /**
-     * @var string URI path to match.
+     * @var string $uri URI path to match.
     */
     private $uri;
 
 
     /**
-     * @var \Closure|string Action to take if matched.
+     * @var \Closure|string $action Action to take if matched.
     */
     private $action;
 
 
     /**
-     * @var array The routers where restrictions.
+     * @var array $variableRestrictions The routers where restrictions.
     */
     private $variableRestrictions = Array();
 
 
     /**
-     * @var boolean Is route HTTPS?
+     * @var array $variables The extracted variables from the route uri based on the variableRestrictions.
+    */
+    private $variables = Array();
+
+
+    /**
+     * @var boolean $secureRoute Is route HTTPS?
     */
     private $secureRoute=false;
 
 
     /**
-     * @var boolean Is this Router a Filter Router?
+     * @var boolean $isFilter Is this Router a Filter Router?
     */
     private $isFilter=false;
 
 
     /**
-     * @var boolean When we a do a filter we store the base here
+     * @var boolean $filterBase When we a do a filter we store the base here
     */
     private $filterBase;
 
 
     /**
-     * @var boolean When we a do a filter we store the filtered portion here
+     * @var boolean $filteredOn When we a do a filter we store the filtered portion here
     */
     private $filteredOn;
 
 
     /**
-     * @var null|string|array|\Closure Send a filtered route to Router file,an array of routes, or Closure.
+     * @var null|string|array|\Closure $useRouter Send a filtered route to Router file,an array of routes, or Closure.
     */
     private $useRouter=null;
 
 
     /**
-     * @var null|array Children of a route.
+     * @var null|array $children Children of a route.
     */
     private $children=null;
 
 
     /**
-     * @var null|string|array Store authentication requirements on route.
+     * @var null|string|array $auth Store authentication requirements on route.
     */
     private $auth=null;
 
@@ -107,6 +119,12 @@ class Router {
      * @var boolean $allowURLParameters Allow GET variables to be contained in the route.
     */
     private $allowURLParameters=false;
+
+
+    /**
+     * @var boolean $paginate Is the route a paginated route?
+    */
+    private $paginate=false;
 
 
 
@@ -216,12 +234,52 @@ class Router {
                 }//if
 
             }//if
+            else if($this->paginate){
+
+                //base uri of pagination matched without including pagination format
+                if($this->match()){
+                    //default value of 1 for page variable (which is required in pagination format)
+                    $this->variables['page'] = 1;
+                    static::executeRoute();
+                }//if
+                else {
+
+                    $format = '/page/{page}';
+
+                    if(\App::configKeyExists('paginate')){
+                        $format = \App::config('paginate');
+                    }//if
+
+                    if(substr($format,0,1) == '/' && substr($this->uri,-1) == '/'){
+                        $this->uri = rtrim($this->uri,'/');
+                    }//elif
+
+                    $this->uri .= $format;
+
+                    $this->variableRestrictions['page'] = 'integer_positive';
+
+                    if($this->match()){
+
+                        if($this->variables['page'] == '0'){
+                            $page0 = str_replace('{page}','0',$format);
+                            $page1 = str_replace('{page}','1',$format);
+                            $redirect = str_replace($page0,$page1,$this->uri);
+                            header("Location: {$redirect}");
+                            exit;
+                        }//if
+
+                        static::$paginateCurrentPage = $this->variables['page'];
+                        static::executeRoute();
+
+                    }//if
+
+                }//el
+
+            }//elif
             else {
 
-                $this->variables = $this->match($this->uri,$this->variableRestrictions,$this->auth,$this->allowURLParameters);
-
-                if($this->variables){
-                    static::executeRoute($this->action,$this->variables);
+                if($this->match()){
+                    static::executeRoute();
                 }//if
                 else if($this->children){
                     $this->buildRelativeChildren();
@@ -267,7 +325,8 @@ class Router {
 
 
     /**
-     * Allow URL parameters/variables to be present in the URL of the route.
+     * Allow URL (GET) parameters/variables to be present in the URL of the route. Passing nothing or an empty array 
+     * means any URL parameters are allowed.
      *
      *
      * @param array $uris The paramaters that are allowed to be present.
@@ -459,6 +518,27 @@ class Router {
 
 
     /**
+     * Match a GET request that uses pagination. 
+     *
+     * @param  string           $uri    The url to match.
+     * @param  string|\Closure  $action The action to take if there is a match.
+     *
+     * @return self 
+     */
+    public function paginate($uri,$action){
+
+        $this->paginate = true;
+        $this->requestMethod = 'GET';
+        $this->uri = $uri;
+        $this->action = $action;
+
+        return $this;
+
+    }//paginate
+
+
+
+    /**
      * Add where variables restrictions to the URI route.
      *
      *
@@ -495,17 +575,17 @@ class Router {
 
 
     /**
-     * Match a URI route against the $uri.
+     * Base on the conditions established in the route, does the request URI match with the routes URI. Any 
+     * variables that are extracted from the URI are stored in `$this->variables`.
      *
-     *
-     * @param  string  $uri The URI to match the route against.  
-     * @param array $restrict The variables that must exist in the URI.
-     * @param null|string|array The authentication for the route.
-     * @param null|array The GET URI paramaters allowed.
-     *
-     * @return boolean Was this $uri a match to the REQUEST_URI?
+     * @return boolean
      */
-    public static function match($uri,$restrict,$auth,$allowParams){
+    private function match(){
+
+        $uri = $this->uri;
+        $restrict = $this->variableRestrictions;
+        $auth = $this->auth;
+        $allowParams = $this->allowURLParameters;
 
         //if there is authentication and it doesn't pass, no match
         if(!static::authenticated($auth)){
@@ -546,8 +626,6 @@ class Router {
             return false;
         }//if
 
-
-        $return = Array();
         foreach($urlPieces as $k=>$urlPiece){
             $uriPiece = $uriPieces[$k];
 
@@ -588,7 +666,7 @@ class Router {
                 }//if
 
                 //store the variable to pass into the Closure or Controller
-                $return[$uriKey]=$urlPiece;
+                $this->variables[$uriKey]=$urlPiece;
 
             }//elif
             //more than 1 variable in the URI piece
@@ -630,7 +708,7 @@ class Router {
                         return false;
                     }//if
 
-                    $return[$variableKey] = $matches[$variableKey][0];
+                    $this->variables[$variableKey] = $matches[$variableKey][0];
 
                 }//foreach
 
@@ -638,7 +716,7 @@ class Router {
 
         }//foreach
 
-        return $return;
+        return true;
 
     }//match
 
@@ -684,17 +762,15 @@ class Router {
 
 
     /**
-     * Execute the action specified by a route, either Closure or Controller Method passing in arguements
-     * from the URI appropriatly.
-     *
-     *
-     * @param \Closure|string $action The action to be taken.
-     * @param Array $variables The variables to be passed to the action.
-     *
+     * Execute the action (`$this->action`) specified by a route, either Closure or Controller Method passing in arguements
+     * from the URI appropriatly (`$this->variables`).
      *
      * @return bool 
     */
-    public static function executeRoute($action,$variables=Array()){
+    private function executeRoute(){
+
+        $action = $this->action;
+        $variables = $this->variables;
 
         if(!$action instanceof \Closure){
 

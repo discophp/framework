@@ -2,6 +2,16 @@
 
 Class RouterTest extends PHPUnit_Framework_TestCase {
 
+
+
+    public function tearDown(){
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/';
+        $_SERVER['QUERY_STRING'] = '';
+    }//tearDown
+
+
+
     public function testGet(){
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -373,6 +383,95 @@ Class RouterTest extends PHPUnit_Framework_TestCase {
 
     }//filterTest
 
+
+
+    public function testAllowURLParameters(){
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $_SERVER['REQUEST_URI'] = '/test-page?foo=bar';
+        $_SERVER['QUERY_STRING'] = 'foo=bar';
+        $t = false;
+
+        Router::paginate('/test-page', function() use(&$t){
+            $t = true;
+            return false;
+        })->process();
+
+        $this->assertFalse($t);
+
+        $t = false;
+
+        Router::paginate('/test-page', function() use(&$t){
+            $t = true;
+            return false;
+        })
+            ->allowURLParameters(Array('foo'))
+            ->process();
+
+        $this->assertTrue($t);
+
+        $t = false;
+
+        Router::paginate('/test-page', function() use(&$t){
+            $t = true;
+            return false;
+        })
+            ->allowURLParameters()
+            ->process();
+
+        $this->assertTrue($t);
+      
+    }//testAllowURLParameters
+
+
+    public function testPaginate(){
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+
+        $_SERVER['REQUEST_URI'] = '/products/software';
+        $p = 0;
+
+        Router::paginate('/products/software', function($page) use(&$p){
+            $p = $page;
+            return false;
+        })->process();
+
+        $this->assertEquals(1,$p);
+
+
+        $_SERVER['REQUEST_URI'] = '/products/software/page/9';
+        $p = 0;
+
+        Router::paginate('/products/software', function($page) use(&$p){
+            $p = $page;
+            return false;
+        })->process();
+
+        $this->assertEquals(9,$p);
+
+
+        $_SERVER['REQUEST_URI'] = '/products/software/page/3?search=disco&limit=10';
+        $_SERVER['QUERY_STRING'] = 'search=disco&limit=10';
+        //$_SERVER['REQUEST_URI'] = '/products/software/page/3';
+        $p = 0;
+        $cat = '';
+
+        Router::paginate('/products/{category}', function($category,$page) use(&$cat,&$p){
+            $cat = $category;
+            $p = $page;
+            return false;
+        })
+        ->allowURLParameters(Array('search','limit'))
+        ->where('category','alpha_nospace')
+        ->process();
+
+        $this->assertEquals('software',$cat);
+        $this->assertEquals(3,$p);
+
+        \Disco\classes\Router::$paginateCurrentPage = 1;
+
+    }//testPaginate
 
 
 }//RouterTest

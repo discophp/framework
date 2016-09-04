@@ -7,9 +7,8 @@ namespace Disco\classes;
 
 
 /**
- * Model class.
- * Allows the creation of ORM style models through extentions of this class.
- * These extending classes must set $table and $ids to use the ORM.
+ * Turn a class into SQL layer abstraction for easy query building.
+ * These extending classes must set `$table` and `$ids`.
 */
 class Model {
 
@@ -63,9 +62,9 @@ class Model {
     
 
     /**
-     * @var array The result limit of the working query.
+     * @var array The limit and potential limit offset to apply to the working query.
     */
-    private $limit=Array();
+    private $limit=Array('offset' => null, 'limit' => null);
 
 
     /**
@@ -90,7 +89,7 @@ class Model {
     public final function clearData(){
         $this->where='';
         $this->joinOn=Array();
-        $this->limit=Array();
+        $this->limit=Array('offset' => null, 'limit' => null);
         $this->order=Array();
         $this->update='';
         $this->alias = null;
@@ -1008,15 +1007,17 @@ class Model {
      *
      * @param int $start Starting position of LIMIT or the number of tuples to return contigent upon the 
      * exsistance of the second parameter $limit.
-     * @param int $limit The number of tuples to return, default to 0.
+     * @param null|int $limit The number of tuples to return.
      *
      * @return self 
     */
-    public final function limit($start,$limit=0){
-        $this->limit[]=$start;
-        if($limit!=0){
-            $this->limit[]=$limit;
-        }//if
+    public final function limit($start,$limit=null){
+        if($limit !== null){
+            $this->limit['offset'] = $start;
+            $this->limit['limit'] = $limit;
+        } else {
+            $this->limit['limit'] = $start;
+        }//el
         return $this;
     }//limit
 
@@ -1083,11 +1084,14 @@ class Model {
 
 
         $limit='';
-        if(count($this->limit)==1)
-            $limit = "LIMIT {$this->limit[0]}";
-        else if(count($this->limit)==2)
-            $limit = "LIMIT {$this->limit[0]},{$this->limit[1]}";
-
+        if($this->limit['limit'] !== null){
+            if($this->limit['offset'] !== null){
+                $limit = "LIMIT {$this->limit['offset']},{$this->limit['limit']}";
+            }//if
+            else {
+                $limit = "LIMIT {$this->limit['limit']}";
+            }//el
+        }//if
 
         $alias = '';
         if($this->alias){

@@ -7,7 +7,7 @@ namespace Disco\classes;
  * of the fetch method override `$this->preFetch()` and `$this->postFetch`.
  *
  */
-abstract class AbstractLookUp {
+abstract class LookUp {
 
 
     /**
@@ -47,7 +47,7 @@ abstract class AbstractLookUp {
 
 
     /**
-     * @var null|array $page An array containing `offset` and `per_page`.
+     * @var int $page The current page being looked up.
     */
     protected $page;
 
@@ -321,7 +321,7 @@ abstract class AbstractLookUp {
     protected function prepareLimit(){
 
         if($this->limit){
-            if($this->page){
+            if($this->page !== null){
                 $this->Model->limit(($this->page - 1) * $this->limit ,$this->limit);
             } else {
                 $this->Model->limit($this->limit);

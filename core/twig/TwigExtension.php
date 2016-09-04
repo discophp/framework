@@ -50,7 +50,8 @@ class TwigExtension extends \Twig_Extension {
         return Array(
             new \Disco\twig\CacheTokenParser,
             new \Disco\twig\ScriptTokenParser,
-            new \Disco\twig\StyleTokenParser
+            new \Disco\twig\StyleTokenParser,
+            new \Disco\twig\PageTokenParser
         );
 
     }//getTokenParsers

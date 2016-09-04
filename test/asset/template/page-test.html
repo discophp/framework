@@ -1,0 +1,5 @@
+{% set lookup = App.with('PersonLookUp') %}
+{% page lookup.name('Person One').limit(1) as people %}
+    {% do View.set('pageTagTestLookUp', people) %}
+    {% do View.set('pageTagTestPaginate', page) %}
+{% endpage %}

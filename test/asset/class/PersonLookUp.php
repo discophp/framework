@@ -1,5 +1,5 @@
 <?php
-class PersonLookUp extends \Disco\classes\AbstractLookUp {
+class PersonLookUp extends \Disco\classes\LookUp {
 
     protected $fields = Array(
         'person_id' => 'p.person_id',

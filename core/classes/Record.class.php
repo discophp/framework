@@ -2,7 +2,7 @@
 namespace Disco\classes;
 
 /**
- * Abstract Record class. Treats an object as a table row. Use the Disco CLI tool to generate your records. 
+ * Abstract Record class. Treats an object as a table row (Active Record/ORM). Use the Disco CLI tool to generate your records. 
  *
  * Records: 
  *      - protects against missing ids
