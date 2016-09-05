@@ -1024,6 +1024,18 @@ class Model {
 
 
     /**
+     * Get the current limit being prepared for the active query. This method really only exists to be used with 
+     * the twig `page` tag.
+     *
+     * @return array
+    */
+    public final function getLimit(){
+        return $this->limit;
+    }//getLimit
+
+
+
+    /**
      * Return the data from the execution of the previous query.
      *
      * @return mixed Result of last query.

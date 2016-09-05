@@ -322,7 +322,11 @@ abstract class LookUp {
 
         if($this->limit){
             if($this->page !== null){
-                $this->Model->limit(($this->page - 1) * $this->limit ,$this->limit);
+                $page = $this->page;
+                if($page <= 0){
+                    $page = 1;
+                }//if
+                $this->Model->limit(($page - 1) * $this->limit ,$this->limit);
             } else {
                 $this->Model->limit($this->limit);
             }//el

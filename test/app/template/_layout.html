@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang='{{ View.lang }}'>
+    <head>
+        <meta charset='{{ View.charset }}' />
+        <meta content='{{ View.robots }}' name='robots'>
+
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+
+        <title>{{ View.title }}</title>
+
+        {% if View.desc %}
+        <meta name='description' content="{{ View.desc }}">
+        {% endif %}
+
+        {% if View.favIcon %}
+        <link type='image/x-icon' href='{{ View.favIcon }}' rel='shortcut icon'>
+        {% endif %}
+
+        {{ View.printStyleSrcs() }}
+
+        {{ View.printStyles() }}
+
+        {{ View.printHeadScriptSrcs() }}
+
+        {% if View.headExtra %}
+            {{ View.headExtra }}
+        {% endif %}
+
+    </head>
+    {% set bodyClasses = View.bodyClasses() %}
+    <body{% if bodyClasses %} class='{{ bodyClasses }}'{% endif %}> 
+
+        {% block content %}{% endblock %}
+
+        {{ View.printScriptSrcs() }}
+        {{ View.printScripts() }}
+
+    </body>
+</html>

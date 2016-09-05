@@ -35,26 +35,52 @@ class PageNode extends \Twig_Node {
 
 
     /**
-     * The method the twig tag `page` uses to perform pagination on lookups.
+     * The method the twig tag `page` uses to perform pagination on lookups and models.
      *
      *
-     * @param mixed $lookup A instance of a class that extends {@link \Disco\classes\AbstractLookUp}.
+     * @param mixed $lookup A instance of a class that extends {@link \Disco\classes\LookUp} or {@link 
+     * \Disco\classes\Model}.
      *
      * @return array The first element is the {@link \Disco\classes\Paginate}, the second is the results of the 
-     * lookup.
+     * lookup or model query.
+     *
+     * @throws \Disco\exceptions\Excetion When trying to use the lookup tag on a class that does not extend {@link \Disco\classes\LookUp} or {@link \Disco\classes\Model}.
     */
-    public static function page($lookup){
+    public static function page($object){
 
         $page = \Disco\classes\Router::$paginateCurrentPage;
 
-        $lookup->page($page);
+        $parent = get_parent_class($object);
 
-        $copy = clone $lookup;
+        if($parent === 'Disco\classes\LookUp'){
 
-        return Array(
-            (new \Disco\classes\Paginate($page, $copy->total()->fetch(), $lookup->getLimit())),
-            $lookup->fetch(),
-        );
+            $object->page($page);
+
+            $copy = clone $object;
+
+            return Array(
+                (new \Disco\classes\Paginate($page, $copy->total()->fetch(), $object->getLimit())),
+                $object->fetch(),
+            );
+
+        } else if($parent === 'Disco\classes\Model'){
+
+            $limit = $object->getLimit();
+
+            $object->limit($page - 1,$limit['limit']);
+
+            $copy = clone $object;
+
+            $copy->limit(0,1)->select('COUNT(*) AS total');
+
+            return Array(
+                (new \Disco\classes\Paginate($page, $copy->first()['total'], $limit['limit'])),
+                $object->asArray(),
+            );
+
+        }//elif
+
+        throw new \Disco\exceptions\Exception('The page tag can only be applied to classes that extend `\Disco\classes\LookUp` and `\Disco\classes\Model`');
 
     }//page
 

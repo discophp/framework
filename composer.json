@@ -4,11 +4,11 @@
     "license": "Apache License V2",
     "authors": [
         {
-            "name": "Bradley Hamilton",
-            "email": "brad@bradleyhamilton.com"
+            "name": "WebYoke",
+            "email": "support@webyoke.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php":">=5.4.0",
         "ext-mcrypt":"*",

@@ -1,19 +1,26 @@
 <?php
-require('vendor/autoload.php');
-require_once('vendor/discophp/framework/test/asset/class/PersonModelTest.php');
-require_once('vendor/discophp/framework/test/asset/class/PersonEmailModelTest.php');
-require_once('vendor/discophp/framework/test/asset/class/PersonRecordTest.php');
-require_once('vendor/discophp/framework/test/asset/class/PersonLookUp.php');
-require_once('vendor/discophp/framework/test/asset/class/DiscoPhpTestFactory.php');
-require_once('vendor/discophp/framework/test/asset/class/DiscoPhpUnitTestController.php');
-require_once('vendor/discophp/framework/test/asset/class/DITest.php');
+
+$_SERVER['DISCO_TEST_DIR'] = dirname(__DIR__);
+
+function unitTestPath($path) {
+    return $_SERVER['DISCO_TEST_DIR'] . '/' . ltrim($path,'/');
+}//unitTestPath
+
+require unitTestPath('vendor/autoload.php');
+
+$testClasses = glob(unitTestPath('test/asset/class/*.php'));
+
+foreach($testClasses as $class){
+    require $class;
+}//foreach
 
 $_SERVER['REQUEST_URI'] = '/';
 $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['QUERY_STRING'] = null;
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
-$path = dirname(dirname(dirname(dirname(__DIR__))));
-\Disco\classes\App::instance($path)->setUp();
+$app_dir = $_SERVER['DISCO_TEST_DIR'] . '/test';
+
+\Disco\classes\App::instance($app_dir)->setUp();
 
 \Session::has('test');

@@ -1,0 +1,12 @@
+{% extends View.isAjax ? "_ajax_layout.html" : "_layout.html" %}
+
+{% block content %}
+
+    <div class='body-content-wrapper'>
+        <div class='header'>{{ View.getHeader }}</div>
+        <div class='body'>{{ View.body }}</div>
+    </div>
+
+    <div class='footer'>{{ View.getFooter }}</div>
+
+{% endblock %}

@@ -5,7 +5,8 @@ Class DataTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
 
-        $this->stream = \App::path() . '/vendor/discophp/framework/test/asset/mock-php-input-stream.txt';
+        //$this->stream = \App::path() . '/vendor/discophp/framework/test/asset/mock-php-input-stream.txt';
+        $this->stream = unitTestPath('test/asset/mock-php-input-stream.txt');
 
         $_POST['post_test'] = 'post_value';
         $_GET['get_test'] = 'get_value';

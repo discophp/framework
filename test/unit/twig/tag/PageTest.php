@@ -6,10 +6,7 @@ Class PageTest extends PHPUnit_Framework_TestCase {
 
     public function setUp(){
 
-        $this->TemplateRef = new TemplateTest;
         $this->DBRef = new DBTest;
-
-        $this->TemplateRef->setUp();
         $this->DBRef->setUp();
 
     }//setUp
@@ -17,7 +14,6 @@ Class PageTest extends PHPUnit_Framework_TestCase {
 
     public function tearDown(){
 
-        $this->TemplateRef->tearDown();
         $this->DBRef->tearDown();
 
     }//setUp
@@ -26,7 +22,7 @@ Class PageTest extends PHPUnit_Framework_TestCase {
 
     public function testPageTag(){
 
-        $this->TemplateRef->Template->render('page-test.html');
+        Template::render('page-lookup-test.html');
 
         $pageTagTestLookUp = View::get('pageTagTestLookUp');
         $pageTagTestPaginate = View::get('pageTagTestPaginate');
@@ -35,6 +31,19 @@ Class PageTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(1,count($pageTagTestLookUp));
         $this->assertTrue($pageTagTestPaginate instanceof \Disco\classes\Paginate);
         $this->assertEquals(2,$pageTagTestPaginate->totalPages);
+
+
+        Template::render('page-model-test.html');
+
+        $pageTagTestModel = View::get('pageTagTestModel');
+        $pageTagTestPaginate = View::get('pageTagTestPaginate');
+
+        $this->assertTrue(is_array($pageTagTestModel));
+        $this->assertEquals(1,count($pageTagTestModel));
+        $this->assertEquals('Person Two',$pageTagTestModel[0]['name']);
+        $this->assertTrue($pageTagTestPaginate instanceof \Disco\classes\Paginate);
+        $this->assertEquals(5,$pageTagTestPaginate->totalPages);
+
         
     }//testPageTag
 

@@ -1,0 +1,5 @@
+{% set model = App.with('PersonModelTest') %}
+{% page model.select('name').where('age IS NOT NULL').order('age').limit(1) as people %}
+    {% do View.set('pageTagTestModel', people) %}
+    {% do View.set('pageTagTestPaginate', page) %}
+{% endpage %}
