@@ -130,6 +130,51 @@ class DataModel implements \ArrayAccess {
 
 
     /**
+     * Verify only the passed fields data. This comes in handy when you only want to verify a subset of the data 
+     * models definition. 
+     *
+     * @param array $fields The field data keys to verify.
+     *
+     * @return boolean Whether the data in the passed fields passed verification.
+    */
+    public final function verifyOnly($fields){
+
+        foreach($fields as $k){
+            $this->verifyData($k);
+        }//foreach
+
+        if(count($this->errors)){
+            return false;
+        }//if
+
+        return true;
+
+    }//verifyOnly
+
+
+
+    /**
+     * Verify only data that has been set in the data model and not all data defined by the definitions.
+     *
+     * @return boolean Whether the set data passed verification.
+    */
+    public final function verifySetData(){
+
+        foreach($this->data as $k => $v){
+            $this->verifyData($k);
+        }//foreach
+
+        if(count($this->errors)){
+            return false;
+        }//if
+
+        return true;
+
+    }//verifySetData
+
+
+
+    /**
      * Verify a single piece of data in the model. If the data fails to validate its corresponding error message 
      * will be set in the errors by the same key.
      *
@@ -379,6 +424,15 @@ class DataModel implements \ArrayAccess {
     public final function getErrors(){
         return $this->errors;
     }//getErrors
+
+
+
+    /**
+     * Clear all errors from the data model.
+    */
+    public final function clearErrors(){
+        $this->errors = Array();
+    }//clearErrors
 
 
 
