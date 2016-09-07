@@ -5,7 +5,7 @@ return Array(
     'DEV_MODE'              => false,
     'MAINTENANCE_MODE'      => false,
 
-    'DOMAIN'                => 'your-site.localhost',
+    'DOMAIN'                => '',
     'FORCE_HTTPS'           => false,
 
     'CSRF_TOKEN_NAME'       => 'APP_CSRF_TOKEN',
@@ -18,8 +18,8 @@ return Array(
 
     'DB_HOST'               => '127.0.0.1',
     'DB_USER'               => 'root',
-    'DB_PASSWORD'           => 'rainbow22',
-    'DB_DB'                 => 'DISCO_TEST',
+    'DB_PASSWORD'           => '',
+    'DB_DB'                 => 'test_db',
 
     'AES_KEY256'            => 'def00000440d830145f0e6d2870a144b04582f3c4dce4dbeb3a934743530135060d3ccd897850f23d843d74b43d19d10e67ee743a53de6ed04d80b45c20e803679a1f703',
 

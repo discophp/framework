@@ -12,7 +12,7 @@ Class FormTest extends PHPUnit_Framework_TestCase {
             ->props(Array('class'=>'test'))
             ->make(Array('email'=>'test@email.com'));
 
-        $actual = '<form method="POST" ><label>email<input name="email" value="test@email.com" type="text" class="test" /></label><input type="submit" value="send" /></form>';
+        $actual = '<form method="POST"><label>email<input name="email" value="test@email.com" type="text" class="test"/></label><input type="submit" value="send"/></form>';
 
         $this->assertEquals($actual,$form);
 
@@ -53,7 +53,7 @@ Class FormTest extends PHPUnit_Framework_TestCase {
         $form = $this->Form->from('PersonModelTest')
             ->where(Array('person_id'=>1))
             ->make();
-        $actual = '<form><input name="person_id" value="1" type="hidden" /><label>name<input name="name" value="Person One" type="text" /></label><label>age<input name="age" value="30" type="number" /></label><input type="submit" value="send" /></form>';
+        $actual = '<form><input name="person_id" value="1" type="hidden"/><label>name<input name="name" value="Person One" type="text"/></label><label>age<input name="age" value="30" type="number"/></label><input type="submit" value="send"/></form>';
         $this->assertEquals($actual,$form);
 
 
@@ -61,7 +61,7 @@ Class FormTest extends PHPUnit_Framework_TestCase {
             ->where(Array('person_id'=>1))
             ->with(Array('name'))
             ->make();
-        $actual = '<form><label>name<input name="name" value="Person One" type="text" /></label><input type="submit" value="send" /></form>';
+        $actual = '<form><label>name<input name="name" value="Person One" type="text"/></label><input type="submit" value="send"/></form>';
         $this->assertEquals($actual,$form);
 
 
@@ -69,14 +69,14 @@ Class FormTest extends PHPUnit_Framework_TestCase {
             ->where(Array('person_id'=>1))
             ->without(Array('age'))
             ->make();
-        $actual = '<form><input name="person_id" value="1" type="hidden" /><label>name<input name="name" value="Person One" type="text" /></label><input type="submit" value="send" /></form>';
+        $actual = '<form><input name="person_id" value="1" type="hidden"/><label>name<input name="name" value="Person One" type="text"/></label><input type="submit" value="send"/></form>';
         $this->assertEquals($actual,$form);
 
 
         $form = $this->Form->from('PersonModelTest')
             ->blank()
             ->make();
-        $actual = '<form><label>person_id<input name="person_id" value="" type="text" /></label><label>name<input name="name" value="" type="text" /></label><label>age<input name="age" value="" type="text" /></label><input type="submit" value="send" /></form>';
+        $actual = '<form><label>person_id<input name="person_id" value="" type="text"/></label><label>name<input name="name" value="" type="text"/></label><label>age<input name="age" value="" type="text"/></label><input type="submit" value="send"/></form>';
         $this->assertEquals($actual,$form);
 
 
@@ -98,24 +98,24 @@ Class FormTest extends PHPUnit_Framework_TestCase {
         //TEST SELECT MENU
         $data = Array('r'=>'red','g'=>'green');
         $select = $this->Form->selectMenu($data,'color','g');
-        $actual = '<select name="color" ><option value="r" >red</option><option value="g" selected="selected" >green</option></select>';
+        $actual = '<select name="color"><option value="r">red</option><option value="g" selected="selected">green</option></select>';
         $this->assertEquals($actual,$select);
 
         $data = $dbTest->DB->query('SELECT person_id AS option_value,name AS option_text FROM discophp_test_person ORDER BY person_id LIMIT 2');
         $select = $this->Form->selectMenu($data,'names');
-        $actual = '<select name="names" ><option value="1" >Person One</option><option value="2" >Person Two</option></select>';
+        $actual = '<select name="names"><option value="1">Person One</option><option value="2">Person Two</option></select>';
         $this->assertEquals($actual,$select);
 
 
         //TEST RADIO BUTTONS 
         $data = Array('r'=>'red','g'=>'green');
         $radio = $this->Form->radioButtons($data,'color','g');
-        $actual = '<label>red<input name="color" value="r" type="radio" /></label><label>green<input name="color" value="g" type="radio" checked="checked" /></label>';
+        $actual = '<label>red<input name="color" value="r" type="radio"/></label><label>green<input name="color" value="g" type="radio" checked="checked"/></label>';
         $this->assertEquals($actual,$radio);
 
         $data = $dbTest->DB->query('SELECT person_id AS button_value,name AS button_text FROM discophp_test_person ORDER BY person_id LIMIT 2');
         $radio = $this->Form->radioButtons($data,'names');
-        $actual = '<label>Person One<input name="names" value="1" type="radio" /></label><label>Person Two<input name="names" value="2" type="radio" /></label>';
+        $actual = '<label>Person One<input name="names" value="1" type="radio"/></label><label>Person Two<input name="names" value="2" type="radio"/></label>';
         $this->assertEquals($actual,$radio);
 
 

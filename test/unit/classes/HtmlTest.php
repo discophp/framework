@@ -13,7 +13,7 @@ Class HtmlTest extends PHPUnit_Framework_TestCase {
 
     public function testElementCreationWithAttributes(){
         $a = $this->Html->a(Array('href'=>'/slug'),'test link');
-        $this->assertEquals('<a href="/slug" >test link</a>',$a);
+        $this->assertEquals('<a href="/slug">test link</a>',$a);
     }//testElementCreationWithAttributes
 
     public function testPush(){

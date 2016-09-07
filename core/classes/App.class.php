@@ -190,18 +190,23 @@ Class App extends \Pimple\Container {
         });
 
         if($domain === null){
-            if(!$this->config('DOMAIN')){
-                $this->domain = 'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['SERVER_NAME'];
-            } else {
-                $this->domain = $this->config('DOMAIN');
-            }//el
-        } else {
-            if(substr($domain,0,4) != 'http'){
-                $domain = 'http://' . $domain;
+            if($this->configKeyExists('DOMAIN') && $this->config('DOMAIN')){
+                $domain = $this->config('DOMAIN');
             }//if
-            $this->domain = $domain;
-        }//el
+            else {
+                $domain = $_SERVER['SERVER_NAME'];
+            }//el
+        }//if
 
+        if(substr($domain,0,4) != 'http'){
+            $domain = 'http://' . $domain;
+        }//if
+
+        if(!empty($_SERVER['HTTPS']) && substr($domain,0,5) != 'https'){
+            $domain = str_replace('http://','https://',$domain);
+        }//if
+
+        $this->domain = $domain;
 
     }//__construct
 
@@ -231,7 +236,7 @@ Class App extends \Pimple\Container {
         }//if
 
         if(!$this->cli && $this->config('FORCE_HTTPS') && empty($_SERVER['HTTPS'])){
-            \View::redirect(str_replace('http','https',$this->domain));
+            \View::redirect($this->domain . $_SERVER['REQUEST_URI']);
         }//if
 
         /**

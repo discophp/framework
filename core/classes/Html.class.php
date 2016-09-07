@@ -67,7 +67,7 @@ Class Html {
             foreach($args[0] as $k=>$v){
                 $props .= sprintf($this->prop,$k,$v);
             }//foreach
-            rtrim($props);
+            $props = rtrim($props);
 
             if(!isset($args[1]) && in_array($method,$this->noClose)){
                 $out = sprintf($this->noCloseBase,$method.' '.$props);

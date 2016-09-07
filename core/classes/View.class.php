@@ -323,7 +323,9 @@ class View {
      * @return void
     */
     public function lang($lang = null){
-        if(!$lang) return $this->view['lang'];
+        if(!$lang){ 
+            return $this->view['lang'];
+        }//if
         $this->view['lang'] = $lang;
     }//lang
 
@@ -337,7 +339,9 @@ class View {
      * @return void
     */
     public function charset($charset = null){
-        if($charset === null) return $this->view['charset'];
+        if($charset === null){
+            return $this->view['charset'];
+        }//if
         $this->view['charset'] = $charset;
     }//charset
 
@@ -351,7 +355,9 @@ class View {
      * @return void
     */
     public function headExtra($extra = null){
-        if($extra === null) return $this->view['headExtra'];
+        if($extra === null){
+            return $this->view['headExtra'];
+        }//if
         $this->view['headExtra'] .= $extra;
     }//headExtra
 
@@ -552,35 +558,50 @@ class View {
 
 
     /**
-     * When we create full path links to resources and the browser is using SSL/HTTPS
-     * we need to make sure we request that resource as such in order to avoid mixed content errors.
-     *
+     * Create FQDN link.
      *
      * @param string $p The path of the resource.
-     * @param string $h The host of the resource ( if not local).
+     *
+     * @return string The FQDN.
     */
-    public static function url($p,$h=null){
-        if(!empty($_SERVER['HTTPS']) && $h===null && substr($p,0,1)=='/'){
-            $p = \App::domain() . $p;                                                                             
-        }//if                                                                                                               
-        else if($h!==null && substr($h,0,3)!='http'){                                                                        
-            $p = 'http://'.$h.$p;                                                                                           
-        }//elif   
-        return $p;
+    public static function url($p){
+        return \App::domain() . $p;                                                                             
     }//url
 
 
 
     /**
-     * When we create full path links to resources and the browser is using SSL/HTTPS
-     * we need to make sure we request that resource as such in order to avoid mixed content errors.
-     *
+     * Create FQDN link.
      *
      * @param string $p The path of the resource.
+     *
+     * @return string The FQDN.
     */
     public static function localUrl($p){
         return \App::domain() . $p;
     }//localUrl
+
+
+
+    /**
+     * Append the last modified time to a resource path in a GET variable (default is `c`). This can be useful if 
+     * your caching assets via `.htaccess` rules and you dont want to have to rename them manually after every 
+     * change.
+     *
+     * @param string $path The path to the resource as used in the front end.
+     * @param string $var The GET variable name to store the last modified time in.
+     *
+     * @return string The path with the last modified time appended.
+    */
+    public function appendLastMod($path, $var = 'c'){
+
+        if(substr($path,0,1) !== '/' || substr($path,0,2) === '//'){
+            return $path;
+        }//if
+
+        return $path . '?c=' . stat(\App::path() . '/public' . $path)['mtime'];
+
+    }//appendLastMod
 
 
 
@@ -594,11 +615,11 @@ class View {
     */
     public function prop($k,$v){
         if($this->lastCallType=='script')
-            $this->view['scriptSrcs'][count($this->view['scriptSrcs'])-1]['props'][$k]=$v;
+            $this->view['scriptSrcs'][count($this->view['scriptSrcs'])-1][$k]=$v;
         else if($this->lastCallType=='style')
-            $this->view['styleSrcs'][count($this->view['styleSrcs'])-1]['props'][$k]=$v;
+            $this->view['styleSrcs'][count($this->view['styleSrcs'])-1][$k]=$v;
         else 
-            $this->view['headScriptSrcs'][count($this->view['headScriptSrcs'])-1]['props'][$k]=$v;
+            $this->view['headScriptSrcs'][count($this->view['headScriptSrcs'])-1][$k]=$v;
     }//prop
 
 
@@ -619,13 +640,24 @@ class View {
      * Add a Javascript file to the page by URL.
      *
      *
-     * @param string $s A URL path to a javascript file.
+     * @param string $path A URL path to a javascript file.
+     *
      * @return self 
     */
-    public function scriptSrc($s){
-        $this->view['scriptSrcs'][]=Array('src'=>$s,'props'=>Array());
+    public function scriptSrc($path,$appendLastMod = false){
+
+        if($appendLastMod){
+            $path = $this->appendLastMod($path);
+        }//if
+
+        $this->view['scriptSrcs'][] = Array(
+            'type'  => 'text/javascript',
+            'src'   => $path,
+        );
+
         $this->lastCallType='script';
         return $this;
+
     }//scriptSrc
 
 
@@ -634,15 +666,24 @@ class View {
      * Add a Javascript file to the page head by URL.
      *
      *
-     * @param string $s A URL path to a javascript file.
+     * @param string $path A URL path to a javascript file.
      * @return self 
     */
-    public function headScriptSrc($s){
-        $this->view['headScriptSrcs'][]=Array('src'=>$s,'props'=>Array());
+    public function headScriptSrc($path,$appendLastMod = false){
+
+        if($appendLastMod){
+            $path = $this->appendLastMod($path);
+        }//if
+
+        $this->view['headScriptSrcs'][] = Array(
+            'type'  => 'text/javascript',
+            'src'   => $path,
+        );
+
         $this->lastCallType='headScript';
         return $this;
-    }//headScriptSrc
 
+    }//headScriptSrc
 
 
 
@@ -663,13 +704,24 @@ class View {
      * Add a CSS file to the page by URL.
      *
      *
-     * @param string $s A url path to a CSS file.
+     * @param string $path A url path to a CSS file.
      * @return self 
     */
-    public function styleSrc($s){
-        $this->view['styleSrcs'][]=Array('src'=>$s,'props'=>Array());
+    public function styleSrc($path,$appendLastMod = false){
+
+        if($appendLastMod){
+            $path = $this->appendLastMod($path);
+        }//if
+
+        $this->view['styleSrcs'][] = Array(
+            'rel'   => 'stylesheet',
+            'type'  => 'text/css',
+            'href'  => $path,
+        );
+
         $this->lastCallType='style';
         return $this;
+
     }//styleSrc
 
 
@@ -743,12 +795,9 @@ class View {
     public function printStyleSrcs(){
 
         $styles = '';
+
         foreach($this->view['styleSrcs'] as $s){
-            $styles .= '<link rel="stylesheet" href="'.$this->url($s['src']).'" type="text/css"';
-            foreach($s['props'] as $p=>$a){
-                $styles .= " {$p}=\"{$a}\"";
-            }//foreach
-            $styles .= '/>';
+            $styles .= \Html::link($s);
         }//foreach
 
         return $styles;
@@ -807,11 +856,7 @@ class View {
 
         $scripts = '';
         foreach($src as $s){
-            $scripts .= '<script src="' . $this->url($s['src']) . '" type="text/javascript"';
-            foreach($s['props'] as $p=>$a){
-                $scripts .= " {$p}=\"{$a}\"";
-            }//foreach
-            $scripts .= '></script>';
+            $scripts .= \Html::script($s);
         }//foreach
 
         return $scripts;
