@@ -19,7 +19,7 @@ Class LookUpTest extends PHPUnit_Framework_TestCase {
 
         //Test basics
         $PersonLookUp = new PersonLookUp;
-        $result = $PersonLookUp->name('Person One')->fetch();
+        $result = $PersonLookUp->name('Person One')->order('email')->fetch();
         $this->assertTrue(is_array($result));
         $result = $result[0];
         $this->assertTrue(is_array($result));
@@ -28,7 +28,7 @@ Class LookUpTest extends PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('age',$result);
         $this->assertArrayHasKey('email',$result);
         $this->assertEquals('Person One',$result['name']);
-        $this->assertEquals('test1@email.com',$result['email']);
+        $this->assertEquals('test11@email.com',$result['email']);
 
         //Test Condition
         $PersonLookUp = new PersonLookUp;
