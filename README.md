@@ -10,7 +10,6 @@ Version](https://poser.pugx.org/discophp/framework/v/unstable.svg)](https://pack
 
 <h1>Disco PHP Framework</h1>
 
-
 <p>This is the core code that powers the Disco PHP framework.</p>
 
 <p>
