@@ -53,7 +53,6 @@ Class LookUpTest extends PHPUnit_Framework_TestCase {
             ->page(1)
             ->fetch();
         $this->assertEquals(1,count($result));
-        $this->assertEquals('test11@email.com',$result[0]['email']);
 
 
     }//testLookUp
