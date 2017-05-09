@@ -4,7 +4,7 @@ namespace Disco\classes;
 /**
  * This is the Html class.
  * It helps you build html elements with a logical and simple syntax.
- * This class doesn't not contain any actual methods, but instead using 
+ * This class does not contain any actual methods, but instead using
  * the magic method __call($method,$args) we can build any specified html
  * element from a mocked method.
  * For example:
@@ -56,7 +56,7 @@ Class Html {
      *
      *
      * @param string $method The method name called and also the intented html element to return.
-     * @param Array $args The arguements passed to $method.
+     * @param Array $args The arguments passed to $method.
      *
      * @return string
     */

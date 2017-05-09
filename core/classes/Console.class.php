@@ -155,9 +155,7 @@ class Console {
      * @param array $args The arguements.
     */
     public function killJob($args){
-
-        \Queue::killJob($argv[0]);
-
+        \Queue::killJob($args[0]);
     }//killJob
 
 
@@ -173,36 +171,36 @@ class Console {
     */
     public function gen($args){
 
-            if($args[0]=='aes'){
-                $r = \Disco\manage\Manager::genAES256Key();
-                if(isset($args[1]) && $args[1]=='set'){
-                    \Disco\manage\Manager::setAES256Key($r);
-                    echo '`AES_KEY256` now set to : ' . $r . PHP_EOL;
-                }//if
-                else {
-                    echo $r . PHP_EOL;
-                }//el
+        if($args[0]=='aes'){
+            $r = \Disco\manage\Manager::genAES256Key();
+            if(isset($args[1]) && $args[1]=='set'){
+                \Disco\manage\Manager::setAES256Key($r);
+                echo '`AES_KEY256` now set to : ' . $r . PHP_EOL;
             }//if
-            else if($args[0]=='sha'){
-
-                if(empty($args[1])){
-                    echo 'You must specify a length for the SHA512 salt' . PHP_EOL;
-                    exit;
-                }//if
-
-                $s = \Disco\manage\Manager::genSalt($args[1]);
-
-                if(!empty($args[2]) && $args[2]=='set'){
-                    \Disco\manage\Manager::setSalt($s);
-                    echo '`SHA512_SALT` now set to : ' . $s . PHP_EOL;
-                }//if
-                else {
-                    echo $s . PHP_EOL;
-                }//el
-
-            } else {
-                echo 'You must specify what to gen, either `aes` or `sha`' . PHP_EOL;
+            else {
+                echo $r . PHP_EOL;
             }//el
+        }//if
+        else if($args[0]=='sha'){
+
+            if(empty($args[1])){
+                echo 'You must specify a length for the SHA512 salt' . PHP_EOL;
+                exit;
+            }//if
+
+            $s = \Disco\manage\Manager::genSalt($args[1]);
+
+            if(!empty($args[2]) && $args[2]=='set'){
+                \Disco\manage\Manager::setSalt($s);
+                echo '`SHA512_SALT` now set to : ' . $s . PHP_EOL;
+            }//if
+            else {
+                echo $s . PHP_EOL;
+            }//el
+
+        } else {
+            echo 'You must specify what to gen, either `aes` or `sha`' . PHP_EOL;
+        }//el
 
 
     }//gen
@@ -258,7 +256,7 @@ class Console {
             exit;
         }//if
 
-        Disco\manage\Manager::maintenanceMode(($args[0] == 'true') ? true : false);
+        \Disco\manage\Manager::maintenanceMode(($args[0] == 'true') ? true : false);
         echo 'MAINTENANCE_MODE now set to: ' . $args[0] . PHP_EOL;
         if($args[0] == 'true'){
             echo 'Users will being seeing the result of the file' . PHP_EOL . ' -  app/maintenance.php' . PHP_EOL;

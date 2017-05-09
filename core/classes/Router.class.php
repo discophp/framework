@@ -1,14 +1,14 @@
 <?php
 namespace Disco\classes;
 /**
- *      This file holds the class Router 
+ * This file holds the class Router
 */
 
 
 
 /**
  * Router class.
- * Used to resove a RESTful endpoint to an action, either a \Closure or a Controller.
+ * Used to resolve a RESTful endpoint to an action, either a \Closure or a Controller.
 */
 class Router {
 
@@ -76,55 +76,55 @@ class Router {
     /**
      * @var boolean $secureRoute Is route HTTPS?
     */
-    private $secureRoute=false;
+    private $secureRoute = false;
 
 
     /**
      * @var boolean $isFilter Is this Router a Filter Router?
     */
-    private $isFilter=false;
+    private $isFilter = false;
 
 
     /**
      * @var boolean $filterBase When we a do a filter we store the base here
     */
-    private $filterBase;
+    private $filterBase = false;
 
 
     /**
      * @var boolean $filteredOn When we a do a filter we store the filtered portion here
     */
-    private $filteredOn;
+    private $filteredOn = false;
 
 
     /**
      * @var null|string|array|\Closure $useRouter Send a filtered route to Router file,an array of routes, or Closure.
     */
-    private $useRouter=null;
+    private $useRouter = null;
 
 
     /**
      * @var null|array $children Children of a route.
     */
-    private $children=null;
+    private $children = null;
 
 
     /**
      * @var null|string|array $auth Store authentication requirements on route.
     */
-    private $auth=null;
+    private $auth = null;
 
 
     /**
      * @var boolean $allowURLParameters Allow GET variables to be contained in the route.
     */
-    private $allowURLParameters=false;
+    private $allowURLParameters = false;
 
 
     /**
      * @var boolean $paginate Is the route a paginated route?
     */
-    private $paginate=false;
+    private $paginate = false;
 
 
 
@@ -295,7 +295,7 @@ class Router {
 
     /**
      * Convert a children array of routes to use the parent routes information by prepending the parent URI to the 
-     * childrens URIs and merge the childrens where variable restrictions with the parents where variable 
+     * children's URIs and merge the children's where variable restrictions with the parents where variable
      * restrictions.
     */
     private function buildRelativeChildren(){
@@ -329,7 +329,7 @@ class Router {
      * means any URL parameters are allowed.
      *
      *
-     * @param array $uris The paramaters that are allowed to be present.
+     * @param array $params The paramaters that are allowed to be present.
      *
      * @return self
     */
@@ -339,7 +339,7 @@ class Router {
         }//if
         $this->allowURLParameters = $params;
         return $this;
-    }//allowUrlParamaters
+    }//allowURLParameters
 
 
 
@@ -376,7 +376,8 @@ class Router {
      * Filter a url route using {*} notation.
      *
      *
-     * @param  string  $uri the URI filter
+     * @param string $uri The URI filter.
+     * @param string|\Closure $action The action to take if there is a match.
      * @return self 
     */
     public function filter($uri,$action = null){
@@ -545,7 +546,7 @@ class Router {
      * @param  string|array $k Either a string key or an array.
      * @param  null|string  $v Either null or a string.
      *
-     * @return void
+     * @return self
      */
     public function where($k,$v=null){
         if(is_array($k)){
@@ -762,8 +763,8 @@ class Router {
 
 
     /**
-     * Execute the action (`$this->action`) specified by a route, either Closure or Controller Method passing in arguements
-     * from the URI appropriatly (`$this->variables`).
+     * Execute the action (`$this->action`) specified by a route, either Closure or Controller Method passing in agreements
+     * from the URI appropriately (`$this->variables`).
      *
      * @return bool 
     */
@@ -827,10 +828,10 @@ class Router {
 
     /**
      * Private method for setting and getting whether we have a route match yet. Big difference is that this method 
-     * does not call `static::procesAvailableRoutes()` unlike its public counter part `routeMatch()`. The reason 
+     * does not call `static::processAvailableRoutes()` unlike its public counter part `routeMatch()`. The reason
      * the public method calls `static::processAvailableRoutes()` is so that say a Router was created, and 
-     * immeditatly after the a call is made to `Router::routeMatch()` to check if the last route satisifed the 
-     * request, well if the `process()` method wasn't called on it directly, it wont be processed until another 
+     * immediately after the a call is made to `Router::routeMatch()` to check if the last route satisifed the
+     * request, well if the `process()` method was not called on it directly, it wont be processed until another
      * Router is created or the end of the application method `tearDown()` is called. So to make sure we respond 
      * with the correct anwser we need to make sure any un-processed routes are processed first.
      *
@@ -862,7 +863,7 @@ class Router {
 
 
     /**
-     * Once a router has found a match we dont perform more match attempts. 
+     * Once a router has found a match we don't perform more match attempts.
      * This function is both a setter and a getter.
      *
      *
@@ -881,9 +882,13 @@ class Router {
 
 
     /**
-     * Resolve a string name to a router file path.
+     * Resolve a string name to a router file path. Can be as simple as say `user` which would map to 
+     * `app/router/user.router.php` or aliased like `@shopping`.
+     *
+     * @param string $routerPath The relative name of the router.
      *
      * @return string The path to the router file.
+     *
      * @throws \Disco\exceptions\Exception When no router file is found given the passed router path.
     */
     public static function resolveRouterPath($routerPath){
@@ -911,10 +916,8 @@ class Router {
     * Load a Router File for processing.
     *
     *
-    * @param string|array $router Path to a router file that contains Router definitions, or returns an array of 
+    * @param string|array $routerPath Path to a router file that contains Router definitions, or returns an array of
     * routes. Or an array of routes to process.
-    *
-    * @return void
     */
     public static function useRouter($routerPath){
 

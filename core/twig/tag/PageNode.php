@@ -2,7 +2,7 @@
 namespace Disco\twig;
 
 /**
- * Compliler for `page` twig template tag. <a href='http://twig.sensiolabs.org/doc/advanced.html#tags'>Twig Tag 
+ * Compiler for `page` twig template tag. <a href='http://twig.sensiolabs.org/doc/advanced.html#tags'>Twig Tag
  * Docs</a>.
  */
 class PageNode extends \Twig_Node {
@@ -38,13 +38,13 @@ class PageNode extends \Twig_Node {
      * The method the twig tag `page` uses to perform pagination on lookups and models.
      *
      *
-     * @param mixed $lookup A instance of a class that extends {@link \Disco\classes\LookUp} or {@link 
+     * @param \Disco\classes\Lookup|\Disco\classes\Model $object A instance of a class that extends {@link \Disco\classes\LookUp} or {@link
      * \Disco\classes\Model}.
      *
      * @return array The first element is the {@link \Disco\classes\Paginate}, the second is the results of the 
      * lookup or model query.
      *
-     * @throws \Disco\exceptions\Excetion When trying to use the lookup tag on a class that does not extend {@link \Disco\classes\LookUp} or {@link \Disco\classes\Model}.
+     * @throws \Disco\exceptions\Exception When trying to use the lookup tag on a class that does not extend {@link \Disco\classes\LookUp} or {@link \Disco\classes\Model}.
     */
     public static function page($object){
 

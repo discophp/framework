@@ -117,7 +117,7 @@ Class App extends \Pimple\Container {
      *
      * @return \Disco\classes\App
     */
-    public static function instance($path = null,$domain = null){
+    public static function instance($path = null, $domain = null){
 
         if(!self::$app){
             self::$app = new \Disco\classes\App($path,$domain);
@@ -314,7 +314,7 @@ Class App extends \Pimple\Container {
      *
      * @throws \Exception If the config key doesn't exist.
     */
-    public function config($name,$value=null){
+    public function config($name, $value=null){
 
         if($value === null){
 
@@ -390,7 +390,7 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public final function registerAlias($name,$path){
+    public final function registerAlias($name, $path){
         $this->alias[$name] = $path;
     }//registerAlias
 
@@ -446,7 +446,7 @@ Class App extends \Pimple\Container {
      *
      * @return void 
     */
-    public final function registerCondition($k,$v){
+    public final function registerCondition($k, $v){
         $this->defaultMatchCondition[$k]=$v;
     }//registerCondition
 
@@ -480,7 +480,7 @@ Class App extends \Pimple\Container {
      *
      * @return boolean The condition passed.
     */
-    public final function matchCondition($k,$v){
+    public final function matchCondition($k, $v){
 
         $condition = $this->getCondition($k);
 
@@ -595,7 +595,7 @@ Class App extends \Pimple\Container {
      *
      * @return void 
     */
-    public function make($obj,$val){
+    public function make($obj, $val){
 
         if(!$val instanceof \Closure){
 
@@ -621,19 +621,19 @@ Class App extends \Pimple\Container {
      * @return void
      *
     */
-    public function extend($obj,$val){
+    public function extend($obj, $val){
 
         $app = self::$app;
 
         if(!$val instanceof \Closure){
 
-            $val = function() use($val,$app){
+            $val = function() use($val, $app){
                 return $app->resolveDependencies($val);
             };
 
         }//if
        
-        parent::extend($obj,$val);
+        parent::extend($obj, $val);
 
     }//extend
 
@@ -648,7 +648,7 @@ Class App extends \Pimple\Container {
      *
      * @return void
     */
-    public function makeFactory($obj,$val){
+    public function makeFactory($obj, $val){
 
         if(!$val instanceof \Closure){
 
@@ -660,7 +660,7 @@ Class App extends \Pimple\Container {
 
         $this[$obj] = $this->factory($val);
 
-    }//factory
+    }//makeFactory
 
 
 
@@ -671,14 +671,19 @@ Class App extends \Pimple\Container {
      * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
      *
     */
-    public function makeProtected($obj,$val){
+    public function makeProtected($obj, $val){
+
          if(!$val instanceof \Closure){
+
             $val = function($app) use($val){
                 return $app->resolveDependencies($val);
             };
+
         }//if
+
         $this[$obj] = $this->protect($val);
-    }//protect
+
+    }//makeProtected
 
 
 
@@ -693,10 +698,9 @@ Class App extends \Pimple\Container {
      *
      * @return mixed
     */
-    public function handle($key,$method,$args){
+    public function handle($key, $method, $args){
 
         $instance = $this->with($key);
-
 
         $args = (!is_array($args)) ? Array() : array_values($args);
 
@@ -818,12 +822,12 @@ Class App extends \Pimple\Container {
      *
      *
      * @param string $msg The error message to log.
-     * @param string|Array $methods The method call names that could have generated the error.
-     * @param Array $e The debug_stacktrace call.
+     * @param string|array $methods The method call names that could have generated the error.
+     * @param array $e The debug_stacktrace call.
      *
      * @return void
     */
-    public function error($msg,$methods,$e){
+    public function error($msg, $methods, $e){
 
         if(!is_array($methods)){
             $methods = Array($methods);

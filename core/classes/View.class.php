@@ -197,9 +197,12 @@ class View {
      *
      * @return void
     */
-    public function json($data = null,$code = 200){
+    public function json($data = null, $code = 200){
+
         $this->ajax();
+
         header('Content-type: application/json');
+
         $this->view['json'] = true;
 
         if($data !== null){
@@ -320,7 +323,7 @@ class View {
      *
      *
      * @param string $lang The language to set the page as.
-     * @return void
+     * @return string|null
     */
     public function lang($lang = null){
         if(!$lang){ 
@@ -336,7 +339,7 @@ class View {
      *
      *
      * @param string $charset the charset the page should use 
-     * @return void
+     * @return string|null
     */
     public function charset($charset = null){
         if($charset === null){
@@ -352,7 +355,7 @@ class View {
      * 
      *
      * @param string $extra the markup to put in the head of the page
-     * @return void
+     * @return string|null
     */
     public function headExtra($extra = null){
         if($extra === null){
@@ -435,10 +438,8 @@ class View {
 
 
     /**
-     * If the view is AJAX render and echo the tempalte `$this->ajaxTemplate` otherwise render the template 
+     * If the view is AJAX render and echo the template `$this->ajaxTemplate` otherwise render the template
      * `$this->baseTemplate`.
-     *
-     * @return void
     */
     public function printPage(){
 
@@ -466,7 +467,6 @@ class View {
      * Set that the view is returning a response to a client via an AJAX request.
      *
      * @param boolean $bool Whether were responding to an AJAX request.
-     * @return void
     */
     public function ajax($bool = true){
         $this->view['ajax'] = $bool;
@@ -491,7 +491,7 @@ class View {
      *
      * @param null|string $t The title of the page.
      *
-     * @return string|void
+     * @return string|null
     */
     public function title($t = null){
         if($t === null) return $this->view['title'];
@@ -506,7 +506,7 @@ class View {
      *
      * @param null|string $d The description of the page.
      *
-     * @return string|void
+     * @return string|null
     */
     public function desc($d = null){
         if($d === null) return $this->view['description'];
@@ -533,7 +533,7 @@ class View {
      *
      * @param null|string $b The body.
      *
-     * @return string|void
+     * @return string|null
     */
     public function body($b = null){
         if($b === null) return $this->view['body'];
@@ -548,7 +548,7 @@ class View {
      *
      * @param null|string $v the path to the favicon
      *
-     * @return string|void
+     * @return string|null
     */
     public function favIcon($v = null){
         if($v === null) return $this->view['favIcon'];
@@ -641,6 +641,7 @@ class View {
      *
      *
      * @param string $path A URL path to a javascript file.
+     * @param boolean $appendLastMod Whether to append the last modified time to the resource path.
      *
      * @return self 
     */
@@ -667,6 +668,8 @@ class View {
      *
      *
      * @param string $path A URL path to a javascript file.
+     * @param boolean $appendLastMod Whether to append the last modified time to the resource path.
+     *
      * @return self 
     */
     public function headScriptSrc($path,$appendLastMod = false){
@@ -705,6 +708,8 @@ class View {
      *
      *
      * @param string $path A url path to a CSS file.
+     * @param boolean $appendLastMod Whether to append the last modified time to the resource path.
+     *
      * @return self 
     */
     public function styleSrc($path,$appendLastMod = false){
@@ -728,9 +733,6 @@ class View {
 
     /**
      * Add a body class.
-     *
-     *
-     * @param string $s A CSS class.
     */
     public function bodyClass($class){
         $this->view['bodyClass'][] = $class;
@@ -751,7 +753,7 @@ class View {
 
 
     /**
-     * Set the index type to index,follow , $this->activeIndex=0.
+     * Set the index type to index,follow ; $this->activeIndex=0.
     */
     public function index(){
         $this->activeIndex=0;
@@ -760,7 +762,7 @@ class View {
 
 
     /**
-     * Set the index type to noindex,nofollow , $this->activeIndex=1.
+     * Set the index type to noindex,nofollow ; $this->activeIndex=1.
     */
     public function noIndex(){
         $this->activeIndex=1;
@@ -769,7 +771,7 @@ class View {
 
 
     /**
-     * Set the index type to index,nofollow, $this->activeIndex=2.
+     * Set the index type to index,nofollow ; $this->activeIndex=2.
     */
     public function indexNoFollow(){
         $this->activeIndex=2;
@@ -778,7 +780,7 @@ class View {
 
 
     /**
-     * Set the index type to noindex,follow, $this->activeIndex=3.
+     * Set the index type to noindex,follow ; $this->activeIndex=3.
     */
     public function noIndexFollow(){
         $this->activeIndex=3;
@@ -790,7 +792,7 @@ class View {
      * Complile the style(css) sources to html `<link>` elements.
      *
      *
-     * @return string The compliled elements.
+     * @return string The compiled elements.
     */
     public function printStyleSrcs(){
 
@@ -821,10 +823,10 @@ class View {
 
 
     /**
-     * Complile the head script(js) sources to html `<script>` elements.
+     * Compile the head script(js) sources to html `<script>` elements.
      *
      *
-     * @return string The compliled elements.
+     * @return string The compiled elements.
     */
     public function printHeadScriptSrcs(){
         return $this->printScriptsFromSource($this->view['headScriptSrcs']);
@@ -833,10 +835,10 @@ class View {
 
 
     /**
-     * Complile the script(js) sources to html `<script>` elements.
+     * Compile the script(js) sources to html `<script>` elements.
      *
      *
-     * @return string The compliled elements.
+     * @return string The compiled elements.
     */
     public function printScriptSrcs(){
         return $this->printScriptsFromSource($this->view['scriptSrcs']);
@@ -845,12 +847,12 @@ class View {
 
 
     /**
-     * Complile the script(js) sources to html `<script>` elements.
+     * Compile the script(js) sources to html `<script>` elements.
      *
      *
      * @param array $src The js sources.
      *
-     * @return string The compliled elements.
+     * @return string The compiled elements.
     */
     private function printScriptsFromSource($src){
 
@@ -885,7 +887,7 @@ class View {
      * @param boolean|string|\Closure $action Optional template or Closure function.
     */
     public function abort($action = false){
-        $this->serve(404,$action);
+        $this->serve(404, $action);
     }//abort
 
 
@@ -897,7 +899,7 @@ class View {
      * @param boolean|string|\Closure $action Optional template or Closure function.
     */
     public function error($code = 500, $action = false){
-        $this->serve($code,$action);
+        $this->serve($code, $action);
     }//abort
 
 
@@ -941,7 +943,7 @@ class View {
     */
     public final function serve($code = 200, $action = false){
 
-        if($code!=200){
+        if($code != 200){
 
             //set the response code
             http_response_code($code);

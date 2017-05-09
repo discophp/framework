@@ -48,11 +48,8 @@ abstract class Facade {
      *
      * @return mixed    Return the result of the method call on the resolved instance from the IoC container.
      */
-    public static function __callStatic($method,$args){
-
-        $app = \Disco\classes\App::instance();
-        return $app->handle(static::returnFacadeId(),$method,$args);
-
+    public static function __callStatic($method, $args){
+        return \Disco\classes\App::instance()->handle(static::returnFacadeId(), $method, $args);
     }//callStatic
 
 
@@ -64,11 +61,7 @@ abstract class Facade {
      * @return object  
      */
     public static function instance(){
-
-        //$app = \App::$app;
-        $app = \Disco\classes\App::instance();
-        return $app[static::returnFacadeId()];
-
+        return \Disco\classes\App::instance()[static::returnFacadeId()];
     }//instance
 
 

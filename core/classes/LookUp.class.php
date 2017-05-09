@@ -82,8 +82,6 @@ abstract class LookUp {
      *
      * 
      * @param array $stack Method and arguements and key/value pairs.
-     *
-     * @return void
     */
     public function __construct($stack = Array()){
         if(is_string($this->Model)){
@@ -123,7 +121,7 @@ abstract class LookUp {
 
 
     /**
-     * Responsible for returing the results of the lookup as an array. By default `$this->Model->asArray()` is 
+     * Responsible for returning the results of the lookup as an array. By default `$this->Model->asArray()` is
      * called and returned.
      *
      * @return array The array of results of the lookup.

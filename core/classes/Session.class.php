@@ -6,7 +6,7 @@ namespace Disco\classes;
 
 
 /**
- * Convient wrapper around using $_SESSION variables.
+ * Convenient wrapper around using $_SESSION variables.
 */
 class Session {
 

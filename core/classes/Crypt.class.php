@@ -1,14 +1,13 @@
 <?php
 namespace Disco\classes;
 /**
- * This file contains the class Crypt. It provides helper functions to use AES encryption via the 
- * mcrypt module. It also provides SHA512 hashing and a timing safe comparsion function.
+ * This file contains the class Crypt. It provides helper wrappers around the \Defuse\Crypto library.
+ * It also provides SHA512 hashing and a timing safe comparision function.
 */
 
 
 /**
  * Crypt class.
- * Provides easy wrapper around mycrpt_php module.
 */
 class Crypt {
 
@@ -89,7 +88,7 @@ class Crypt {
      *
      * @return string The hashed value of $s.
      */
-    public function hash($value,$salt = ''){
+    public function hash($value, $salt = ''){
 
         if($salt === ''){
             $salt = \App::config('SHA512_SALT');
@@ -116,7 +115,7 @@ class Crypt {
         $salt = \Disco\manage\Manager::genRand($saltLength);
         return Array(
             'salt' => $salt,
-            'hash' => $this->hash($value,$salt),
+            'hash' => $this->hash($value, $salt),
         );
     }//hashAndGenerateNewSalt
 

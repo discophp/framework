@@ -1,0 +1,6 @@
+composer.lock
+vendor/
+test/app/template/.cache
+.idea/
+*.un~
+*.*.swp

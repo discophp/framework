@@ -82,6 +82,8 @@ class TemplateLoader extends \Twig_Loader_Filesystem {
      *
      *
      * @param string $name The template name.
+     * @param int $time The cached last mod time of the template.
+     *
      * @return boolean Whether the template is fresh.
      */
     public function isFresh($name, $time){

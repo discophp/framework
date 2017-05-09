@@ -1,7 +1,6 @@
 <?php
 namespace Disco\classes;
 
-
 /**
  * This is the Form class.
  * You can build crazy dynamic forms with ease.
@@ -131,12 +130,7 @@ Class Form {
      * @return string
     */
     public function token(){
-        if($this->app['Session']->has('disco-csrf-token')){
-            return $this->app['Session']->get('disco-csrf-token');
-        }//if
-
-        $this->app['Session']->set('disco-csrf-token',\Disco\manage\Manager::genRand(32));
-        return $this->app['Session']->get('disco-csrf-token');
+        return \Data::getCSRFToken();
     }//token
 
 
@@ -159,12 +153,10 @@ Class Form {
      * timing safe comparision.
      *
      *
-     * @param string $token The token to check.
-     *
      * @return boolean
     */
-    public function validToken($token){
-        return $this->app['Crypt']->timingSafeCompare($this->token(),$token);
+    public function validToken(){
+        return \Data::validateCSRFToken();
     }//validToken
 
 
@@ -215,7 +207,7 @@ Class Form {
     /**
      * Wrap each input in a specific user specified string
      * containing identifies %1\$s and %2\$s for the 
-     * field name and field value respectivly.
+     * field name and field value respectively.
      *
      *
      * @param string $wrap The input wrapper.
@@ -244,7 +236,7 @@ Class Form {
 
 
     /**
-     * Specify either an Array to be used as properties on a specfic field or a \Closure function to be called.
+     * Specify either an Array to be used as properties on a specific field or a \Closure function to be called.
      * If $props is an Array then those are the default properties to be used on all fields. 
      *
      *
@@ -266,8 +258,8 @@ Class Form {
 
 
     /**
-     * Fields not to be included in the form. Accepts arguements via func_get_args(),
-     * pass in an Array or any number of field names, or a comma delimted string of fields.
+     * Fields not to be included in the form. Accepts arguments via func_get_args(),
+     * pass in an Array or any number of field names, or a comma delimited string of fields.
      *
      *
      * @return self
@@ -311,8 +303,8 @@ Class Form {
 
 
     /**
-     * Fields to be included in the form. Accepts arguements via func_get_args(),
-     * pass in an Array or any number of field names, or a comma delimted string of fields.
+     * Fields to be included in the form. Accepts arguments via func_get_args(),
+     * pass in an Array or any number of field names, or a comma delimited string of fields.
      *
      *
      * @return self
@@ -342,7 +334,7 @@ Class Form {
 
     /**
      * Force using a custom \Closure to handle building whatever the field should represent.
-     * The $action will be passed arguements $k,$v representing the field name and the field value.
+     * The $action will be passed arguments $k,$v representing the field name and the field value.
      * If no $k is passed then the \Closure function will become the default function used to build
      * each field.
      *
@@ -402,7 +394,7 @@ Class Form {
         $form = '';
 
         if($this->useCSRFToken){
-            $form .= $this->app['Html']->input(Array('type'=>'hidden','name'=>'disco-csrf-token','value'=>$this->token()));
+            $form .= \Data::getCSRFTokenInput();
         }//if
 
         foreach($fields as $k=>$v){
@@ -510,7 +502,7 @@ Class Form {
 
 
         if($this->useCSRFToken){
-            if(!isset($data['disco-csrf-token']) || !$this->validToken($data['disco-csrf-token'])){
+            if(!\Data::validateCSRFToken()){
                 return false;
             }//if
         }//if
@@ -563,8 +555,10 @@ Class Form {
      * @param mixed $selectedValue The option_value to set as selected.
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException
     */
-    public function selectMenu($data,$name,$selectedValue=null){
+    public function selectMenu($data, $name, $selectedValue = null){
 
         $options = '';
 
@@ -591,7 +585,7 @@ Class Form {
 
         }//el
         else {
-            throw new \InvalidArguementException;
+            throw new \InvalidArgumentException('Data must be an instance of a \PDOStatement or an array');
         }//el
 
         return $this->app['Html']->select(Array('name'=>$name),$options);

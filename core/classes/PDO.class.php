@@ -41,7 +41,7 @@ class PDO extends \PDO {
      * @param string $engine The engine type to use, default is `mysql`.
      * @param string $charset The charset to use, default is `utf8`.
      *
-     * @return void
+     * @throws \Disco\exceptions\DBConnection If the SQL connection fails.
     */
     public function __construct($host=null,$user=null,$pw=null,$db=null,$engine='mysql',$charset='utf8') {
 
@@ -217,7 +217,7 @@ class PDO extends \PDO {
     */
     public function insert($query, $data = null){
 
-        if($this->query($query,$data)){
+        if($this->query($query, $data)){
             return $this->lastId();
         }//if
 
@@ -236,11 +236,11 @@ class PDO extends \PDO {
      * @return mixed
      * @throws \Disco\exceptions\DBQuery
     */
-    public function create($table,$data){
+    public function create($table, $data){
         $keys = array_keys($data);
-        $values = ':' . implode(',:',$keys);
-        $keys = implode(',',$keys);
-        return $this->query($this->set("INSERT INTO {$table} ({$keys}) VALUES({$values})",$data));
+        $values = ':' . implode(',:', $keys);
+        $keys = implode(',', $keys);
+        return $this->query($this->set("INSERT INTO {$table} ({$keys}) VALUES({$values})", $data));
     }//create
 
 
@@ -256,13 +256,13 @@ class PDO extends \PDO {
      * @return mixed
      * @throws \Disco\exceptions\DBQuery
     */
-    public function delete($table,$data, $conjunction = 'AND'){
+    public function delete($table, $data, $conjunction = 'AND'){
         $keys = array_keys($data);
         $pairs = Array();
         foreach($keys as $key){
             $pairs[] = "{$key}=:{$key}";
         }//foreach
-        $pairs = implode(" {$conjunction} ",$pairs);
+        $pairs = implode(" {$conjunction} ", $pairs);
         return $this->query($this->set("DELETE FROM {$table} WHERE {$pairs}",$data));
     }//delete
 
@@ -280,7 +280,7 @@ class PDO extends \PDO {
      * @return mixed
      * @throws \Disco\exceptions\DBQuery
     */
-    public function update($table,$data,$where, $conjunction = 'AND'){
+    public function update($table, $data, $where, $conjunction = 'AND'){
         $values = array_merge(array_values($data),array_values($where));
         $keys = array_keys($data);
         $pairs = Array();
@@ -297,6 +297,7 @@ class PDO extends \PDO {
         $condition = implode(" {$conjunction} ",$condition);
 
         return $this->query($this->set("UPDATE {$table} SET {$pairs} WHERE {$condition}",$values));
+
     }//update
 
 
@@ -314,7 +315,7 @@ class PDO extends \PDO {
      * @return mixed
      * @throws \Disco\exceptions\DBQuery
     */
-    public function select($table,$select,$where, $conjunction = 'AND'){
+    public function select($table, $select, $where, $conjunction = 'AND'){
 
         $keys = array_keys($where);
         $pairs = Array();
@@ -358,7 +359,7 @@ class PDO extends \PDO {
      * @throws \Disco\exceptions\DBQuery When the number of arguements doesn't match the numebr of `?` 
      * placeholders.
     */
-    public function set($q,$args){
+    public function set($q, $args){
 
         if(is_array($args) && isset($args['raw'])){
             $q = implode($args['raw'],explode('?',$q,2));;
@@ -369,14 +370,14 @@ class PDO extends \PDO {
             $first = array_shift($first);
 
             if(!is_numeric($first)){
-                return $this->setAssocativeArrayPlaceHolders($q,$args);
+                return $this->setAssociativeArrayPlaceHolders($q,$args);
             }//if
 
             return $this->setQuestionMarkPlaceHolders($q,$args);
 
         }//if
         else {
-            $q=implode($this->prepareType($args),explode('?',$q,2));
+            $q = implode($this->prepareType($args), explode('?', $q, 2));
         }//el
 
         return $q;
@@ -394,7 +395,7 @@ class PDO extends \PDO {
      *
      * @return string               The $q with $args bound into it.
     */
-    private function setAssocativeArrayPlaceHolders($q,$args){
+    private function setAssociativeArrayPlaceHolders($q, $args){
 
         foreach($args as $key => $value){
 
@@ -411,7 +412,7 @@ class PDO extends \PDO {
             $keyPlaceHolder = ":{$key}";
             $keyLength = strlen($keyPlaceHolder);
 
-            while(($p = strpos($q,$keyPlaceHolder,$p + $offset)) !== false){
+            while(($p = strpos($q,$keyPlaceHolder, $p + $offset)) !== false){
                 $positions[] = $p;
                 $offset = $keyLength;
             }//while
@@ -421,14 +422,14 @@ class PDO extends \PDO {
             $positions = array_reverse($positions);
 
             foreach($positions as $p){
-                $q = substr_replace($q,$value,$p,$keyLength);
+                $q = substr_replace($q, $value, $p, $keyLength);
             }//foreach
 
         }//foreach
 
         return $q;
 
-    }//setAssocativeArrayPlaceHolders
+    }//setAssociativeArrayPlaceHolders
 
 
 
@@ -444,7 +445,7 @@ class PDO extends \PDO {
      * @throws \Disco\exceptions\DBQuery When the number of arguements doesn't match the numebr of `?` 
      * placeholders.
     */
-    private function setQuestionMarkPlaceHolders($q,$args){
+    private function setQuestionMarkPlaceHolders($q, $args){
 
         foreach($args as $k=>$a){
             if(is_array($a) && isset($a['raw'])){
@@ -458,7 +459,7 @@ class PDO extends \PDO {
 
         $positions = Array();
         $p = -1;
-        while(($p = strpos($q,'?',$p + 1)) !== false){
+        while(($p = strpos($q, '?', $p + 1)) !== false){
             $positions[] = $p;
         }//while
 

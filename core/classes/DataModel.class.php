@@ -10,7 +10,7 @@ namespace Disco\classes;
  * conditions, and when it does not it sets errors specific to each datum which can then be used to communicate 
  * what type of datum should have been passed.
  *
- * Data models are primarly used to verify incoming user data from forms in the browser, but can also be used as 
+ * Data models are primarily used to verify incoming user data from forms in the browser, but can also be used as 
  * contracts in class communications.
  *
  * The only thing necessary to implement a data model is defining the data models definition in `protected 
@@ -24,45 +24,54 @@ namespace Disco\classes;
  * }
  * ```
  *
- * Notice that data models can be accessed via object sytanx and array access sytax, this is because the data model 
+ * Notice that data models can be accessed via object syntax and array access syntax, this is because the data model 
  * class implements `\ArrayAccess` and implements the necessary methods for object access.
 */
 class DataModel implements \ArrayAccess {
 
 
     /**
-     * @var array $definition Definitions of the data this data model contains.
-     *
      * A definition is defined by a key, which is the name of the data/field, and an array which defines the 
      * conditions verifying the data/field.
      *
+     *
      * Conditions used to define a data/field:
-     *      - `type` : `string` (int, uint, float, ufloat, string, boolean, char, array, object, closure)
-     *      - `nullable` : `boolean` (optional) Data can be null.
-     *      - `truthy` : `boolean` (optional) Data can be a boolean.
-     *      - `in` : `array` (optional) Data must be contained in this array.
-     *      - `notin` : `array` (optional) Data must NOT be contained in this array.
-     *      - `instanceof` : `string` (optional)(only applies to object) Data must be an instance of class.
-     *      - `max` : `numeric` (optional)(only applies to int, uint, float, ufloat) Max value of data.
-     *      - `min` : `numeric` (optional)(only applies to int, uint, float, ufloat) Min value of data.
-     *      - `maxlen` : `int` (optional)(only applies to string) Max length of data.
-     *      - `minlen` : `int` (optional)(only applies to string) Min length of data.
+     * <ul>
+     *      <li>`type` : `string` (int, uint, float, ufloat, string, boolean, char, array, object, closure)</li>
+     *      <li>`nullable` : `boolean` (optional) Data can be null.</li>
+     *      <li>`truthy` : `boolean` (optional) Data can be a boolean.</li>
+     *      <li>`in` : `array` (optional) Data must be contained in this array.</li>
+     *      <li>`notin` : `array` (optional) Data must NOT be contained in this array.</li>
+     *      <li>`instanceof` : `string` (optional)(only applies to object) Data must be an instance of class.</li>
+     *      <li>`max` : `numeric` (optional)(only applies to int, uint, float, ufloat) Max value of data.</li>
+     *      <li>`min` : `numeric` (optional)(only applies to int, uint, float, ufloat) Min value of data.</li>
+     *      <li>`maxlen` : `int` (optional)(only applies to string) Max length of data.</li>
+     *      <li>`minlen` : `int` (optional)(only applies to string) Min length of data.</li>
+     * </ul>
+     *
      *
      * Conditions that when set will disregard all conditions listed above (aka are mutually exclusive with any 
      * other condition):
-     *      - `regexp` : `string` A regular expression that the data must match, can be one of the default matching 
-     *      conditions provided by Disco.
-     *      - `method` : `string` The name of a method of the class that is passed the value of the data and returns 
-     *      a boolean value indicating whether the data is valid.
+     * <ul>
+     *      <li>`regexp` : `string` A regular expression that the data must match, can be one of the default matching 
+     *      conditions provided by Disco.</li>
+     *      <li>`method` : `string` The name of a method of the class that is passed the value of the data and returns 
+     *      a boolean value indicating whether the data is valid.</li>
+     * </ul>
+     *
      *
      * Conditions that aren't mutually exclusive to any data type and can be used to augment a piece of data:
-     *      - `required` : `boolean` Whether the data is required in the data model.
-     *      - `default` : `mixed` A default value to give the data when its not set, mutually exclusive with 
-     *      `required`.
-     *      - `premassage` : `string` The name of the method of the class that can massage the data value prior to validation.
-     *      - `postmassage` : `string` The name of the method of the calss that can massage the data value after successfull validation.
-     *      - `error` : `string` The error message returned when the data doesn't validate. If this is not set 
-     *      a custom one will be generated for you based on the conditions.
+     * <ul>
+     *      <li>`required` : `boolean` Whether the data is required in the data model.
+     *      <li>`default` : `mixed` A default value to give the data when its not set, mutually exclusive with `required`.
+     *      <li>`premassage` : `string` The name of the method of the class that can massage the data value prior to validation.
+     *      <li>`postmassage` : `string` The name of the method of the class that can massage the data value after successful validation.
+     *      <li>`error` : `string` The error message returned when the data doesn't validate. If this is not set 
+     *      a custom one will be generated for you based on the conditions.</li>
+     * </ul>
+     *
+     *
+     * @var array $definition Definitions of the data this data model contains.
     */
     protected $definition = Array();
 
@@ -100,7 +109,7 @@ class DataModel implements \ArrayAccess {
         }//if
 
         if(count($data)){
-            $this->data = array_merge(array_intersect_key($data,array_flip(array_keys($this->definition))));
+            $this->data = array_merge( array_intersect_key($data, array_flip(array_keys($this->definition) ) ) );
         }//if
 
     }//__construct
@@ -384,7 +393,7 @@ class DataModel implements \ArrayAccess {
      *
      * @return boolean Always returns false, which eases chaining in the `verifyData` method.
     */
-    protected final function setError($key,$error = null){
+    protected final function setError($key, $error = null){
         if($e = $this->getDefinitionValue($key,'error')){
             $error = $e;
         } else if($error === null){
@@ -468,8 +477,8 @@ class DataModel implements \ArrayAccess {
      *
      * @throws \Disco\exceptions\Exception When setting the definition would override a frozen data model definition. 
     */
-    public final function setDefinition($key,$value){
-        if(isset($this->definition[$key])){
+    public final function setDefinition($key, $value){
+        if(array_key_exists($key, $this->definition)){
             throw new \Disco\exceptions\Exception("Cannot override frozen data model definition `{$key}`");
         }//if
         $this->definition[$key] = $value;
@@ -482,11 +491,12 @@ class DataModel implements \ArrayAccess {
      *
      * @param string $key The definition key.
      * @param string $condition The definition key child key.
+     * @param mixed False when the condition is not set, otherwise the condition value.
      *
-     * @param mixed False when the condition is not set, otherwise the condition value. 
+     * @return mixed
     */
-    public final function getDefinitionValue($key,$condition){
-        if(!isset($this->definition[$key][$condition])){
+    public final function getDefinitionValue($key, $condition){
+        if(!array_key_exists($key, $this->definition) || !array_key_exists($condition, $this->definition[$key])){
             return false;
         }//if 
         return $this->definition[$key][$condition];

@@ -26,12 +26,11 @@ class Manager {
      * name of the Facade to use.
      * @param string $method The method name to call.
      * @param string $vars The serialized form of the variables.
-     * @param string $d A serialized representation of our Application the moment the Job was pushed onto the 
-     * Queue.
+     * @param string $domain The FQDN of the application.
      *
      * @return void
     */
-    public static function resolve($delay=null,$obj,$method,$vars,$domain){
+    public static function resolve($delay=null, $obj, $method, $vars, $domain){
 
         if($delay!=0){
             sleep($delay);
@@ -39,7 +38,6 @@ class Manager {
 
         \App::instance()->domain = $domain;
 
-        $d = unserialize(base64_decode($d));
         $obj = unserialize(base64_decode($obj));
 
         if($vars=='disco-no-variable'){

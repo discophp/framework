@@ -13,6 +13,12 @@ class FileHelper {
     private $mimeCache;
 
 
+    /**
+     * @var $int $copyDirBasePathLen Used when copying directories recursivly to another directory.
+    */
+    private $copyDirBasePathLen = 0;
+
+
 
     /**
      * Format a number of bytes as human friendly text.
@@ -79,7 +85,6 @@ class FileHelper {
     public function getMimeType($file){
 
         if(function_exists('finfo_open')) {
-
             $const = defined('FILEINFO_MIME_TYPE') ? FILEINFO_MIME_TYPE : FILEINFO_MIME;
             $info = finfo_open($const);
             if($info && ($result = finfo_file($info,$file,$const)) !== false){
@@ -100,7 +105,7 @@ class FileHelper {
      * Get a file extension type based on the file MIME info.
      *
      *
-     * @param string $file The file.
+     * @param string $path The file.
      *
      * @return null|string The extension.
     */
@@ -121,16 +126,16 @@ class FileHelper {
 
 
     /**
-     * Iterate over a diretory and all its children including other directories.
+     * Iterate over a directory and all its children including other directories.
      *
      *
      * @param string $path The path of the directory to iterate through.
      *
-     * @return array
+     * @return \RecursiveIteratorIterator
     */
     public function recursiveIterate($path){
         return new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
-    }//revursiveIterate
+    }//recursiveIterator
 
 
 
@@ -138,8 +143,8 @@ class FileHelper {
      * Empty a directory.
      *
      *
-     * @param string $path The direcotry to empty.
-     * @param array $except Dont remove paths included in this array.
+     * @param string $path The directory to empty.
+     * @param array $except Don't remove paths included in this array.
      *
      * @return boolean
     */
@@ -194,23 +199,21 @@ class FileHelper {
     }//removeDir
 
 
-    private $copyDirBasePathLen = 0;
 
     /**
      * Copy a directory.
      *
      *
-     * @param string $path The direcotry to copy.
+     * @param string $path The directory to copy.
      * @param string $toPath The directory to copy to.
      * @param boolean $nested Whether to create the $path directory in $toPath or not.
      *
      * @return boolean
     */
-    public function copyDir($path,$toPath, $nested = false){
+    public function copyDir($path, $toPath, $nested = false){
 
         $path = rtrim($path,'/') . '/';
         $toPath = rtrim($toPath,'/') . '/';
-        $pathLen = strlen($path);
 
         if(!$nested){
             if(!is_dir($toPath) && !mkdir($toPath)){
@@ -218,7 +221,6 @@ class FileHelper {
             }//if
             $this->copyDirBasePathLen = strlen($path);
         }//if
-
 
         try {
 

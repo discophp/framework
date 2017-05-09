@@ -15,6 +15,24 @@ class Email {
 
 
     /**
+     * The key for the default account.
+     */
+    const DEFAULT_ACCOUNT_KEY = 'DEFAULT_ACCOUNT';
+
+
+    /**
+     * The key for the default server.
+     */
+    const DEFAULT_SERVER_KEY = 'DEFAULT_SERVER';
+
+
+    /**
+     * The key for the dev mode email address.
+     */
+    const DEV_MODE_SEND_TO_KEY = 'DEV_MODE_SEND_TO';
+
+
+    /**
      * @var array Holds config data from `app/config/email.php`.
     */
     private $settings = Array();
@@ -36,9 +54,6 @@ class Email {
     /**
      * Load our Email setting from `app/config/email.php` over riding any values set in `app/config/dev.email.php` if the 
      * application is in `DEV_MODE`. 
-     *
-     *
-     * @return void
      */
     public function __construct(){
 
@@ -49,7 +64,7 @@ class Email {
         if(\App::devMode()){
             $devSettings = \App::path() . '/app/config/dev.email.php';
             if(is_file($devSettings)){
-                $this->settings = array_merge($this->settings,require $devSettings);
+                $this->settings = array_merge($this->settings, require $devSettings);
             }//if
         }//if
 
@@ -74,7 +89,7 @@ class Email {
     */
     public function getSetting($key){
 
-        if(!array_key_exists($key,$this->settings)){
+        if(!array_key_exists($key, $this->settings)){
             return false;
         }//if
 
@@ -93,7 +108,7 @@ class Email {
      *
      * @return void
     */
-    public function setSetting($key,$value){
+    public function setSetting($key, $value){
         $this->settings[$key] = $value;
     }//setSetting
 
@@ -108,7 +123,7 @@ class Email {
      * @return void
     */
     public function setCurrentAccount($key){
-        $this->setSetting('DEFAULT_ACCOUNT',$key);
+        $this->setSetting(self::DEFAULT_ACCOUNT_KEY, $key);
     }//account
 
 
@@ -120,7 +135,7 @@ class Email {
      * @return array The account configuration.
     */
     public function getCurrentAccount(){
-        return $this->getSetting($this->getSetting('DEFAULT_ACCOUNT'));
+        return $this->getSetting($this->getSetting(self::DEFAULT_ACCOUNT_KEY));
     }//getCurrentAccount
 
 
@@ -134,7 +149,7 @@ class Email {
      * @return void
     */
     public function setCurrentServer($key){
-        $this->setSetting('DEFAULT_SERVER',$key);
+        $this->setSetting(self::DEFAULT_SERVER_KEY, $key);
     }//getCurrentServer
 
 
@@ -146,7 +161,7 @@ class Email {
      * @return array The server confiuration.
     */
     public function getCurrentServer(){
-        return $this->getSetting($this->getSetting('DEFAULT_SERVER'));
+        return $this->getSetting($this->getSetting(self::DEFAULT_SERVER_KEY));
     }//getCurrentServer
 
 
@@ -157,10 +172,10 @@ class Email {
      *
      * @param boolean $bool Plain text only? True, False.
      *
-     * @return void
+     * @return self
     */
     public function plainText($bool=true){
-        $this->plainTextOnly=$bool;
+        $this->plainTextOnly = $bool;
         return $this;
     }//plainText
 
@@ -192,21 +207,21 @@ class Email {
     *
     * @return boolean Success?
     */
-    public function send($toEmail,$subject,$body,$attach=null){
+    public function send($toEmail, $subject, $body, $attach=null){
 
-        if($this->delay!=null){
+        if($this->delay != null){
             $d = $this->delay;
             $this->delay = null;
             $body = htmlentities($body);
-            \App::with('Queue')->push('Email@send',$d,Array($toEmail,$subject,$body,$attach));
+            \App::with('Queue')->push('Email@send', $d, Array($toEmail, $subject, $body, $attach));
             return true;
         }//if
 
-        $message = $this->getMessage($toEmail,$subject,$body);
+        $message = $this->getMessage($toEmail, $subject, $body);
 
         //attach attachments to message if any
         if($attach !== null){
-            $message = $this->addAtachments($message,$attach);
+            $message = $this->addAtachments($message, $attach);
         }//if
          
         return $this->sendMessage($message);
@@ -224,7 +239,7 @@ class Email {
      *
      * @return \Swift_Message The message with the attachments
     */
-    public function addAtachments(\Swift_Message $message,$attach){
+    public function addAtachments(\Swift_Message $message, $attach){
 
         if(is_string($attach)){
             $attach = Array($attach);
@@ -266,8 +281,8 @@ class Email {
             $message->setFrom($account['EMAIL']);
         }//el
 
-        if(\App::devMode() && $this->getSetting('DEV_MODE_SEND_TO')){
-            $toEmail = $this->getSetting('DEV_MODE_SEND_TO');
+        if(\App::devMode() && $this->getSetting(self::DEV_MODE_SEND_TO_KEY)){
+            $toEmail = $this->getSetting(self::DEV_MODE_SEND_TO_KEY);
         }//if
 
         if(!is_array($toEmail)){
@@ -314,7 +329,7 @@ class Email {
             $serverConfig = $this->getCurrentServer();
 
             if($serverConfig === null){
-                throw new \Disco\exceptions\Email("Email exception: Server defined by key {$this->setting['DEFAULT_SERVER']} does not exist.");
+                throw new \Disco\exceptions\Email("Email exception: Server defined by key {$this->settings[self::DEFAULT_SERVER_KEY]} does not exist.");
             }//if
 
             $serverConfig['PROTOCOL'] = strtolower($serverConfig['PROTOCOL']);
@@ -326,11 +341,11 @@ class Email {
             $account = $this->getCurrentAccount();
 
             if($account === null){
-                throw new \Disco\exceptions\Email("Email exception: Account defined by key {$this->setting['DEFAULT_ACCOUNT']} does not exist.");
+                throw new \Disco\exceptions\Email("Email exception: Account defined by key {$this->settings[self::DEFAULT_ACCOUNT_KEY]} does not exist.");
             }//if
 
             //Create the Transport
-            $transport = \Swift_SmtpTransport::newInstance($serverConfig['HOST'],$serverConfig['PORT'],$serverConfig['PROTOCOL']);
+            $transport = \Swift_SmtpTransport::newInstance($serverConfig['HOST'], $serverConfig['PORT'], $serverConfig['PROTOCOL']);
             $transport->setUsername($account['EMAIL']);
             $transport->setPassword($account['PASSWORD']);
             

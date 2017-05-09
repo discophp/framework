@@ -15,7 +15,7 @@ class Event {
     /**
      * @var array Events to listen for.
     */
-    private $events=Array();
+    private $events = Array();
 
 
     /**
@@ -35,10 +35,10 @@ class Event {
      *
      * @return void
     */
-    public final function listen($event,$action,$priority=0){
+    public final function listen($event, $action, $priority=0){
 
         if(!isset($this->events[$event])){
-            $this->events[$event]=Array('actions'=>Array());
+            $this->events[$event]=Array('actions' => Array());
         }//if
 
         if($action instanceof \Closure){
@@ -50,7 +50,7 @@ class Event {
             $priority++;
         }//while
 
-        $this->events[$event]['actions'][$priority]=$action;
+        $this->events[$event]['actions'][$priority] = $action;
 
     }//listen
 
@@ -65,7 +65,7 @@ class Event {
      *
      * @return void
     */
-    public final function fire($event,$data=null){
+    public final function fire($event, $data = null){
 
         if(count(array_intersect_key(Array($event=>Array()),$this->events))>0){
 

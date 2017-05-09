@@ -38,7 +38,7 @@ class Model {
 
 
     /**
-     * @var string The working select statement.
+     * @var array The working select statement.
     */
     private $select;
 
@@ -115,7 +115,7 @@ class Model {
 
     /**
      * Prepare a SELECT condition. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      *
      * @return self 
@@ -123,22 +123,13 @@ class Model {
     public final function select(){
         $data = func_get_args();
         if(is_array($data[0])){
-            foreach($data[0] as $k=>$v){
-                $data[0][$k] = $v;
-            }//foreach
             $this->select = $data[0];
         }//if
         else if(!isset($data[1])){
             $data[0] = explode(',',$data[0]);
-            foreach($data[0] as $k=>$v){
-                $data[0][$k] = $v;
-            }//foreach
             $this->select = $data[0];
         }//elif
         else {
-            foreach($data as $k=>$v){
-                $data[$k] = $v;
-            }//foreach
             $this->select = $data;
         }//el
         return $this;
@@ -173,7 +164,7 @@ class Model {
      * Execute the UPDATE statement that was previously prepared.
      *
      *
-     * @return boolean Return whether the update was successful.
+     * @return mixed Return whether the update was successful.
     */
     public final function finalize(){
 
@@ -203,7 +194,7 @@ class Model {
 
     /**
      * Execute an INSERT statement.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      *
      * @return boolean Was the insert successful? 
@@ -246,11 +237,11 @@ class Model {
 
     /**
      * Execute a DELETE statement. 
-     * Accepts its arguements thruogh func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Delete records where all the key/value pairs match.
      *
-     * @return boolean Whether or not the delete was successful.
+     * @return mixed Whether or not the delete was successful.
     */
     public final function delete(){
         $this->clearData();
@@ -262,12 +253,12 @@ class Model {
 
     /**
      * Execute a DELETE statement. 
-     * Accepts its arguements thruogh func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Will delete any records that match any of the key/values pairs.
      *
      *
-     * @return boolean Whether or not the delete was successful.
+     * @return mixed Whether or not the delete was successful.
     */
     public final function deleteOr(){
         $this->clearData();
@@ -284,9 +275,9 @@ class Model {
      *
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
-     * @return self
+     * @return mixed
     */
     public final function deleteIn($field,$array){
 
@@ -304,7 +295,7 @@ class Model {
 
     /**
      * Specify a WHERE condition for the working query.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Will find records where all key/value pairs match.
      *
@@ -322,7 +313,7 @@ class Model {
 
     /**
      * Specify a WHERE condition for the working query.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Will find records where any of the key/value pairs match.
      *
@@ -340,7 +331,7 @@ class Model {
 
     /**
      * Specify a WHERE condition for the working query.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      *
      * Will find records where key/values pairs do not match any conditions.
@@ -359,9 +350,9 @@ class Model {
 
     /**
      * Specify a WHERE condition for the working query.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
-     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * Starts a new condition group by wrapping the previous condition in parenthesis and starting the new
      * condition group with an AND. Then in the new condition group match records where all of the key/value pairs 
      * match.
 
@@ -379,7 +370,7 @@ class Model {
 
     /**
      * Specify a WHERE condition for the working query.
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find record where none of the values match the key/value pairs.
      *
@@ -397,9 +388,9 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
-     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * Starts a new condition group by wrapping the previous condition in parenthesis and starting the new
      * condition group with an AND. Then in the new condition group match records where none of the key/value pairs 
      * match. 
      *
@@ -417,7 +408,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records that are like the key/value pairs. AKA a regexp.
      *
@@ -435,9 +426,9 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
-     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * Starts a new condition group by wrapping the previous condition in parenthesis and starting the new
      * condition group with an AND. Then in the new condition group match records that are like the key/value pairs. 
      *
      * @return self
@@ -455,7 +446,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records that are not like the key/value pairs.
      *
@@ -473,9 +464,9 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
-     * Starts a new condition group by wrapping the previous condition in paranethesis and starting the new 
+     * Starts a new condition group by wrapping the previous condition in parenthesis and starting the new
      * condition group with an AND. Then in the new condition group match records that are not like the key/value pairs. 
      *
      * @return self
@@ -497,7 +488,7 @@ class Model {
      *
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -524,7 +515,7 @@ class Model {
      *
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -550,7 +541,7 @@ class Model {
      * Find records where a value is in the key/value pairs.
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -576,7 +567,7 @@ class Model {
      * Find records where a value is not in the key/value pairs.
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -598,7 +589,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records where the key/value pairs match.
      *
@@ -616,7 +607,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records where any of the key/value pairs match.
      *
@@ -647,7 +638,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Will find records where key/values pairs do not match any conditions.
      *
@@ -665,7 +656,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find record where none of the values match the key/value pairs.
      *
@@ -683,7 +674,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records that are like the key/value pairs. AKA a regexp.
      *
@@ -701,7 +692,7 @@ class Model {
 
     /**
      * Prepare the WHERE condition for the working query. 
-     * Accepts its arguements through func_get_args(). 
+     * Accepts its arguments through func_get_args().
      *
      * Find records that are not like the key/value pairs.
      *
@@ -723,7 +714,7 @@ class Model {
      * Find records where a value is in the key/value pairs.
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -749,7 +740,7 @@ class Model {
      * Find records where a value is not in the key/value pairs.
      *
      * @param string $field The field to look in.
-     * @param string|array $array A string of comma seperated values, or an array of values.
+     * @param string|array $array A string of comma separated values, or an array of values.
      *
      * @return self
     */
@@ -846,9 +837,7 @@ class Model {
      * Return an aliased table name.
      *
      * 
-     * @param string $k The table name to alias.
-     *
-     * @return string 
+     * @return string
     */
     private function tableAlias(){
         if($this->alias){
@@ -868,11 +857,11 @@ class Model {
      * @param string $modelName The name of the Model you will join on.
      * @param string|array $on The condition used to join on.
      * @param mixed  $data Data that should be bound into the `$on` condition.
-     * @param string $joinOn The type of JOIN that should be used, this is hidden from the user.
+     * @param string $joinType The type of JOIN that should be used, this is hidden from the user.
      *
      * @return self 
     */
-    public final function join($modelName,$on=null,$data=null,$joinType='INNER JOIN'){
+    public final function join($modelName, $on=null, $data=null, $joinType = 'INNER JOIN'){
         $tableAlias = '';
         if(stripos($modelName,' as ') !== false){
             $modelName = explode(' AS ',$modelName);
@@ -892,9 +881,6 @@ class Model {
         if($on !== null){
             if(is_array($on)){
                 $joinType .= 'ON ' . $this->prepareCondition(Array($on),'AND');
-                //foreach($on as $k=>$v){
-                //    $joinType .= "ON {$k}={$v} ";
-                //}//foreach
             }//if
             else if($data !== null){
                 $joinType .= 'ON ' . \App::with('DB')->set($on,$data).' ';
@@ -932,7 +918,7 @@ class Model {
 
     /**
      * Read docs on join function first, this simply extends that function and 
-     * passes in a LEFT JOIN as the second arguement.
+     * passes in a LEFT JOIN as the second argument.
      *
      * 
      * @param string $modelName The name of the Model you will join on.
@@ -950,7 +936,7 @@ class Model {
 
     /**
      * Read docs on join function first, this simply extends that function and 
-     * passes in a RIGHT JOIN as the second arguement.
+     * passes in a RIGHT JOIN as the second argument.
      *
      * 
      * @param string $modelName The name of the Model you will join on.
@@ -972,10 +958,7 @@ class Model {
      * Takes strings and numbers.
      *
      * 
-     * @param string $param0 The attributes to order by. 
-     * @param string $param1 .... 
-     *
-     * @return self 
+     * @return self
     */
     public final function order(){
         $data = func_get_args();
@@ -1005,9 +988,9 @@ class Model {
      * Set a LIMIT condition on the current SELECT query.
      *
      *
-     * @param int $start Starting position of LIMIT or the number of tuples to return contigent upon the 
-     * exsistance of the second parameter $limit.
-     * @param null|int $limit The number of tuples to return.
+     * @param int $start Starting position of LIMIT or the number of tuple's to return contingent upon the
+     * existence of the second parameter $limit.
+     * @param null|int $limit The number of tuple's to return.
      *
      * @return self 
     */
@@ -1117,7 +1100,7 @@ class Model {
 
 
     /**
-     * Wrapper thats calls the DB service `query` method. Sets `$this->lastQuery` to the passed param. It also 
+     * Wrapper that calls the DB service `query` method. Sets `$this->lastQuery` to the passed param. It also
      * clears the data on the object to clean its state for a new method chain/query.
      *
      * @param string $query The query to execute.
@@ -1145,29 +1128,29 @@ class Model {
      *         - tablename.price>59.99
      *
      *     But we also will likely have another condition that will precede the first one we are passed,
-     *     that is where the $conjuction paramater comes into play. 
-     *     Its value will be a literal conjuction such as 'AND' or 'OR' or ','
+     *     that is where the $conjunction parameter comes into play.
+     *     Its value will be a literal conjunction such as 'AND' or 'OR' or ','
      *
      * This function uses the DB method set() to safely bind the passed variables into the DML statement.
      *
      *
      *
      * @param array $data Pieces of the condition that needs to be prepared.
-     * @param string $conjunction The conjuction to be used if more than one condition is present.
+     * @param string $conjunction The conjunction to be used if more than one condition is present.
      * @param string $comparator The comparator used to form the comparison condition between the key and the value.
      *
      * @return mixed $where Either return the condition or false if there was no condition to prepare.
     */
-    public final function prepareCondition($data,$conjunction,$comparator = '='){
+    public final function prepareCondition($data, $conjunction, $comparator = '='){
 
         $return = '';
 
         //array was passed
         if(is_array($data[0])){
             foreach($data[0] as $k=>$v){
-                $return .= \App::with('DB')->set($k . $comparator . '?',$v).' '.$conjunction.' ';
+                $return .= \App::with('DB')->set($k . $comparator . '?', $v) . ' '. $conjunction . ' ';
             }//foreach
-            $return = rtrim($return,$conjunction.' ');
+            $return = rtrim($return, $conjunction . ' ');
         }//if
         //just a string was passed
         else if(!isset($data[1]) && is_string($data[0])){
@@ -1176,22 +1159,22 @@ class Model {
         //a string with ? placeholders was passed as first arg,
         //and an array was passed as second
         else if(is_string($data[0]) && is_array($data[1])){
-            $data[0] = explode(',',$data[0]);
+            $data[0] = explode(',', $data[0]);
             foreach($data[0] as $k=>$v){
                 $data[0][$k] = $v;
             }//foreach
-            $data[0] = implode(',',$data[0]);
-            $return .= \App::with('DB')->set($data[0],(isset($data[1])) ? $data[1] : null);
+            $data[0] = implode(',', $data[0]);
+            $return .= \App::with('DB')->set($data[0], isset($data[1]) ? $data[1] : null);
         }//elif
         //a single value was passed with a string
         else if(!isset($data[2])){
-            $return = \App::with('DB')->set($data[0],$data[1]);
+            $return = \App::with('DB')->set($data[0], $data[1]);
         } else {
             $length = count($data);
             for($i = 0; $i < $length; $i = $i + 3){
-                $return .= \App::with('DB')->set($data[$i].$data[$i+1].'?',$data[$i+2]).' '.$conjunction.' ';
+                $return .= \App::with('DB')->set($data[$i] . $data[$i + 1] . '?', $data[$i + 2]) . ' ' . $conjunction . ' ';
             }//for
-            $return = rtrim($return,$conjunction.' ');
+            $return = rtrim($return, $conjunction . ' ');
         }//el
 
         return str_replace('=NULL',' IS NULL',$return);
@@ -1223,7 +1206,7 @@ class Model {
      * @return Array
     */
     public final function columns(){
-        $result = \App::with('DB')->query('SHOW COLUMNS FROM '.$this->table);
+        $result = \App::with('DB')->query('SHOW COLUMNS FROM ' . $this->table);
         $columns = Array();
         while($row = $result->fetch()){
             $columns[] = $row;

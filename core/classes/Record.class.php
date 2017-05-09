@@ -28,7 +28,7 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * @var int VALIDATION_EMIT Error will be emiited if inserting will cause data loss.
+     * @var int VALIDATION_EMIT Error will be emitted if inserting will cause data loss.
     */
     const VALIDATION_EMIT = 1;
 
@@ -41,7 +41,7 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * @var int $validationLevel The level of validation to apply to columns when perfomring data manipulation.
+     * @var int $validationLevel The level of validation to apply to columns when performing data manipulation.
     */
     private static $validationLevel = 0;
 
@@ -53,7 +53,7 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * @var array $fieldDefintions The fields defintions for the record.
+     * @var array $fieldDefinitions The fields definitions for the record.
     */
     protected $fieldDefinitions = Array();
 
@@ -80,8 +80,8 @@ abstract class Record implements \ArrayAccess {
      * @var boolean|array $cache The primary keys that were present when the record was constructed. Only used when 
      * allowKeyUpdates is set to true and a record is updated and some of the records primary keys have changed. 
      * This prevents the record from attempting to update its self with the new primary key values, which will 
-     * result in the updates where statement using conditions pointing to a record that doesn't exist, or is wrong 
-     * all togethor.
+     * result in the updates where statement using conditions pointing to a record that does not exist, or is wrong
+     * all together.
     */
     private $initial_primary_keys = false;
 
@@ -170,14 +170,12 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * Set the intital fields of the record. Performs an array intersection to only take fields that exist on the 
+     * Set the initial fields of the record. Performs an array intersection to only take fields that exist on the
      * model from the passed fields.
      *
      * 
      * @param array $fields Fields of the record.
      * @param boolean $cache Whether to cache the initial passed fields.
-     *
-     * @return void
     */
     public function __construct($fields = Array(), $cache = false){
 
@@ -479,7 +477,7 @@ abstract class Record implements \ArrayAccess {
 
 
     /**
-     * INSERT or UPDATE the record based on the presense or lack there of the records primary keys.
+     * INSERT or UPDATE the record based on the presence or lack there of the records primary keys.
      *
      * @return boolean|int
      *
@@ -516,6 +514,8 @@ abstract class Record implements \ArrayAccess {
      * @return boolean|array False if no missing fields. An assoc array of the missing fields and their values otherwise.
      *
      * @throws \Disco\exceptions\RecordId When ids are null.
+     * @throws \Disco\exceptions\RecordNonExistent When the record does not exist.
+     * @throws \Disco\exceptions\Record When multiple records are returned for the given id(s).
     */
     public function fetchMissing(){
 
@@ -675,9 +675,6 @@ abstract class Record implements \ArrayAccess {
     /**
      * Validate the current fields of the record.
      *
-     *
-     * @return void
-     *
      * @throws \Disco\exceptions\RecordValidation When a field doesn't exist or a field fails validation.
     */
     public function validateFields(){
@@ -784,8 +781,6 @@ abstract class Record implements \ArrayAccess {
      *
      * @param null|string|array $fields An optional subset of fields or single field to convert.
      *
-     * @return void
-     *
      * @throws \Disco\exceptions\RecordValidation If a passed field fails to exist.
     */
     public function convertEmptyStringsToNull($fields = Array()){
@@ -823,6 +818,8 @@ abstract class Record implements \ArrayAccess {
      * @param null|string|array $select The fields to select from the record.
      *
      * @return boolean|mixed Return false if the record wasn't found, otherwise return an instance of the record.
+     *
+     * @throws \InvalidArgumentException If the $where condition is not an array.
     */
     public static function find($where, $select = null){
 
@@ -865,6 +862,8 @@ abstract class Record implements \ArrayAccess {
      * @param null|string|array $select The fields to select from the records.
      *
      * @return array An array of the records found.
+     *
+     * @throws \InvalidArgumentException If the $where condition is not an array.
     */
     public static function findAll($where, $select = null){
 
@@ -903,10 +902,12 @@ abstract class Record implements \ArrayAccess {
     * Determine if a value is valid for a records particular field.
     *
     *
-    * @param string \$field The field of the record.
-    * @param string \$v The value to test against the field.
+    * @param string $field The field of the record.
+    * @param string $v The value to test against the field.
     *
     * @return boolean Did it validate?
+    *
+    * @throws \Disco\exceptions\Record Record doesn't have a field named $field.
     */
     public function validate($field, $v){
 

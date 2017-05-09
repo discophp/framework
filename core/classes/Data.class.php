@@ -8,7 +8,7 @@ namespace Disco\classes;
 /**
  * Data class.
  * Provides easy wrapper around using HTTP data centric around
- * the RESTful priciples PUT,POST,GET,DELETE.
+ * the RESTful principles PUT,POST,GET,DELETE.
 */
 class Data {
 
@@ -51,6 +51,9 @@ class Data {
         $this->stream = $stream;
 
         switch($_SERVER['REQUEST_METHOD']) {
+            case 'POST':
+                $this->setData('POST');
+                break;
             case 'PUT':
                 $this->setData('PUT');
                 break;
@@ -64,23 +67,43 @@ class Data {
 
 
     /**
-     * Set data of the selected type from the PUT or DELETE stream php://input .
-     * We don't have to worry about handling GET or POST as Apache pre-parses those into $_GET & $_POST.
-     *
+     * Set data of the selected type from the POST, PUT, or DELETE stream. Will automatically handle parsing incoming JSON
+     * and XML data.
      *
      * @param string $type the type of REST request either PUT|DELETE
      * @return void
     */
     private function setData($type){
 
-        $string = file_get_contents($this->stream);
+        $is_json = strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false;
+        $is_xml = strpos($_SERVER['CONTENT_TYPE'], 'application/xml') !== false;
 
-        if($string){
-            parse_str($string,$vars);
-            if($type=='PUT')
+        if($type == 'POST' && !$is_json && !$is_xml){
+            return;
+        }//if
+
+        $stream = file_get_contents($this->stream);
+
+        if($stream){
+
+            if($is_json){
+                $vars = json_decode($stream, true);
+            } else if($is_xml){
+                $vars = \Disco\classes\XML2Array::createArray($stream);
+            } else {
+                parse_str($stream, $vars);
+            }
+
+            if($type == 'POST'){
+                $_POST = $vars;
+            } 
+            else if($type == 'PUT'){
                 $this->putData = $vars;
-            else
+            } 
+            else if($type == 'DELETE'){
                 $this->deleteData = $vars;
+            }
+
         }//if
 
     }//setPutData
@@ -96,7 +119,7 @@ class Data {
      *
      * @return string|bool|int|float 
     */
-    public function where($k,$v=null){
+    public function where($k, $v=null){
 
         $dataType=$this->all();
 
@@ -132,23 +155,12 @@ class Data {
      * Return a GET variable or if $g==null return $this and set method chain to use GET.
      *
      *
-     * @param null|string $g The GET key to return.
+     * @param null|string $key The GET key to return.
      *
      * @return self|string|int|float|bool 
     */
-    public function get($g=null){
-        if($g==null){
-            $this->workingDataType='GET';
-            return $this;
-        }//if
-        else if(is_array($g)){
-            return array_intersect_key($_GET,array_flip($g));
-        }//elif
-        else if(isset($_GET[$g])){
-            return $_GET[$g];
-        }//if
-        else 
-            return false;
+    public function get($key=null){
+        return $this->_get('GET', $_GET, $key);
     }//get
 
 
@@ -157,23 +169,12 @@ class Data {
      * Return a POST variable or if $p==null return $this and set method chain to use POST.
      *
      *
-     * @param null|string $p The POST key to return.
+     * @param null|string $key The POST key to return.
      *
      * @return self|string|int|float|bool 
     */
-    public function post($p=null){
-        if($p==null){
-            $this->workingDataType='POST';
-            return $this;
-        }//if
-        else if(is_array($p)){
-            return array_intersect_key($_POST,array_flip($p));
-        }//elif
-        else if(isset($_POST[$p])){
-            return $_POST[$p];
-        }//if
-        else 
-            return false;
+    public function post($key=null){
+        return $this->_get('POST', $_POST, $key);
     }//post
 
 
@@ -182,23 +183,12 @@ class Data {
      * Return a DELETE variable or if $d==null return $this and set method chain to use DELETE.
      *
      *
-     * @param null|string $d The DELETE key to return.
+     * @param null|string $key The DELETE key to return.
      *
      * @return self|string|int|float|bool 
     */
-    public function delete($d=null){
-        if($d==null){
-            $this->workingDataType='DELETE';
-            return $this;
-        }//if
-        else if(is_array($d)){
-            return array_intersect_key($this->deleteData,array_flip($d));
-        }//elif
-        else if(isset($this->deleteData[$d])){
-            return $this->deleteData[$d];
-        }//if
-        else 
-            return false;
+    public function delete($key=null){
+        return $this->_get('DELETE', $this->deleteData, $key);
     }//delete
 
 
@@ -207,23 +197,12 @@ class Data {
      * Return a PUT variable or if $p==null return $this and set method chain to use PUT.
      *
      *
-     * @param null|string $p The PUT key to return.
+     * @param null|string $key The PUT key to return.
      *
      * @return self|string|int|float|bool 
     */
-    public function put($p=null){
-        if($p==null){
-            $this->workingDataType='PUT';
-            return $this;
-        }//if
-        else if(is_array($p)){
-            return array_intersect_key($this->putData,array_flip($p));
-        }//elif
-        else if(isset($this->putData[$p])){
-            return $this->putData[$p];
-        }//if
-        else 
-            return false;
+    public function put($key=null){
+        return $this->_get('PUT', $this->putData, $key);
     }//put
 
 
@@ -232,14 +211,18 @@ class Data {
      * SET a selected type of REST variable.
      *
      *
-     * @param null|string $k The key to set the $v with.
+     * @param string $k The key to set the $v with.
      * @param mixed $v The value of $k.
      *
-     * @return mixed  
+     * @return mixed
+     *
+     * @throws \Disco\exceptions\Exception
     */
-    public function set($k=null,$v){
-        if($this->workingDataType==null ||  $k==null)
-            return;
+    public function set($k, $v){
+
+        if($this->workingDataType == null){
+            throw new \Disco\exceptions\Exception("Cannot set data without first specifying the data type");
+        }
 
         switch($this->workingDataType){
             case 'PUT':
@@ -255,6 +238,7 @@ class Data {
                 $_GET[$k]=$v;
                 break;
         }//switch
+
     }//set
 
 
@@ -265,9 +249,16 @@ class Data {
      *
      * @param null|string $k The key to remove.
      *
-     * @return void 
+     * @return void
+     *
+     * @throws \Disco\exceptions\Exception
     */
     public function remove($k){
+
+        if($this->workingDataType == null){
+            throw new \Disco\exceptions\Exception("Cannot remove data without first specifying the data type");
+        }
+
         switch($this->workingDataType){
             case 'PUT':
                 unset($this->putData[$k]);
@@ -282,6 +273,7 @@ class Data {
                 unset($_GET[$k]);
                 break;
         }//switch
+
     }//remove
 
 
@@ -291,8 +283,15 @@ class Data {
      *
      *
      * @return array
+     *
+     * @throws \Disco\exceptions\Exception
     */
     public function all(){
+
+        if($this->workingDataType == null){
+            throw new \Disco\exceptions\Exception("Cannot get all data without first specifying the data type");
+        }
+
         switch($this->workingDataType){
             case 'PUT':
                 return $this->putData;
@@ -325,7 +324,7 @@ class Data {
      *
      * @return boolean
     */
-    public function setCookie($name,$value,$time = '+30 days',$path = '',$domain = '',$secure = false, $httponly = false){
+    public function setCookie($name, $value, $time = '+30 days', $path = '', $domain = '', $secure = false, $httponly = false){
 
         if(is_int($time)){
             $time = time() + $time;
@@ -337,7 +336,7 @@ class Data {
             $value = json_encode($value);
         }//if
 
-        return setcookie($name,$value,$time,$path,$domain,$secure,$httponly);
+        return setcookie($name, $value, $time, $path, $domain, $secure, $httponly);
 
     }//setCookie
 
@@ -360,7 +359,7 @@ class Data {
      *
      * @return boolean
     */
-    public function setRawCookie($name,$value,$time = '+30 days',$path = '',$domain = '',$secure = false, $httponly = false){
+    public function setRawCookie($name, $value, $time = '+30 days', $path = '', $domain = '', $secure = false, $httponly = false){
 
         if(is_int($time)){
             $time = time() + $time;
@@ -387,7 +386,7 @@ class Data {
     */
     public function getCookie($name){
 
-        if(isset($_COOKIE[$name])){
+        if(array_key_exists($name, $_COOKIE)){
             return $_COOKIE[$name];
         }//if
 
@@ -406,7 +405,7 @@ class Data {
     */
     public function getComplexCookie($name){
 
-        if(isset($_COOKIE[$name])){
+        if(array_key_exists($name, $_COOKIE)){
             return json_decode($_COOKIE[$name],true);
         }//if
 
@@ -424,7 +423,7 @@ class Data {
      * @return mixed The value of the cookie, or false if the cookie is not set.
     */
     public function hasCookie($name){
-        return isset($_COOKIE[$name]);
+        return array_key_exists($name, $_COOKIE);
     }//hasCookie
 
 
@@ -437,8 +436,8 @@ class Data {
      * @return boolean
     */
     public function deleteCookie($name){
-        if(isset($_COOKIE[$name])){
-            return setcookie($name,$_COOKIE[$name],1);
+        if(array_key_exists($name, $_COOKIE)){
+            return setcookie($name, $_COOKIE[$name],1);
         }//if
         return true;
     }//deleteCookie
@@ -452,7 +451,7 @@ class Data {
      * `PHPSESSID`, this avoids deleting the cookie that stores the session.
     */
     public function deleteAllCookies($except = Array('PHPSESSID')){
-        $keys = array_diff(array_keys($_COOKIE),$except);
+        $keys = array_diff(array_keys($_COOKIE), $except);
         foreach($keys as $k){
             $this->deleteCookie($k);
         }//foreach
@@ -601,6 +600,32 @@ class Data {
 
     }//validateCSRFToken
 
+
+
+    /**
+     * @param $type
+     * @param $sourceData
+     * @param $key
+     * @return $this|mixed
+     */
+    private function _get($type, &$sourceData, $key){
+
+        if($key == null){
+            $this->workingDataType = $type;
+            return $this;
+        }//if
+
+        if(is_array($key)){
+            return array_intersect_key($sourceData, array_flip($key));
+        }//if
+
+        if(array_key_exists($key, $sourceData)){
+            return $sourceData[$key];
+        }//if
+
+        return false;
+
+    }
 
 
 }//Data

@@ -3,7 +3,7 @@ namespace Disco\classes;
 
 /**
  * Provides some simple functionality to controllers for returning requests. Using these methods short circuits the 
- * request, aka terminates it immeditatly, not allowing other routes or controllers to be executed.
+ * request, aka terminates it immediately, not allowing other routes or controllers to be executed.
 */
 class Controller {
 
@@ -37,9 +37,10 @@ class Controller {
      * A template to add to the view and return.
      *
      * @param string $template The template name to load into the view.
+     * @param array $data The data to bind into the template. Defaults to empty array.
     */
-    public function template($template,$data = Array()){
-        \Template::with($template,$data);
+    public function template($template, $data = Array()){
+        \Template::with($template, $data);
         \View::serve();
     }//template
 
@@ -51,7 +52,7 @@ class Controller {
      * @param string $html HTML to load into the view.
     */
     public function html($html){
-        \View::html($template);
+        \View::html($html);
         \View::serve();
     }//html
 

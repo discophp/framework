@@ -6,9 +6,9 @@ namespace Disco\classes;
 
 /**
  * Queue class. 
- * Allow simulation of parallel processing of jobs either immediatly or after a set delay.
+ * Allow simulation of parallel processing of jobs either immediately or after a set delay.
  * The classes objective is to allow large jobs that would cause lag or generally take a long time and
- * are expensive in processing to be executed without interupting the applications response.
+ * are expensive in processing to be executed without interrupting the applications response.
 */
 class Queue {
 
@@ -17,14 +17,13 @@ class Queue {
     /**
      *  Push a job onto the Queue for processing. 
      *
-     *
-     *  @param \Closure|string $job Either a \Closure to execute or a Class method pair like 'DB@query'.
-     *  @param int $delay The delay to wait before begining execution of the $job.
-     *  @param null|string|array $vars The variables to pass to the $job.
+     *  @param \Closure|string $job Either a `\Closure` to execute or a Class method pair like `DB@query`.
+     *  @param int $delay The delay to wait before beginning execution of the `$job`.
+     *  @param null|string|array $vars The variables to pass to the `$job`.
      *
      *  @return void
     */
-    public function push($job,$delay=0,$vars=null){
+    public function push($job, $delay = 0, $vars = null){
 
         if($vars==null){
             $vars='disco-no-variable';
@@ -39,8 +38,8 @@ class Queue {
             $obj = new \Jeremeamia\SuperClosure\SerializableClosure($job);
             $method = 'closure';
         }//if
-        else if(stripos($job,'@')!==false){
-            $obj = explode('@',$job); 
+        else if(stripos($job, '@') !== false){
+            $obj = explode('@', $job);
             $method = $obj[1];
             $obj = $obj[0];
         }//elif
@@ -61,8 +60,6 @@ class Queue {
             $vars,
             $domain
         );
-
-        error_log($command);
 
         exec($command);
 
@@ -91,22 +88,22 @@ class Queue {
 
         $f = 'php ' . \App::path(). '/public/index.php resolve';
         $j = Array();
-        foreach($jobs as $k=>$v){
-            if(stripos($v,$f)!==false){
+        foreach($jobs as $k => $v){
+            if(stripos($v,$f) !== false){
                 $v = preg_replace('!\s+!', ' ', $v);
-                $j[]=$v;
+                $j[] = $v;
             }//if
         }//foreach
 
-        foreach($j as $k=>$job){
+        foreach($j as $k => $job){
             $job = explode(' ',$job,15);
             $j[$k] = new \stdClass();
-            $j[$k]->pId=$job[1];
-            $j[$k]->time=$job[4];
-            $j[$k]->delay=$job[10];
-            $j[$k]->object=unserialize(base64_decode($job[11]));
-            $j[$k]->method=$job[12];
-            $j[$k]->vars=($job[13]=='disco-no-variable')?'':unserialize(base64_decode($job[13]));
+            $j[$k]->pId = $job[1];
+            $j[$k]->time = $job[4];
+            $j[$k]->delay = $job[10];
+            $j[$k]->object = unserialize(base64_decode($job[11]));
+            $j[$k]->method = $job[12];
+            $j[$k]->vars = $job[13] == 'disco-no-variable' ? '' : unserialize(base64_decode($job[13]));
         }//foreach
 
         return $j;
@@ -130,17 +127,17 @@ class Queue {
         global $argv;
 
         foreach($j as $job){
-            if($job->pId==$pId){
-                exec('kill '.$job->pId);
-                if($argv[1]=='kill-job'){
-                    echo 'Killed Job # '.$job->pId.' Action:'.$job->object.'@'.$job->method.PHP_EOL;
+            if($job->pId == $pId){
+                exec('kill ' . $job->pId);
+                if($argv[1] == 'kill-job'){
+                    echo 'Killed Job # ' . $job->pId . ' Action:' . $job->object . '@' . $job->method . PHP_EOL;
                 }//if
                 return true;
             }//if
         }//foreach
 
-        if($argv[1]=='kill-job'){
-            echo 'No Job # '.$pId.PHP_EOL;
+        if($argv[1] == 'kill-job'){
+            echo 'No Job # ' . $pId . PHP_EOL;
         }//if
 
         return false;
