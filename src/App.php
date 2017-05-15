@@ -1,0 +1,1086 @@
+<?php
+namespace Disco;
+/**
+ * Copyright 2014 WebYoke, webyoke.com 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ *     http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ---------------------------------------------------------------------
+ *
+ * This is the core code for the Disco PHP Framework.
+ * It is distributed under the Apache Lisence v2.0.
+ * This file contains all the necessary bootstrapping code to pick the 
+ * application up off its feet and assemble the pieces needed to complete the
+ * request.
+*/
+
+
+/**
+ * The application container. This class is a Singleton.
+*/
+Class App extends \Pimple\Container {
+
+
+    /**
+     * @var string Absolute path of project.
+    */
+    public $path;
+
+
+    /**
+     * @var string The configuration directory.
+    */
+    public $configDir = '/app/config/';
+
+
+    /**
+     * @var string Is CLI request 
+     */
+    public $cli = false;
+
+
+    /**
+     * @var object Static reference to instance of App {@link \Disco\classes\App}.
+    */
+    public static $app;
+
+    /**
+     * @var string The relative path to the directory which holds server error responses.
+    */
+    public $errorDir = 'app/error/';
+
+    /**
+     * @var string The relative path to the template directory which holds server error templates.
+    */
+    public $errorTemplateDir = '_error/';
+
+
+    /**
+     * @var array Default regex matching conditions.
+    */
+    public $defaultMatchCondition = Array(
+        'alpha'                 => '^[a-zA-Z\s\-]+$',
+        'alpha_nospace'         => '^[a-zA-Z\-]+$',
+        'alpha_numeric'         => '^[a-zA-Z\s\-0-9]+$',
+        'alpha_numeric_nospace' => '^[a-zA-Z\-0-9]+$',
+        'integer'               => '^-?\d+$',
+        'integer_positive'      => '^\d+$',
+        'numeric'               => '^-?\d+(\.\d+)?$',
+        'numeric_positive'      => '^\d+(\.\d+)?$',
+        'all'                   => '[.]*',
+        'datetime'              => '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$',
+        'date'                  => '^\d{4}-\d{2}-\d{2}$',
+        'time'                  => '^\d{2}:\d{2}:\d{2}$',
+        'boolean'               => '^(true|false)$',
+        'one_or_zero'           => '^(1|0)$',
+    );
+
+
+    /**
+     * @var array $config Application configuration variables.
+    */
+    public $config = Array();
+
+
+    /**
+     * @var array $alias Application aliases.
+    */
+    public $alias = Array();
+
+
+    /**
+     * @var string $domain The domain name of the current application.
+    */
+    public $domain;
+
+
+    /**
+     * @var string $maintenance The PHP file path relative to the root of the app that should be executed when in 
+     * maintenance mode.
+    */
+    public $maintenance = '/app/maintenance.php';
+
+
+    /**
+     * @var array $registeredMiddleware
+     */
+    public $registeredMiddleware = [];
+
+
+    /**
+     * @var array $registeredMiddlewareGroups
+     */
+    public $registeredMiddlewareGroups = [];
+
+
+    /**
+     * Get the application instance singleton {@link \Disco\classes\App}.
+     *
+     *
+     * @param null|string $path Absolute path to root of the project.
+     * @param null|string $domain The domain name the app is serving.
+     *
+     * @return \Disco\classes\App
+    */
+    public static function instance($path = null, $domain = null){
+
+        if(!self::$app){
+            self::$app = new App($path, $domain);
+        }//if
+
+        return self::$app;
+
+    }//instance
+
+
+
+    /**
+     * Set up the application path, domain, configs, services, factories, 
+     *
+     *
+     * @param null|string $path Absolute path to root of the project.
+     * @param null|string $domain The domain name the app is serving.
+    */
+    public function __construct($path = null, $domain = null){
+
+
+        //construct the PimpleContainer
+        parent::__construct();
+
+        //Are we running in CLI mode?
+        if(php_sapi_name() == 'cli'){
+
+            $_SERVER['SERVER_NAME'] = null;
+
+            if($path === null){
+                $this->path = @dirname(dirname(array_pop(debug_backtrace())['file']));
+            } else {
+                $this->path = $path;
+            }//el
+
+            $this->cli = true;
+
+            global $argv;
+            if(isset($argv[1]) && $argv[1]=='routes'){
+                Router::$base = '\Disco\manage\Router';
+            }//if
+
+        }//if
+        else if($path === null){
+            $this->path = dirname($_SERVER['DOCUMENT_ROOT']);
+        } else {
+            $this->path = $path;
+        }//el
+
+        //a little magic
+        $this['App']    = $this; 
+        self::$app      = $this['App'];
+
+        //include the functions file
+        require_once dirname(__FILE__) . '/functions.php';
+
+
+        $appFunctionsPath = $this->path . '/app/function.php';
+        if(is_file($appFunctionsPath)){
+            require_once $appFunctionsPath;
+        }
+
+        //register the default configuration options
+        $this->registerConfig($this->path . $this->configDir . 'config.php');
+
+        //register the dev configuration options if necessary
+        if($this->config('DEV_MODE')){
+            $this->registerConfig($this->path . $this->configDir . 'dev.config.php');
+        }//if
+
+        error_reporting($this->configOrDefault('ERROR_REPORTING', E_ALL));
+
+        //regiser the default services into the container
+        $this->registerServices($this->path . $this->configDir . 'services.php');
+
+        echo $this->path . $this->configDir . 'services.php' . PHP_EOL;
+        echo (array_key_exists('Log', $this) ? 'Exists' : 'Does not') . PHP_EOL;
+        var_export(array_keys($this)) . PHP_EOL;
+        exit;
+
+        register_shutdown_function('__checkForFatal');
+        set_error_handler([&$this, 'errorHandler']);
+        set_exception_handler([&$this, 'exceptionHandler']);
+
+
+        //regiser the default factories into the container
+        $this->registerFactories($this->path . $this->configDir . 'factories.php');
+
+        //force the registery of the Router factory.
+        $this->makeFactory('Router', function(){
+            return \Disco\http\Router::factory();
+        });
+
+        $middlewareConfigPath = $this->path . $this->configDir . 'middleware.php';
+        if(is_file($middlewareConfigPath)){
+            $this->registeredMiddleware = require $middlewareConfigPath;
+        }
+
+        $middlewareGroupsConfigPath = $this->path . $this->configDir . 'middleware.groups.php';
+        if(is_file($middlewareGroupsConfigPath)){
+            $this->registeredMiddlewareGroups = require $middlewareGroupsConfigPath;
+        }
+
+        if($domain === null){
+            if($this->configKeyExists('DOMAIN') && $this->config('DOMAIN')){
+                $domain = $this->config('DOMAIN');
+            }//if
+            else {
+                $domain = $_SERVER['SERVER_NAME'];
+            }//el
+        }//if
+
+        if(substr($domain,0,4) != 'http'){
+            $domain = 'http://' . $domain;
+        }//if
+
+        if(!empty($_SERVER['HTTPS']) && substr($domain,0,5) != 'https'){
+            $domain = str_replace('http://','https://',$domain);
+        }//if
+
+        $this->domain = $domain;
+
+    }//__construct
+
+
+
+    /**
+     * Set up some basic ini settings, the domain, running console commands if CLI, maintenance mode screen, and 
+     * forcing requests to be HTTPS if necessary.
+     *
+     *
+     * @return void
+    */
+    public function setUp(){
+
+
+        //disable apache from append session ids to requests
+        ini_set('session.use_trans_sid',0);
+
+        //only allow sessions to be used with cookies
+        ini_set('session.use_only_cookies',1);
+
+        $this->registerAlias('disco.mime', dirname(__DIR__) . '/util/mimeTypes.php');
+
+        //handle console commands
+        if($this->cli && basename($_SERVER['PHP_SELF']) == 'index.php'){
+            $console = new \Disco\classes\Console;
+        }//if
+
+        if(!$this->cli && $this->config('FORCE_HTTPS') && empty($_SERVER['HTTPS'])){
+            \View::redirect($this->domain . $_SERVER['REQUEST_URI']);
+        }//if
+
+        /**
+         * Handle maintenance mode.
+        */
+        $this->handleMaintenance();
+
+
+    }//setup
+
+
+
+    /**
+     * This function is called by setting the `set_exception_handler()` native PHP function to catch uncaught Exceptions.
+     * It will delegate out the Exception to the `ExceptionHandler` defined in the application container for reporting
+     * and rendering.
+     *
+     * @param \Throwable $e
+     */
+    public function exceptionHandler(\Throwable $e){
+        /** @var \Disco\exceptions\Handler $handler */
+        $handler = $this->with('ExceptionHandler');
+        $handler->report($e);
+        $handler
+            ->render(request(), $e)
+            ->prepare(request())
+            ->send();
+    }
+
+
+
+    /**
+     * Called by `register_shutdown_function` of the php standard library, checks for a fatal error.
+     * Required when using a custom error handler.
+     */
+    public static function checkForFatalError(){
+        $error = error_get_last();
+        if($error){
+            app()->errorHandler(E_ERROR, $error['message'],  $error['file'], $error['line']);
+        }//if
+    }//checkForFatalError
+
+
+
+    /**
+     * Function used by `set_error_handler` of php standard library
+     * http://php.net/manual/en/function.set-error-handler.php.
+     * It will delegate out the logging of the errors to the `Log` defined in the application container.
+     *
+     *
+     * @param int $num The error number constant.
+     * @param string $str The error message.
+     * @param string $file The file the error occurred in.
+     * @param int $line The line number the error occurred on.
+     * @param null|array $context The context of the error.
+     *
+     * @return void
+     */
+    public function errorHandler($num, $str, $file, $line, $context = null){
+
+        if (0 === error_reporting()) { return false;}
+
+        $lvl = null;
+
+        switch($num){
+            case E_ERROR:
+                $num = 'Error';
+                $lvl = \Monolog\Logger::ERROR;
+                break;
+            case E_WARNING:
+                $num = 'Warning';
+                $lvl = \Monolog\Logger::WARNING;
+                break;
+            case E_PARSE:
+                $num = 'Parse Error';
+                $lvl = \Monolog\Logger::CRITICAL;
+                break;
+            case E_NOTICE:
+                $num = 'Notice';
+                $lvl = \Monolog\Logger::NOTICE;
+                break;
+            case E_CORE_ERROR:
+                $num = 'Core Error';
+                $lvl = \Monolog\Logger::CRITICAL;
+                break;
+            case E_CORE_WARNING:
+                $num = 'Core Warning';
+                $lvl = \Monolog\Logger::WARNING;
+                break;
+            case E_COMPILE_ERROR:
+                $num = 'Compile Error';
+                $lvl = \Monolog\Logger::CRITICAL;
+                break;
+            case E_COMPILE_WARNING:
+                $num = 'Compile Warning';
+                $lvl = \Monolog\Logger::WARNING;
+                break;
+            case E_USER_ERROR:
+                $num = 'User Error';
+                $lvl = \Monolog\Logger::ERROR;
+                break;
+            case E_USER_WARNING:
+                $num = 'User Warning';
+                $lvl = \Monolog\Logger::WARNING;
+                break;
+            case E_USER_NOTICE:
+                $num = 'User Notice';
+                $lvl = \Monolog\Logger::NOTICE;
+                break;
+            case E_STRICT:
+                $num = 'Strict Notice';
+                $lvl = \Monolog\Logger::NOTICE;
+                break;
+            case E_RECOVERABLE_ERROR:
+                $num = 'Recoverable Error';
+                $lvl = \Monolog\Logger::CRITICAL;
+                break;
+            default:
+                $num = "Unknown error ($num)";
+                $lvl = \Monolog\Logger::ERROR;
+                break;
+        }
+
+        app()->with('Log')->log($lvl, "($num) {$str} in {$file} on line {$line}");
+
+    }//errorHandler
+
+
+    /**
+     * Make sure a \Disco\http\Router matched against the requested URI, and serve the necessary page.
+     *
+     * @throws \Disco\exceptions\HttpError
+    */
+    public function tearDown(){
+
+        /**
+         * did this requested URI not find a match? If so that's a 404.
+        */
+        if(!Router::routeMatch()){
+            throw new \Disco\exceptions\HttpError('Page not found', 404);
+        }//if
+
+
+    }//tearDown
+
+
+
+    /**
+     * Merge a configuration file with the current app configuration.
+     *
+     *
+     * @param array|string $config Either an array of configs, or a path to a config definition file that 
+     * returns an array.
+     *
+     * @return boolean Was it registered.
+    */
+    public final function registerConfig($config){
+
+        if(is_string($config)){
+            if(!is_file($config)){
+                return false;
+            }//if
+            $config = require $config;
+        }//if
+
+        if(!is_array($config)){
+            return false;
+        }//if
+
+        $this->config = array_merge($this->config,$config);
+
+        return true;
+
+    }//registerConfig
+
+
+
+    /**
+     * Get/Set a config value.
+     *
+     * @param string $name Configuration setting to touch.
+     * @param mixed $value The value to set.
+     *
+     * @return mixed The config value.
+     *
+     * @throws \Exception If the config key doesn't exist.
+    */
+    public function config($name, $value=null){
+
+        if($value === null){
+
+            if(!$this->configKeyExists($name)){
+                throw new \Exception("Config key `{$name}` does not exist!");
+            }//if
+
+            return $this->config[$name];
+
+        }//if
+
+        $this->config[$name] = $value;
+
+    }//config
+
+
+    /**
+     * Get a config value, optionally returning a default if the config key doesn't exist.
+     *
+     * @param string $name The config name.
+     * @param mixed $value The default value to return if the config is not set.
+     * @return mixed
+     */
+    public function configOrDefault($name, $value){
+        if(!$this->configKeyExists($name)){
+            return $value;
+        }
+        return $this->config($name);
+    }
+
+
+    /**
+     * Whether a configuration key exists. Use this if you dont want to catch an Exception thrown by 
+     * `$this->config()` when a passed configuration key doesn't exist.
+     *
+     *
+     * @param string $name Configuration key.
+     * 
+     * @return boolean
+    */
+    public function configKeyExists($name){
+        return array_key_exists($name,$this->config);
+    }//configKeyExists
+
+
+
+    /**
+     * Whether the application is running in dev mode.
+     *
+     * @return boolean
+    */
+    public function devMode(){
+        return $this->config('DEV_MODE');
+    }//devMode
+
+
+
+    /**
+     * Return the root working system path of the discophp project.
+     *
+     * @return string 
+    */
+    public function path(){
+        return $this->path;
+    }//path
+
+
+
+    /**
+     * Get the current fully qualified domain name. eg: `https://yoursite.com`.
+     *
+     *
+     * @return string
+    */
+    public function domain(){
+        return $this->domain;     
+    }//domain
+
+
+
+    /**
+     * Register an alias. Aliases should adhere to the convention `your.alias`.
+     *
+     *
+     * @param string $name The alias name (key).
+     * @param string $path The alias path (value).
+     *
+     * @return void
+    */
+    public final function registerAlias($name, $path){
+        $this->alias[$name] = $path;
+    }//registerAlias
+
+
+
+    /**
+     * Get a previously registerd alias.
+     *
+     *
+     * @param string $name The alias name (key).
+     * 
+     * @return string
+    */
+    public final function getAlias($name){
+        return $this->alias[$name];
+    }//getAlias
+
+
+
+    /**
+     * Resolve a path that uses an alias that has been registered. Aliases are resolved by using the syntax 
+     * `@your.alias:the/rest/of/your/path/to/file.ext` where `@your.alias:` was defined earlier by registering 
+     * `your.alias`.
+     *
+     *
+     * @param string $path The aliased path.
+     *
+     * @return boolean|string False if no alias, the resolved alias path otherwise.
+    */
+    public final function resolveAlias($path){
+
+        if(substr($path,0,1) != '@'){
+            return false; 
+        }//if
+
+        $parts = explode(':',$path);
+        $alias = substr($parts[0],1,strlen($parts[0]));
+        $name = $parts[1];
+
+        return $this->alias[$alias].$name;
+
+    }//resolveAlias
+
+
+
+    /**
+     * Add a default matching condition for use with Router and Data. Store the $k and $v in 
+     * $this->defaultMatchConditions .
+     *
+     *
+     * @param string $k The conditions key. 
+     * @param string $v The conditions regex value.
+     *
+     * @return void 
+    */
+    public final function registerCondition($k, $v){
+        $this->defaultMatchCondition[$k]=$v;
+    }//registerCondition
+
+
+
+    /**
+     * Get a matching condition.
+     *
+     *
+     * @param string $k The conditions key.
+     *
+     * @return string
+    */
+    public final function getCondition($k){
+
+        if(!isset($this->defaultMatchCondition[$k])){
+            return false;
+        }//if
+
+        return $this->defaultMatchCondition[$k];
+
+    }//getCondition
+
+
+
+    /**
+     * Match a registered condition against a value.
+     *
+     * @param string $k The condition key.
+     * @param mixed $v The value to test the condition against.
+     *
+     * @return boolean The condition passed.
+     *
+     * @throws \Disco\exceptions\Exception When the condition key to match on does not exist.
+    */
+    public final function matchCondition($k, $v){
+
+        $condition = $this->getCondition($k);
+
+        if(!$condition){
+            throw new \Disco\exceptions\Exception("Condidition with key `{$k}` does not exist!`");
+        }
+
+        if(!preg_match("/{$condition}/",$v)){
+            return false;
+        }//if
+
+        return true;
+
+    }//matchCondition
+
+
+    /**
+     * Register services into the application container. If the service already exists, it will be extended.
+     *
+     *
+     * @param array|string $services Either an array of services, or a path to a services definition file that 
+     * returns an array.
+     * 
+     * @return boolean Were the services registered.
+    */
+    public function registerServices($services){
+
+        if(is_string($services)){
+            if(!is_file($services)){
+                return false;
+            }//if
+            $services = require $services;
+        }//if
+
+        if(!is_array($services)){
+            return false;
+        }//if
+
+        foreach($services as $k => $v){
+
+            echo $k . PHP_EOL;
+
+            if(!isset($this[$k])){
+                $this->make($k,$v);
+            }//if
+            else {
+                $this->extend($k,$v);
+            }//el
+
+        }//foreach
+
+        return true;
+
+    }//registerServices
+
+
+
+    /**
+     * Register services as factories into the application container.
+     *
+     *
+     * @param array|string $factories Either an array of factories, or a path to a factories definition file that 
+     * returns an array.
+     *
+     * @return boolean Were the factories registered.
+    */
+    public function registerFactories($factories){
+
+        if(is_string($factories)){
+            if(!is_file($factories)){
+                return false;
+            }//if
+            $factories = require $factories;
+        }//if
+
+        if(!is_array($factories)){
+            return false;
+        }//if
+
+        foreach($factories as $k => $v){
+
+            $this->makeFactory($k,$v);
+
+        }//foreach
+
+        return true;
+
+    }//registerFactories
+
+
+
+    /**
+     * Get a service from the container.
+     *
+     *
+     * @param string $obj The service to get from the container.
+     *
+     * @return Object 
+    */
+    public function with($obj){
+
+        if(!isset($this[$obj])){
+            $this->make($obj, $obj);
+        }//if
+
+        return $this[$obj];
+
+    }//with
+
+
+
+    /**
+     * Register a standard service with the container.
+     *
+     *
+     * @param string $obj The service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void 
+    */
+    public function make($obj, $val){
+
+        if(!$val instanceof \Closure){
+
+            $val = function($app) use($val){
+                return $app->resolveDependencies($val);
+            };
+
+        }//if
+
+        $this[$obj] = $val;
+
+    }//make
+
+
+
+    /**
+     * Overwrite an existing service in the application container with a new service.
+     *
+     *
+     * @param string $obj The service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void
+     *
+    */
+    public function extend($obj, $val){
+
+        $app = self::$app;
+
+        if(!$val instanceof \Closure){
+
+            $val = function() use($val, $app){
+                return $app->resolveDependencies($val);
+            };
+
+        }//if
+       
+        parent::extend($obj, $val);
+
+    }//extend
+
+
+
+    /**
+     * Register a factory service with the container.
+     *
+     *
+     * @param string $obj The factory service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+     * @return void
+    */
+    public function makeFactory($obj, $val){
+
+        if(!$val instanceof \Closure){
+
+            $val = function($app) use($val){
+                return $app->resolveDependencies($val);
+            };
+
+        }//if
+
+        $this[$obj] = $this->factory($val);
+
+    }//makeFactory
+
+
+
+    /**
+     * Register a protected service ( a Class with __call() defined or a \Closure function).
+     *
+     * @param string $obj The protected service to register.
+     * @param string|\Closure $val The object name or \Closure function to be created or evaluated.
+     *
+    */
+    public function makeProtected($obj, $val){
+
+         if(!$val instanceof \Closure){
+
+            $val = function($app) use($val){
+                return $app->resolveDependencies($val);
+            };
+
+        }//if
+
+        $this[$obj] = $this->protect($val);
+
+    }//makeProtected
+
+
+
+    /**
+     * Call a method ($method) on a service defined by $key in the container
+     * with arguments $args.
+     *
+     *
+     * @param string $key The service to call the method on.
+     * @param string $method The method to call on the service.
+     * @param array $args The arguments to pass to $key->$method();
+     *
+     * @return mixed
+    */
+    public function handle($key, $method, $args){
+
+        $instance = $this->with($key);
+
+        $args = (!is_array($args)) ? Array() : array_values($args);
+
+        switch (count($args)) {
+            case 0:
+                return $instance->$method();
+            case 1:
+                return $instance->$method($args[0]);
+            case 2:
+                return $instance->$method($args[0], $args[1]);
+            case 3:
+                return $instance->$method($args[0], $args[1], $args[2]);
+            case 4:
+                return $instance->$method($args[0], $args[1], $args[2], $args[3]);
+            default:
+                return call_user_func_array(array($instance, $method), $args);
+        }//switch
+
+    }//handle
+
+
+
+    /**
+     * When constructing services (objects) in the container determine whether or not
+     * the constructor is requesting other services from the container as arguments.
+     * If it is then we need to resolve those services from the container and pass them in.
+     *
+     *
+     * @param string $v The service that is about to be instantiated.
+     *
+     * @return Object
+    */
+    private function resolveDependencies($v){
+
+        $Ref = new \ReflectionClass($v);
+        $con = $Ref->getConstructor();
+
+        if(is_null($con)){
+            return new $v;
+        }//if
+
+        $inject = Array();
+
+        $ss = (string)$con;
+        $ss = explode("\n",$ss);
+        foreach($ss as $s){
+            $s = trim($s);
+            if(strpos($s,'Parameter #')!==false){
+                $s = trim(explode('[',$s)[1]);
+                $s = explode(' ',$s)[1];
+                if(substr($s,0,1) != '$'){
+                    $inject[] = $this->with($s);
+                }//if
+            }//if
+        }//foreach
+
+        switch (count($inject)) {
+            case 0:
+                return new $v;
+                break;
+            case 1:
+                return new $v($inject[0]);
+                break;
+            case 2:
+                return new $v($inject[0], $inject[1]);
+                break;
+            case 3:
+                return new $v($inject[0], $inject[1], $inject[2]);
+                break;
+            case 4:
+                return new $v($inject[0], $inject[1], $inject[2], $inject[3]);
+                break;
+            case 5:
+                return new $v($inject[0], $inject[1], $inject[2], $inject[3], $inject[4]);
+                break;
+            case 6:
+                return new $v($inject[0], $inject[1], $inject[2], $inject[3], $inject[4], $inject[5]);
+                break;
+            default:
+                return call_user_func_array(Array(new $v, '__construct'), $inject);
+                break;
+        }//switch
+
+    }//resolveDependencies
+
+
+
+    /**
+     * When MAINTENANCE_MODE=true in config.php the application is in maintenance mode and the \Closure function 
+     * returned from app/maintenance.php should be executed.
+     *
+     *
+     * @return void 
+    */
+    public final function handleMaintenance(){
+
+        if(!$this->config('MAINTENANCE_MODE') || $this->cli){
+            return;
+        }//if
+
+        http_response_code(503);
+
+        $file = $this->path . $this->maintenance;
+        if(is_file($file)){
+            require $file;
+        }//if
+        else {
+            echo '<h1>This site is currently undering going maintenance.</h1><p>It will be back up shortly.</p>';
+        }//el
+
+        exit;
+
+    }//handleMaintenance
+
+
+
+    /**
+     * Stack trace a Disco error and log it.
+     *
+     *
+     * @param string $msg The error message to log.
+     * @param string|array $methods The method call names that could have generated the error.
+     * @param array $e The debug_stacktrace call.
+     *
+     * @return void
+    */
+    public function error($msg, $methods, $e){
+
+        if(!is_array($methods)){
+            $methods = Array($methods);
+        }//if
+
+        $trace = Array();
+        $e = array_reverse($e);
+        foreach($e as $err){
+            if(isset($err['file']) && isset($err['function']) && in_array($err['function'],$methods)){
+                $trace['line']=$err['line'];
+                $trace['file']=$err['file'];
+                break;
+            }//if
+        }//foreach
+        $msg = "$msg  @ line {$trace['line']} in File: {$trace['file']} ";
+        error_log($msg,0);
+
+    }//error
+
+
+
+    /**
+     * Log an error in the log file defined by `$this->log` if it exists, also log the message in the standard 
+     * log called by `error_log()`.
+     *
+     * This method accepts its arguments via `func_get_args()`, it expects the first argument to be the log message and
+     * any additional arguments as variables that should be bound into `{}` strings in the log message in the order they are
+     * passed and defined in the log message.
+     *
+     * This method will by default perform a `var_export($obj, true)` on any arrays or objects that will be bound into the
+     * log message. It will also by default format exceptions using `$e->getMessage() . "\n" . $e->getStackTrace()`.
+     *
+     * For example:
+     *      `app()->log('We found a value of {} when calling the object {} but got an exception of {}', $value, $obj, $exception);`
+     *
+     * @return void
+    */
+    public function log(){
+
+        $args = func_get_args();
+
+        $msg = array_shift($args);
+
+        $positions = Array();
+        $p = -1;
+        while(($p = strpos($msg, '{}', $p + 1)) !== false){
+            $positions[] = $p;
+        }//while
+
+        //reverse em so when we do replacements we dont have
+        //to keep track of the change in length to positions
+        $args = array_reverse($args);
+        $positions = array_reverse($positions);
+
+        foreach($positions as $k => $pos){
+            if(!is_string($args[$k]) || !is_numeric($args[$k])) {
+                if ($args[$k] instanceof \Exception) {
+                    $args[$k] = $args[$k]->getMessage() . "\n" . $args[$k]->getStackTrace();
+                } else {
+                    $args[$k] = var_export($args[$k], true);
+                }
+            }//if
+            $msg = substr_replace($msg, $args[$k], $pos, 1);
+        }//foreach
+
+
+        if(is_file($this->path . $this->log)){
+            file_put_contents($this->path . $this->log,'[ '. date('m-d-Y H:i:s') .' - ' . $_SERVER['REQUEST_URI'] . '] ' . $msg . "\n", FILE_APPEND);
+        }//if
+
+        error_log($msg);
+
+    }//log
+
+
+
+}//App

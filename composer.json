@@ -18,18 +18,23 @@
         "twig/twig":"~1.0",
         "ifsnop/mysqldump-php": "2.1",
         "phpfastcache/phpfastcache":"3.1.1",
-        "defuse/php-encryption":"2.0.1"
+        "defuse/php-encryption":"2.0.1",
+        "symfony/http-foundation": "^3.2",
+        "monolog/monolog": "^1.22"
     },
     "autoload": {
         "classmap":[
-            "core/",
-            "core/twig/",
-            "core/facades/",
-            "core/manage/",
-            "core/classes/"
+            "src/",
+            "src/database/",
+            "src/twig/",
+            "src/facades/",
+            "src/manage/",
+            "src/http/",
+            "src/xml/",
+            "src/classes/"
         ],
         "psr-4": {
-            "Disco\\":"core/"
+            "Disco\\":"src/"
         }
     }
     
